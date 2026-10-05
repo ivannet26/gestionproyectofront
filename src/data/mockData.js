@@ -23,12 +23,6 @@ export const administrationItem = {
   requiresAuthorization: true,
 }
 
-export const currentUser = {
-  name: 'Mariana Torres',
-  role: 'Coordinación de proyectos',
-  initials: 'MT',
-}
-
 export const portfolioSummary = {
   totalProjects: 18,
 }

@@ -2,14 +2,15 @@ import { useState } from 'react'
 import gmLogo from '../assets/gm-logo.png'
 import {
   administrationItem,
-  currentUser,
   navigationSections,
 } from '../data/mockData.js'
 import ModuleSwitcher from './ModuleSwitcher.jsx'
 import NavSection from './NavSection.jsx'
+import { roleLabel } from '../auth/roles.js'
 
-function Sidebar({ canViewAdmin = false, isCollapsed, onToggleCollapse }) {
+function Sidebar({ canViewAdmin = false, isCollapsed, onToggleCollapse, user, onLogout, currentPath }) {
   const [activeModule, setActiveModule] = useState(navigationSections[0].id)
+  const initials = user.name.split(' ').slice(0, 2).map((part) => part[0]).join('').toUpperCase()
   const activeSection = navigationSections.find(
     (section) => section.id === activeModule,
   )
@@ -43,10 +44,10 @@ function Sidebar({ canViewAdmin = false, isCollapsed, onToggleCollapse }) {
         aria-label="Navegación principal"
       >
         <a
-          className="sidebar__home"
-          href="#main-content"
+          className={`sidebar__home${currentPath === '/' ? '' : ' sidebar__home--inactive'}`}
+          href="/"
           aria-label="Inicio"
-          aria-current="page"
+          aria-current={currentPath === '/' ? 'page' : undefined}
           title="Inicio"
         >
           <span className="sidebar__nav-mark" aria-hidden="true">
@@ -68,7 +69,7 @@ function Sidebar({ canViewAdmin = false, isCollapsed, onToggleCollapse }) {
           </div>
 
           {canViewAdmin && administrationItem.requiresAuthorization && (
-            <a className="sidebar__admin" href="#main-content">
+            <a className="sidebar__admin" href="/administracion/cuentas" aria-current={currentPath === '/administracion/cuentas' ? 'page' : undefined}>
               {administrationItem.label}
             </a>
           )}
@@ -78,16 +79,17 @@ function Sidebar({ canViewAdmin = false, isCollapsed, onToggleCollapse }) {
       <div
         className="sidebar__profile"
         role="group"
-        aria-label={`${currentUser.name}, ${currentUser.role}`}
-        title={`${currentUser.name} · ${currentUser.role}`}
+        aria-label={`${user.name}, ${roleLabel(user.role)}`}
+        title={`${user.name} · ${roleLabel(user.role)}`}
       >
         <span className="sidebar__avatar" aria-hidden="true">
-          {currentUser.initials}
+          {initials}
         </span>
         <span className="sidebar__profile-copy">
-          <strong>{currentUser.name}</strong>
-          <small>{currentUser.role}</small>
+          <strong>{user.name}</strong>
+          <small>{roleLabel(user.role)}</small>
         </span>
+        <button className="sidebar__logout" type="button" onClick={onLogout} aria-label="Cerrar sesión" title="Cerrar sesión">Salir</button>
       </div>
     </aside>
   )

@@ -9,6 +9,14 @@
   grid-template-columns: 82px minmax(0, 1fr);
 }
 
+.app-content {
+  min-width: 0;
+}
+
+.app-content > .form-message {
+  margin: 16px 24px 0;
+}
+
 .sidebar {
   position: sticky;
   top: 0;
@@ -123,6 +131,18 @@
   background: var(--color-surface-soft);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-small);
+}
+
+.sidebar__home--inactive {
+  color: var(--color-text-muted);
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.sidebar__home--inactive:hover {
+  color: var(--color-heading);
+  background: var(--color-hover);
 }
 
 .sidebar__nav-mark {
@@ -1044,4 +1064,314 @@
     grid-template-columns: 1fr;
     gap: 2px;
   }
+}
+
+.sidebar__logout {
+  flex: 0 0 auto;
+  padding: 5px 7px;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-small);
+  cursor: pointer;
+  font-size: 0.68rem;
+}
+
+.sidebar__logout:hover {
+  color: var(--color-heading);
+  background: var(--color-hover);
+  border-color: var(--color-border);
+}
+
+.sidebar--collapsed .sidebar__profile {
+  flex-direction: column;
+}
+
+.sidebar--collapsed .sidebar__logout {
+  padding: 2px;
+  font-size: 0.58rem;
+}
+
+.sidebar__admin[aria-current="page"] {
+  color: var(--color-heading);
+  background: var(--color-selected);
+  border-color: var(--color-brand);
+  font-weight: 700;
+}
+
+.auth-page {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background: var(--color-page);
+}
+
+.auth-card {
+  width: min(100%, 440px);
+  padding: clamp(24px, 4vw, 36px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  box-shadow: var(--shadow-card);
+}
+
+.auth-logo {
+  display: block;
+  width: min(100%, 245px);
+  height: 74px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.auth-card__heading {
+  margin: 20px 0 24px;
+}
+
+.auth-eyebrow {
+  margin: 0 0 6px;
+  color: var(--color-green-700);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.auth-card h1 {
+  margin: 0;
+  color: var(--color-heading);
+  font-size: 1.75rem;
+}
+
+.auth-card__heading > p:last-child {
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.auth-form,
+.account-form {
+  display: grid;
+  gap: 10px;
+}
+
+.auth-form label,
+.account-form label {
+  color: var(--color-heading);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.auth-form input,
+.account-form input,
+.account-form select {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  color: var(--color-heading);
+  background: var(--color-white);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.auth-form input:focus-visible,
+.account-form input:focus-visible,
+.account-form select:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.auth-form .primary-button {
+  width: 100%;
+  margin-top: 9px;
+}
+
+.primary-button:disabled,
+.account-page button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.auth-link {
+  display: inline-block;
+  margin-top: 22px;
+  color: var(--color-blue-700);
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.form-message {
+  margin: 12px 0;
+  padding: 11px 13px;
+  color: var(--color-green-700);
+  background: var(--color-green-50);
+  border: 1px solid var(--color-green-600);
+  border-radius: var(--radius-medium);
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.form-message--error {
+  color: var(--color-red-700);
+  background: var(--color-red-50);
+  border-color: var(--color-red-600);
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.account-panel {
+  margin-top: 0;
+}
+
+.account-panel--wide {
+  grid-column: 1 / -1;
+}
+
+.account-form,
+.account-list {
+  padding: 18px 20px;
+}
+
+.account-form + .account-form {
+  padding-top: 0;
+}
+
+.account-search {
+  display: flex;
+  gap: 8px;
+}
+
+.account-search button,
+.account-row button {
+  padding: 8px 12px;
+  color: var(--color-heading);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.account-row:last-child {
+  border-bottom: 0;
+}
+
+.account-row strong,
+.account-row small {
+  display: block;
+}
+
+.account-row strong {
+  color: var(--color-heading);
+  font-size: 0.82rem;
+}
+
+.account-row small,
+.account-row__meta {
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+}
+
+.account-row__meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.invitation-fields {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.invitation-name-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.invitation-name-grid > div,
+.area-selectors,
+.area-selector {
+  display: grid;
+  gap: 9px;
+}
+
+.area-selector__controls {
+  display: flex;
+  gap: 8px;
+}
+
+.secondary-button {
+  padding: 8px 12px;
+  color: var(--color-heading);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  cursor: pointer;
+}
+
+.add-area-button { justify-self: start; }
+
+.field-hint {
+  margin: 0 0 4px;
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+  line-height: 1.5;
+}
+
+.activation-details {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 22px;
+  padding: 16px;
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.activation-details dt {
+  color: var(--color-text-muted);
+  font-size: 0.73rem;
+}
+
+.activation-details dd {
+  margin: 3px 0 0;
+  color: var(--color-heading);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.account-row > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 520px) {
+  .invitation-name-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+  .account-grid { grid-template-columns: 1fr; }
+  .account-panel--wide { grid-column: auto; }
+}
+
+@media (max-width: 520px) {
+  .account-row { align-items: flex-start; flex-direction: column; }
+  .account-search { flex-direction: column; }
 }
