@@ -1,4 +1,6 @@
-function NavSection({ section }) {
+import { Link } from 'react-router'
+
+function NavSection({ section, currentPath }) {
   const itemsId = `${section.id}-navigation`
 
   return (
@@ -8,8 +10,13 @@ function NavSection({ section }) {
       </p>
       <ul id={itemsId} className="nav-section__items">
         {section.items.map((item) => (
-          <li key={item}>
-            <a href="#main-content">{item}</a>
+          <li key={item.path}>
+            <Link
+              to={item.path}
+              aria-current={currentPath === item.path ? 'page' : undefined}
+            >
+              {item.label}
+            </Link>
           </li>
         ))}
       </ul>

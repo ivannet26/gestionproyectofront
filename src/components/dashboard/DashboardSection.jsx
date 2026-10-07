@@ -1,4 +1,4 @@
-function DashboardSection({ title, description, children, className = '' }) {
+function DashboardSection({ title, description, children, className = "" }) {
   return (
     <section className={`dashboard-section ${className}`.trim()}>
       <header className="dashboard-section__header">
@@ -9,7 +9,7 @@ function DashboardSection({ title, description, children, className = '' }) {
       </header>
       <div className="dashboard-section__content">{children}</div>
     </section>
-  )
+  );
 }
 
-export default DashboardSection
+export default DashboardSection;

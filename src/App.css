@@ -487,10 +487,18 @@
   box-shadow: var(--shadow-card);
 }
 
-.kpi-card--blue { color: var(--color-blue-600); }
-.kpi-card--green { color: var(--color-green-600); }
-.kpi-card--yellow { color: var(--color-yellow-500); }
-.kpi-card--red { color: var(--color-red-600); }
+.kpi-card--blue {
+  color: var(--color-blue-600);
+}
+.kpi-card--green {
+  color: var(--color-green-600);
+}
+.kpi-card--yellow {
+  color: var(--color-yellow-500);
+}
+.kpi-card--red {
+  color: var(--color-red-600);
+}
 
 .kpi-card__topline {
   display: flex;
@@ -621,13 +629,21 @@
 }
 
 .status-stack__segment--blue,
-.status-list__dot--blue { background: var(--color-blue-600); }
+.status-list__dot--blue {
+  background: var(--color-blue-600);
+}
 .status-stack__segment--green,
-.status-list__dot--green { background: var(--color-green-600); }
+.status-list__dot--green {
+  background: var(--color-green-600);
+}
 .status-stack__segment--yellow,
-.status-list__dot--yellow { background: var(--color-yellow-500); }
+.status-list__dot--yellow {
+  background: var(--color-yellow-500);
+}
 .status-stack__segment--red,
-.status-list__dot--red { background: var(--color-red-600); }
+.status-list__dot--red {
+  background: var(--color-red-600);
+}
 
 .status-list {
   display: grid;
@@ -723,10 +739,18 @@
   border-radius: inherit;
 }
 
-.progress-bar--blue { color: var(--color-blue-600); }
-.progress-bar--green { color: var(--color-green-600); }
-.progress-bar--yellow { color: var(--color-yellow-500); }
-.progress-bar--red { color: var(--color-red-600); }
+.progress-bar--blue {
+  color: var(--color-blue-600);
+}
+.progress-bar--green {
+  color: var(--color-green-600);
+}
+.progress-bar--yellow {
+  color: var(--color-yellow-500);
+}
+.progress-bar--red {
+  color: var(--color-red-600);
+}
 
 .operations .dashboard-section__content {
   display: grid;
@@ -1329,7 +1353,9 @@
   cursor: pointer;
 }
 
-.add-area-button { justify-self: start; }
+.add-area-button {
+  justify-self: start;
+}
 
 .field-hint {
   margin: 0 0 4px;
@@ -1360,18 +1386,32 @@
   overflow-wrap: anywhere;
 }
 
-.account-row > div:first-child { min-width: 0; overflow-wrap: anywhere; }
+.account-row > div:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 
 @media (max-width: 520px) {
-  .invitation-name-grid { grid-template-columns: 1fr; }
+  .invitation-name-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 900px) {
-  .account-grid { grid-template-columns: 1fr; }
-  .account-panel--wide { grid-column: auto; }
+  .account-grid {
+    grid-template-columns: 1fr;
+  }
+  .account-panel--wide {
+    grid-column: auto;
+  }
 }
 
 @media (max-width: 520px) {
-  .account-row { align-items: flex-start; flex-direction: column; }
-  .account-search { flex-direction: column; }
+  .account-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .account-search {
+    flex-direction: column;
+  }
 }

@@ -8,7 +8,7 @@ function KpiCard({ label, value, detail, tone }) {
       <strong className="kpi-card__value">{value}</strong>
       <p>{detail}</p>
     </article>
-  )
+  );
 }
 
-export default KpiCard
+export default KpiCard;

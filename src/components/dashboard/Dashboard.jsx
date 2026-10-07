@@ -5,7 +5,7 @@ import {
   projectProgress,
   projectStatusSummary,
   teamWorkload,
-} from '../data/mockData.js'
+} from '../../data/mockData.js'
 import DashboardSection from './DashboardSection.jsx'
 import KpiCard from './KpiCard.jsx'
 import ProgressBar from './ProgressBar.jsx'
