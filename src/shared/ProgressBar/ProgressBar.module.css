@@ -1,0 +1,27 @@
+.progress-bar {
+  height: 6px;
+  overflow: hidden;
+  background: var(--color-hover);
+  border-radius: 999px;
+}
+
+.progress-bar__fill {
+  display: block;
+  width: var(--progress-value);
+  height: 100%;
+  background: currentColor;
+  border-radius: inherit;
+}
+
+.progress-bar--blue {
+  color: var(--color-blue-600);
+}
+.progress-bar--green {
+  color: var(--color-green-600);
+}
+.progress-bar--yellow {
+  color: var(--color-yellow-500);
+}
+.progress-bar--red {
+  color: var(--color-red-600);
+}

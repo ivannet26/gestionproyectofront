@@ -1,0 +1,35 @@
+.app-shell {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--color-page);
+}
+
+.app-shell:global(.sidebar--collapsed) {
+  grid-template-columns: 82px minmax(0, 1fr);
+}
+
+.app-content {
+  min-width: 0;
+}
+
+.app-content > :global(.form-message) {
+  margin: 16px 24px 0;
+}
+
+@media (max-width: 1180px) {
+  .app-shell {
+    grid-template-columns: 244px minmax(0, 1fr);
+  }
+
+  .app-shell:global(.sidebar--collapsed) {
+    grid-template-columns: 78px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 820px) {
+  .app-shell,
+  .app-shell:global(.sidebar--collapsed) {
+    display: block;
+  }
+}
