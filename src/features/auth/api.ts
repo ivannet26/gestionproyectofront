@@ -98,12 +98,13 @@ export async function prepareCsrf(): Promise<void> {
 async function rawRequest(
   path: string,
   options: RequestInit = {},
+  namespace: "auth" | "projects" = "auth",
 ): Promise<Response> {
   const headers = new Headers(options.headers);
   if (!headers.has("Content-Type"))
     headers.set("Content-Type", "application/json");
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
-  return fetch(`${apiBase}/api/auth/${path}`, {
+  return fetch(`${apiBase}/api/${namespace}/${path}`, {
     ...options,
     headers,
     credentials: "include",
@@ -162,12 +163,13 @@ export async function apiRequest<T>(
   path: string,
   options: RequestInit = {},
   retry = true,
+  namespace: "auth" | "projects" = "auth",
 ): Promise<T> {
-  let response = await rawRequest(path, options);
+  let response = await rawRequest(path, options, namespace);
   if (response.status === 401 && retry) {
     try {
       await refreshSession();
-      response = await rawRequest(path, options);
+      response = await rawRequest(path, options, namespace);
     } catch {
       accessToken = null;
       window.dispatchEvent(new Event("gm-session-expired"));

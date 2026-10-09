@@ -1,0 +1,6 @@
+.selector { display: grid; gap: 7px; min-width: 0; }
+.selected { display: flex; flex-wrap: wrap; gap: 7px; max-height: 100px; overflow-y: auto; margin: 0; padding: 2px; list-style: none; }
+.selected li { display: flex; align-items: center; gap: 7px; max-width: 100%; padding: 5px 8px; background: var(--color-surface-soft); border: 1px solid var(--color-border); border-radius: var(--radius-medium); font-size: .76rem; }
+.selected span { overflow-wrap: anywhere; }
+.selected button { width: 24px; height: 24px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--color-heading); cursor: pointer; }
+.selected button:hover { background: var(--color-hover); }

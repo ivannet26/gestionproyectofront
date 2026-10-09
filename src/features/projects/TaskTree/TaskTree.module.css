@@ -1,0 +1,18 @@
+.tree { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.tree .tree { margin: 8px 0 0 22px; padding-left: 12px; border-left: 1px solid var(--color-border); }
+.row { padding: 12px; border: 1px solid var(--color-border-light); border-radius: var(--radius-medium); background: var(--color-surface); }
+.heading { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.heading > strong { min-width: 0; overflow-wrap: anywhere; font-size: .84rem; }
+.toggle { flex: 0 0 auto; width: 27px; height: 27px; border: 1px solid var(--color-border); border-radius: 5px; color: var(--color-heading); background: var(--color-surface-soft); cursor: pointer; }
+.metadata { display: flex; flex-wrap: wrap; gap: 6px 15px; margin: 9px 0; color: var(--color-text-muted); font-size: .72rem; }
+.menu { position: relative; flex: 0 0 auto; margin-left: auto; }
+.menu summary { display: grid; width: 32px; height: 30px; place-items: center; list-style: none; cursor: pointer; border: 1px solid var(--color-border); border-radius: 5px; }
+.menu summary::-webkit-details-marker { display: none; }
+.menu > div { position: absolute; z-index: 5; right: 0; top: 34px; display: grid; min-width: 174px; padding: 5px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-medium); box-shadow: var(--shadow-card); }
+.menu button { padding: 9px 10px; color: var(--color-heading); border: 0; border-radius: 4px; background: transparent; text-align: left; font-size: .8rem; cursor: pointer; }
+.menu button:hover { background: var(--color-hover); }
+.menu summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+@media (max-width: 600px) {
+  .heading { flex-wrap: wrap; gap: 7px; }
+  .tree .tree { margin-left: 9px; padding-left: 7px; }
+}

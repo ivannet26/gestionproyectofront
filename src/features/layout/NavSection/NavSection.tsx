@@ -1,20 +1,33 @@
 import { Link } from 'react-router'
 import type { NavigationSection } from '../../dashboard/mockData'
+import type { ProjectSummary } from '../../projects/types'
 import styles from './NavSection.module.css'
 
 interface NavSectionProps {
   section: NavigationSection
   currentPath: string
+  projects: ProjectSummary[]
+  canCreateProject: boolean
+  projectCreationDisabled: boolean
+  onCreateProject: () => void
 }
 
-function NavSection({ section, currentPath }: NavSectionProps) {
+function NavSection({
+  section, currentPath, projects, canCreateProject, projectCreationDisabled, onCreateProject,
+}: NavSectionProps) {
   const itemsId = `${section.id}-navigation`
 
   return (
     <section className={styles['nav-section']} aria-labelledby={`${section.id}-heading`}>
-      <p id={`${section.id}-heading`} className={styles['nav-section__label']}>
-        {section.label}
-      </p>
+      <div className={styles.heading}>
+        <p id={`${section.id}-heading`} className={styles['nav-section__label']}>{section.label}</p>
+        {section.id === 'projects' && canCreateProject && (
+          <button className={styles.create} type="button" aria-label="Crear proyecto"
+            disabled={projectCreationDisabled}
+            title={projectCreationDisabled ? 'Crear proyecto: esperando servicio y catálogos' : 'Crear proyecto'}
+            onClick={onCreateProject}>+</button>
+        )}
+      </div>
       <ul id={itemsId} className={styles['nav-section__items']}>
         {section.items.map((item) => (
           <li key={item.path}>
@@ -27,6 +40,18 @@ function NavSection({ section, currentPath }: NavSectionProps) {
           </li>
         ))}
       </ul>
+      {section.id === 'projects' && projects.length > 0 && (
+        <ul className={styles.projects} aria-label="Proyectos autorizados">
+          {projects.map((project) => (
+            <li key={project.id}>
+              <Link to={`/proyectos/${project.id}`}
+                aria-current={currentPath === `/proyectos/${project.id}` ? 'page' : undefined}>
+                {project.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }

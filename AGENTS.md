@@ -111,3 +111,13 @@ Después de implementar:
 - El código debe ser comprensible mediante nombres claros, funciones pequeñas y una estructura coherente.
 - Las explicaciones técnicas, decisiones y reglas deben registrarse fuera del código, en `AGENTS.md` o en la documentación correspondiente.
 - No realizar cambios masivos en archivos no relacionados únicamente para eliminar comentarios existentes.
+
+## Arquitectura del frontend
+
+- Usa TypeScript estricto y componentes TSX con props, estados y contratos HTTP tipados. Evita `any` y conserva los errores como `unknown` hasta normalizarlos.
+- Organiza cada funcionalidad en `src/features/<domain>`, con sus servicios y tipos dentro del mismo dominio.
+- Mantén los CSS Modules junto a sus componentes. Reutiliza los estilos globales existentes solo para elementos generales del sistema.
+- Usa `src/shared` únicamente para componentes que realmente comparten varias funcionalidades; conserva los componentes específicos dentro de su dominio.
+- Usa React Router como única fuente de navegación y centraliza la declaración de rutas en `src/routes.ts`. No mantengas estados de ruta paralelos ni manipules directamente el historial del navegador.
+- Centraliza las solicitudes HTTP y reutiliza el transporte autenticado existente, incluida la renovación de sesión.
+- Los controles de interfaz deben reflejar los permisos recibidos del backend; la autorización efectiva siempre se valida en el servidor.

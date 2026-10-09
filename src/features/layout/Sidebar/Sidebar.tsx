@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import gmLogo from "../../../assets/gm-logo.png";
 import type { SessionUser } from "../../auth/api";
+import type { ProjectSummary } from "../../projects/types";
 import { administrationItem, navigationSections } from "../../dashboard/mockData";
 import ModuleSwitcher from "../ModuleSwitcher/ModuleSwitcher";
 import NavSection from "../NavSection/NavSection";
@@ -15,6 +16,10 @@ interface SidebarProps {
   user: SessionUser;
   onLogout: () => void;
   currentPath: string;
+  projects: ProjectSummary[];
+  canCreateProject: boolean;
+  projectCreationDisabled: boolean;
+  onCreateProject: () => void;
 }
 
 function Sidebar({
@@ -24,6 +29,10 @@ function Sidebar({
   user,
   onLogout,
   currentPath,
+  projects,
+  canCreateProject,
+  projectCreationDisabled,
+  onCreateProject,
 }: SidebarProps) {
   const [activeModule, setActiveModule] = useState(navigationSections[0].id);
   const initials = user.name
@@ -93,7 +102,9 @@ function Sidebar({
           />
 
           <div className={styles["sidebar__section-slot"]}>
-            <NavSection section={activeSection} currentPath={currentPath} />
+            <NavSection section={activeSection} currentPath={currentPath}
+              projects={projects} canCreateProject={canCreateProject}
+              projectCreationDisabled={projectCreationDisabled} onCreateProject={onCreateProject} />
           </div>
 
           {canViewAdmin && administrationItem.requiresAuthorization && (

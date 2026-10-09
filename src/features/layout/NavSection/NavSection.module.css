@@ -7,6 +7,16 @@
   text-transform: uppercase;
 }
 
+.heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.heading .nav-section__label { margin-bottom: 0; }
+.create { width: 28px; height: 28px; padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-small); color: var(--color-heading); background: var(--color-surface); font-size: 1.15rem; cursor: pointer; }
+.create:hover { background: var(--color-hover); }
+.create:disabled { opacity: .5; cursor: not-allowed; }
+.projects { display: grid; gap: 3px; margin: 12px 0 0; padding: 10px 0 0; border-top: 1px solid var(--color-border); list-style: none; }
+.projects a { display: block; padding: 8px 10px; border-radius: var(--radius-small); color: var(--color-text-muted); text-decoration: none; font-size: .8rem; overflow-wrap: anywhere; }
+.projects a:hover { color: var(--color-heading); background: var(--color-hover); }
+.projects a[aria-current="page"], .nav-section__items a[aria-current="page"] { color: var(--color-heading); background: var(--color-selected); font-weight: 650; box-shadow: inset 2px 0 var(--color-brand); }
+
 .nav-section__items {
   display: grid;
   gap: 2px;
