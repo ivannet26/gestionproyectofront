@@ -2,122 +2,80 @@
 
 ## Alcance
 
-Estas reglas aplican a todo el código del sistema de GM Ingenieros y Consultores.
+Estas indicaciones aplican al repositorio frontend del sistema de GM Ingenieros y Consultores.
 
-- Respetar la solicitud y el alcance de cada tarea.
-- Revisar el código relacionado antes de modificarlo.
-- Modificar únicamente lo necesario para cumplir la tarea.
-- No introducir funcionalidades, refactorizaciones ni dependencias no solicitadas.
-- Reutilizar las convenciones y componentes existentes cuando sean adecuados.
-- Mantener el código legible, predecible y fácil de mantener.
+- Lee este archivo y revisa el código relacionado antes de modificarlo.
+- Respeta el alcance solicitado y realiza únicamente los cambios necesarios.
+- Conserva la arquitectura, los contratos y las convenciones existentes.
+- Protege los cambios locales; no sobrescribas ni reviertas trabajo ajeno.
+- No agregues funciones, refactorizaciones o dependencias que no sean necesarias para la solicitud.
 
-## Convenciones generales
+## Stack y arquitectura
 
-- Usar nombres técnicos en inglés y textos visibles de la interfaz en español.
-- Usar `PascalCase` para clases y componentes.
-- Usar `camelCase` para variables, funciones, propiedades y métodos en JavaScript.
-- Usar `snake_case` para variables, funciones y módulos de Python.
-- Usar `UPPER_SNAKE_CASE` para constantes.
-- Evitar abreviaturas ambiguas, nombres genéricos y valores mágicos.
-- Mantener funciones y componentes pequeños, con una responsabilidad clara.
-- Evitar duplicación de lógica; extraer utilidades solo cuando exista reutilización real.
-- Preferir soluciones simples y explícitas antes que abstracciones innecesarias.
-- No dejar código comentado, logs de depuración ni imports sin utilizar.
-- Los comentarios deben explicar decisiones o restricciones, no repetir el código.
+- Usa React, Vite y TypeScript estricto, según la configuración existente.
+- Organiza cada funcionalidad dentro de `src/features/<dominio>`.
+- Mantén componentes, servicios y tipos específicos dentro de su funcionalidad.
+- Reserva `src/shared` para elementos reutilizados realmente entre funcionalidades.
+- Mantén los estilos de los componentes en CSS Modules junto a estos. Usa los estilos globales existentes para elementos generales de la aplicación.
+- Centraliza las rutas en `src/routes.ts` y usa React Router según la configuración instalada.
+- No crees sistemas de rutas paralelos ni manipules directamente el historial del navegador.
+- El frontend se comunica con Django REST Framework mediante la capa HTTP existente. Nunca accede directamente a MySQL.
 
-## Python, Django y Django REST Framework
+## Convenciones de código
 
-- Seguir PEP 8 y las convenciones existentes del proyecto.
-- Preferir funciones y clases con nombres descriptivos.
-- Usar anotaciones de tipo cuando mejoren la claridad sin forzar complejidad.
-- Mantener las vistas y ViewSets ligeros; la lógica de negocio compleja debe estar en servicios reutilizables.
-- Usar serializers para validar y transformar los datos de entrada y salida.
-- Aplicar permisos y validaciones en el backend; nunca confiar únicamente en la interfaz.
-- Mantener respuestas HTTP y errores con un formato uniforme.
-- Capturar excepciones específicas; evitar `except Exception` salvo que exista una razón documentada.
-- No ocultar errores reales con valores predeterminados silenciosos.
-- Separar validación, lógica de negocio y presentación de datos.
-- Escribir pruebas para reglas de negocio, endpoints y casos de error relevantes.
+- Usa nombres técnicos en inglés y textos visibles de la interfaz en español.
+- Usa `PascalCase` para componentes y tipos; `camelCase` para variables, funciones, propiedades y Hooks; y `UPPER_SNAKE_CASE` para constantes globales.
+- Mantén cada componente y función enfocados en una responsabilidad clara.
+- Define tipos explícitos para props, estados, respuestas y solicitudes de API.
+- Evita `any`. Conserva los errores como `unknown` hasta validarlos o normalizarlos.
+- Usa componentes funcionales y Hooks siguiendo los patrones existentes.
+- Evita duplicar lógica y crear abstracciones sin reutilización real.
+- No dejes imports sin usar, logs de depuración ni código comentado.
 
-## React y JavaScript
+## API y autenticación
 
-- Usar componentes funcionales y Hooks.
-- Nombrar los componentes con `PascalCase` y los Hooks personalizados con el prefijo `use`.
-- Mantener cada componente enfocado en una responsabilidad.
-- Recibir datos mediante props explícitas y evitar dependencias ocultas.
-- Centralizar las llamadas HTTP y no mezclarlas innecesariamente con componentes visuales.
-- Mantener separados los datos simulados, la lógica de presentación y la comunicación con la API.
-- Usar estado local por defecto; elevarlo o compartirlo solo cuando sea necesario.
-- Evitar usar `useEffect` para calcular valores derivados que puedan obtenerse directamente.
-- Usar claves estables al renderizar listas.
-- Controlar estados de carga, error, vacío y éxito cuando corresponda.
-- No mutar directamente estados, props ni objetos compartidos.
-- Preferir HTML semántico, etiquetas asociadas a campos y navegación accesible por teclado.
+- Centraliza las solicitudes HTTP en los servicios establecidos; evita hacerlas directamente desde componentes visuales.
+- Reutiliza el transporte autenticado existente y su mecanismo de renovación de sesión.
+- No crees una autenticación, manejo de tokens o cliente HTTP paralelo.
+- No almacenes tokens ni credenciales en `localStorage`, `sessionStorage`, código fuente o registros.
+- Trata los valores `VITE_*` como información pública que puede quedar incluida en el bundle.
+- No incluyas secretos en variables del frontend. Mantén `.env` fuera del repositorio y usa valores ficticios en `.env.example`.
+- No debilites CORS, CSRF, autenticación ni manejo de errores para resolver problemas de comunicación.
 
-## Validación y calidad
+## Seguridad y permisos
 
-- Validar entradas tanto en la interfaz como en el backend, sin duplicar reglas críticas de forma inconsistente.
-- Mostrar errores comprensibles al usuario y conservar detalles técnicos en los registros apropiados.
-- Mantener funciones deterministas cuando sea posible.
-- Evitar efectos secundarios ocultos y dependencias globales innecesarias.
-- Antes de finalizar, revisar formato, imports, warnings y errores de consola.
-- Ejecutar las pruebas y verificaciones disponibles para el código modificado.
-- Verificar que la compilación o ejecución local funcione correctamente.
-- No considerar terminada una tarea si existen errores conocidos sin informar.
+- La interfaz puede ocultar o deshabilitar acciones según los permisos recibidos, pero eso no reemplaza la autorización del backend.
+- No consideres una ruta protegida en React como una medida de seguridad suficiente.
+- No confíes en identificadores, permisos ni datos enviados por el cliente; el servidor valida cada operación.
+- No expongas secretos, datos personales innecesarios, trazas ni detalles internos en la interfaz.
+- Renderiza texto de usuario como texto. No uses `dangerouslySetInnerHTML` salvo que la solicitud lo requiera y exista sanitización adecuada.
+- No conectes el frontend directamente a bases de datos ni uses datos reales para pruebas.
 
-## Seguridad del código
+## Interfaz y accesibilidad
 
-- No incluir contraseñas, tokens, claves ni datos sensibles en el código fuente.
-- No confiar en datos provenientes del cliente.
-- Validar entradas y controlar permisos antes de ejecutar operaciones sensibles.
-- Evitar exponer información interna en mensajes de error visibles.
-- No utilizar código dinámico o ejecuciones arbitrarias sin una justificación estricta.
+- Usa HTML semántico, etiquetas asociadas a sus campos y nombres accesibles para controles.
+- Asegura el uso con teclado, foco visible, contraste suficiente y mensajes de error comprensibles.
+- Mantén diseños adaptables a escritorio y pantallas reducidas siguiendo los estilos existentes.
+- Controla los estados de carga, error, vacío y éxito cuando corresponda.
+- No uses mocks en una funcionalidad integrada con la API, salvo que la tarea solicite expresamente una interfaz simulada.
 
-## Entrega de cada tarea
+## Calidad y validación
 
-Antes de implementar:
-
-1. Revisar el código relacionado.
-2. Identificar los archivos que realmente deben modificarse.
-3. Presentar un plan breve si la tarea involucra varios cambios.
-
-Después de implementar:
-
-1. Informar los archivos modificados.
-2. Resumir el comportamiento implementado.
-3. Indicar las validaciones ejecutadas.
-4. Informar errores, limitaciones o pendientes reales.
-
-## Seguridad web y datos operativos
-
-- Aplicar mínimo privilegio y denegar el acceso por defecto.
-- Exigir autenticación en endpoints privados y validar autorización en el backend para cada operación y cada objeto.
-- Filtrar proyectos, áreas, trabajadores, tareas y subtareas según rol, áreas autorizadas y participación; no confiar en controles ocultos ni IDs enviados por el cliente.
-- Validar, normalizar y limitar longitud/formato de toda entrada en el servidor.
-- Usar Django ORM o consultas parametrizadas; nunca concatenar SQL con datos del usuario.
-- Evitar XSS: no insertar contenido del usuario como HTML ni usar `dangerouslySetInnerHTML` sin sanitización justificada.
-- No exponer secretos, datos personales innecesarios, trazas internas ni detalles de infraestructura en respuestas o logs.
-- Mantener CORS restringido a orígenes autorizados; no desactivar CSRF ni debilitar autenticación para resolver errores.
-- No almacenar credenciales en el repositorio, frontend, logs o respuestas; mantenerlas en variables de entorno y usar `.env.example` con valores ficticios.
-- Tratar proyectos publicados como información interna; nunca hacerlos accesibles sin autenticación salvo requisito explícito aprobado.
-- Registrar actor y acción en cambios sensibles mediante el mecanismo de auditoría existente, sin copiar contenido confidencial innecesariamente.
-- Probar permisos y aislamiento entre áreas con datos sintéticos; nunca usar datos reales en fixtures o pruebas.
-- No ejecutar migraciones destructivas ni escrituras contra producción o bases compartidas sin autorización explícita y revisión previa.
+- Ejecuta las verificaciones disponibles que correspondan a los archivos modificados.
+- Usa `npm run lint` y `npm run build` cuando estén definidos y sean pertinentes.
+- Usa `npm ci` para sincronizar dependencias solo cuando corresponda al `package-lock.json`; no agregues dependencias sin necesidad y autorización.
+- Prueba con datos sintéticos. No realices escrituras en bases compartidas o de producción.
+- Informa únicamente las verificaciones que realmente ejecutaste y sus resultados.
 
 ## Comentarios en el código
 
-- No agregar comentarios de ningún tipo dentro del código fuente: comentarios de línea, bloque, documentación inline, `TODO`, `FIXME` ni código comentado.
-- Todo código nuevo o modificado debe quedar libre de comentarios.
-- El código debe ser comprensible mediante nombres claros, funciones pequeñas y una estructura coherente.
-- Las explicaciones técnicas, decisiones y reglas deben registrarse fuera del código, en `AGENTS.md` o en la documentación correspondiente.
-- No realizar cambios masivos en archivos no relacionados únicamente para eliminar comentarios existentes.
+- No agregues comentarios de ningún tipo al código fuente: comentarios de línea o bloque, documentación inline, `TODO`, `FIXME` ni código comentado.
+- Expresa la intención mediante nombres claros, componentes pequeños y una estructura coherente.
+- No hagas cambios masivos en archivos no relacionados para eliminar comentarios existentes.
 
-## Arquitectura del frontend
+## Git y entrega
 
-- Usa TypeScript estricto y componentes TSX con props, estados y contratos HTTP tipados. Evita `any` y conserva los errores como `unknown` hasta normalizarlos.
-- Organiza cada funcionalidad en `src/features/<domain>`, con sus servicios y tipos dentro del mismo dominio.
-- Mantén los CSS Modules junto a sus componentes. Reutiliza los estilos globales existentes solo para elementos generales del sistema.
-- Usa `src/shared` únicamente para componentes que realmente comparten varias funcionalidades; conserva los componentes específicos dentro de su dominio.
-- Usa React Router como única fuente de navegación y centraliza la declaración de rutas en `src/routes.ts`. No mantengas estados de ruta paralelos ni manipules directamente el historial del navegador.
-- Centraliza las solicitudes HTTP y reutiliza el transporte autenticado existente, incluida la renovación de sesión.
-- Los controles de interfaz deben reflejar los permisos recibidos del backend; la autorización efectiva siempre se valida en el servidor.
+- Inspecciona el estado con comandos de lectura, como `git status` y `git diff`, cuando sea necesario.
+- No ejecutes commits, push ni operaciones Git destructivas. El usuario gestiona los commits y la publicación.
+- Antes de tareas con varios archivos, presenta un plan breve y continúa sin esperar confirmación, salvo que exista un bloqueo real.
+- Al terminar, resume archivos modificados, comportamiento implementado, verificaciones ejecutadas y limitaciones o pendientes reales.
