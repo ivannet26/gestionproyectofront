@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { errorText } from "../../auth/api";
 import { configureProjectTaskStates, getProjectTaskStates } from "../services";
 import type { Project, ProjectTaskConfiguration, ProjectTaskState } from "../types";
+import { groupTaskStates, stateCategory } from "../stateGroups";
 import Modal from "../Modal/Modal";
 import ProjectForm from "../ProjectForm/ProjectForm";
 import formStyles from "../ProjectForm/ProjectForm.module.css";
@@ -42,6 +43,8 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
     return () => { current = false; };
   }, [project.id, reload]);
 
+  useEffect(() => { if (!loading) document.getElementById("task-state-template")?.focus(); }, [loading]);
+
   const available = configuration?.available_states.filter((item) => !states.some((state) => state.code === item.code)) ?? [];
 
   function addState() {
@@ -56,11 +59,14 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
     setError("");
   }
 
-  function move(index: number, offset: number) {
+  function move(code: string, offset: number) {
     setStates((current) => {
       const next = [...current];
-      const destination = index + offset;
-      if (destination < 0 || destination >= next.length) return current;
+      const group = current.filter((state) => stateCategory(state.code) === stateCategory(code));
+      const target = group[group.findIndex((state) => state.code === code) + offset];
+      if (!target) return current;
+      const index = current.findIndex((state) => state.code === code);
+      const destination = current.findIndex((state) => state.code === target.code);
       [next[index], next[destination]] = [next[destination]!, next[index]!];
       return next;
     });
@@ -68,7 +74,7 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!configuration?.can_configure) return;
+    if (!configuration?.can_configure || !project.permissions.manage) return;
     const cleanStates = states.map((state) => ({ ...state, name: state.name.trim() }));
     if (template === "custom" && (cleanStates.some((state) => !state.name)
       || new Set(cleanStates.map((state) => state.name.toLocaleLowerCase())).size !== cleanStates.length)) {
@@ -87,21 +93,22 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
   }
 
   return (
-    <Modal title={`Estados de ${project.name}`} busy={busy} onClose={onClose}>
+    <Modal title={`Estados de ${project.name}`} busy={busy} onClose={onClose} wide>
       {loading ? <p className={styles.loading} role="status">Cargando configuración…</p> : (
-        <ProjectForm compact busy={busy} error={error} onSubmit={submit} actions={
+        <ProjectForm compact busy={busy} readOnly={!configuration?.can_configure || !project.permissions.manage}
+          error={error} onSubmit={submit} actions={
           <>
             <button type="button" className={formStyles.secondary} disabled={busy}
               onClick={() => { setLoading(true); setReload((value) => value + 1); }}>Recargar configuración</button>
             <button type="button" className={formStyles.secondary} disabled={busy} onClick={onClose}>Cancelar</button>
-            <button type="submit" className="primary-button" disabled={busy || !configuration?.can_configure}>
+            <button type="submit" className="primary-button" disabled={busy || !configuration?.can_configure || !project.permissions.manage}>
               {busy ? "Guardando…" : "Aplicar cambios"}
             </button>
           </>
         }>
           <div className={formStyles.field}>
             <label htmlFor="task-state-template">Modelo de estados</label>
-            <select id="task-state-template" value={template} disabled={!configuration?.can_configure}
+            <select id="task-state-template" name="template" data-initial-focus value={template} disabled={!configuration?.can_configure}
               onChange={(event) => setTemplate(event.target.value === "custom" ? "custom" : "standard")}>
               <option value="standard">Estándar</option>
               <option value="custom">Personalizado para este proyecto</option>
@@ -111,28 +118,38 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
             PENDIENTE → EN CURSO → CERRADO. Se conservan los estados intermedios, motivos y revisión que exigen las transiciones actuales.
           </p>
           {template === "standard" ? (
-            <ul className={styles.standard}>{configuration?.available_states.map((state) => <li key={state.code}>{state.name}</li>)}</ul>
+            <div className={styles.groups}>{groupTaskStates(configuration?.available_states ?? []).map((group) => (
+              <section key={group.label} aria-label={group.label}>
+                <h3>{group.label}</h3>
+                <ul className={styles.standard}>{group.states.map((state) => <li key={state.code}>{state.name}</li>)}</ul>
+              </section>
+            ))}</div>
           ) : (
             <>
               <p className="field-hint">Personaliza nombres y orden sobre el catálogo existente. No se crean códigos ni transiciones globales.</p>
-              <ol className={styles.states}>
-                {states.map((state, index) => (
+              <div className={styles.groups}>{groupTaskStates(states).map((group) => (
+                <section key={group.label} aria-label={group.label}>
+                  <h3>{group.label}</h3>
+                  <ol className={styles.states}>
+                {group.states.map((state, index) => (
                   <li key={state.code} className={styles.state}>
                     <div>
-                      <label htmlFor={`custom-state-${state.code}`}>{state.code}</label>
-                      <input id={`custom-state-${state.code}`} required maxLength={70} value={state.name}
+                      <label htmlFor={`custom-state-${state.code}`}>{configuration?.available_states.find((item) => item.code === state.code)?.name ?? state.code}</label>
+                      <input id={`custom-state-${state.code}`} name={`state_${state.code}`} required maxLength={70} value={state.name}
                         onChange={(event) => setStates((current) => current.map((item) => item.code === state.code
                           ? { ...item, name: event.target.value } : item))} />
                     </div>
                     <div className={styles.controls}>
-                      <button type="button" disabled={index === 0} aria-label={`Subir estado ${state.name}`} onClick={() => move(index, -1)}>↑</button>
-                      <button type="button" disabled={index === states.length - 1} aria-label={`Bajar estado ${state.name}`} onClick={() => move(index, 1)}>↓</button>
+                      <button type="button" disabled={index === 0} aria-label={`Subir estado ${state.name}`} onClick={() => move(state.code, -1)}>↑</button>
+                      <button type="button" disabled={index === group.states.length - 1} aria-label={`Bajar estado ${state.name}`} onClick={() => move(state.code, 1)}>↓</button>
                       <button type="button" disabled={requiredCodes.has(state.code)} aria-label={`Quitar estado ${state.name}`}
                         onClick={() => setStates((current) => current.filter((item) => item.code !== state.code))}>×</button>
                     </div>
                   </li>
                 ))}
-              </ol>
+                  </ol>
+                </section>
+              ))}</div>
               {available.length > 0 && (
                 <div className={styles.add}>
                   <div className={formStyles.field}>

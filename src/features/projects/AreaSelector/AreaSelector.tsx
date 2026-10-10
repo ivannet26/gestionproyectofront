@@ -6,10 +6,11 @@ interface AreaSelectorProps {
   options: ProjectArea[];
   selected: number[];
   onChange: (selected: number[]) => void;
+  error?: string;
 }
 
-export default function AreaSelector({ options, selected, onChange }: AreaSelectorProps) {
-  const selectId = useId();
+export default function AreaSelector({ options, selected, onChange, error = "" }: AreaSelectorProps) {
+  const selectId = "project-areas";
   const hintId = useId();
   const remaining = options.filter((area) => !selected.includes(area.id));
   const atLimit = selected.length >= 100;
@@ -22,10 +23,12 @@ export default function AreaSelector({ options, selected, onChange }: AreaSelect
       <label htmlFor={selectId}>Áreas participantes *</label>
       <select
         id={selectId}
+        name="area_ids"
         value=""
         required={selected.length === 0}
         disabled={remaining.length === 0 || atLimit}
-        aria-describedby={hintId}
+        aria-invalid={Boolean(error)}
+        aria-describedby={`${hintId}${error ? " project-areas-error" : ""}`}
         onChange={(event) => {
           const id = Number(event.target.value);
           if (remaining.some((area) => area.id === id)) onChange([...selected, id]);
@@ -35,6 +38,7 @@ export default function AreaSelector({ options, selected, onChange }: AreaSelect
         {remaining.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}
       </select>
       <p id={hintId} className="field-hint">Selecciona una o más áreas. Puedes retirarlas antes de continuar.</p>
+      {error && <p id="project-areas-error" className={styles.error}>{error}</p>}
       {selected.length > 0 && (
         <ul className={styles.selected} aria-label="Áreas seleccionadas">
           {selected.map((id) => {

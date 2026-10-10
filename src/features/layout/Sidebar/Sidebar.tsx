@@ -24,6 +24,7 @@ interface SidebarProps {
   projectError: string;
   canCreateTasks: boolean;
   onCreateTask: (projectId: number) => void;
+  onRetryProjects: () => void;
 }
 
 function Sidebar({
@@ -41,6 +42,7 @@ function Sidebar({
   projectError,
   canCreateTasks,
   onCreateTask,
+  onRetryProjects,
 }: SidebarProps) {
   const [activeModule, setActiveModule] = useState(navigationSections[0].id);
   const initials = user.name
@@ -63,6 +65,8 @@ function Sidebar({
             className={styles["sidebar__logo"]}
             src={gmLogo}
             alt="GM Ingenieros y Consultores"
+            width={204}
+            height={62}
           />
         </span>
         <button
@@ -114,7 +118,7 @@ function Sidebar({
               projects={projects} canCreateProject={canCreateProject}
               projectCreationDisabled={projectCreationDisabled} onCreateProject={onCreateProject}
               projectsLoading={projectsLoading} projectError={projectError}
-              canCreateTasks={canCreateTasks} onCreateTask={onCreateTask} />
+              canCreateTasks={canCreateTasks} onCreateTask={onCreateTask} onRetryProjects={onRetryProjects} />
           </div>
 
           {canViewAdmin && administrationItem.requiresAuthorization && (

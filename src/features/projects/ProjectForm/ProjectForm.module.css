@@ -1,4 +1,10 @@
 .form { display: grid; gap: 12px; padding: 22px; }
+.errorHeading { margin: 0; }
+.errorList { display: grid; gap: 4px; margin: 6px 0 0; padding-left: 18px; }
+.errorList button { border: 0; padding: 3px 0; background: transparent; color: inherit; text-align: left; text-decoration: underline; cursor: pointer; font-size: inherit; }
+.fieldError { margin: 0; color: var(--color-red-700); font-size: .76rem; line-height: 1.5; overflow-wrap: anywhere; }
+.form [aria-invalid="true"] { border-color: var(--color-red-700); }
+.form :where(input, select, textarea, button, summary, [tabindex]) { scroll-margin-block: 90px; }
 .fields { display: grid; gap: 12px; min-width: 0; margin: 0; padding: 0; border: 0; }
 .form label, .form legend { font-size: .82rem; font-weight: 600; }
 .form input:not([type="checkbox"]):not([type="radio"]), .form select, .form textarea { width: 100%; min-height: 40px; padding: 9px 11px; color: var(--color-heading); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-medium); font: inherit; font-size: .84rem; }
@@ -19,9 +25,10 @@
 .compact textarea { min-height: 58px; max-height: 120px; }
 .compact :global(.field-hint) { margin: 0; line-height: 1.45; }
 .compact .options { margin: 0; padding: 12px; }
-.compact .actions { gap: 9px; margin-top: 2px; }
+.compact .actions { gap: 9px; margin-top: 2px; position: sticky; bottom: -22px; z-index: 2; padding-block: 12px; background: var(--color-surface); border-top: 1px solid var(--color-border-light); }
 @media (max-width: 600px) {
   .row { flex-direction: column; align-items: stretch; }
   .actions { flex-direction: column; }
   .form { padding: 16px; }
+  .compact .actions { position: static; }
 }

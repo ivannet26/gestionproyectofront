@@ -1,2 +1,8 @@
 .editor { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+.compact { min-width: 0; border: 0; padding: 0; margin: 0; }
+.compact > legend { margin-bottom: 10px; padding: 0; font-size: .8125rem; font-weight: 600; }
+.compact .editor { grid-template-columns: 1fr auto; gap: 10px 8px; }
+.compact .editor > div:first-child { grid-column: 1 / -1; }
+.compact .editor button { min-height: 36px; padding: 6px 10px; }
+.compact > ul { max-height: 120px; overflow-y: auto; overscroll-behavior: contain; }
 @media (max-width: 600px) { .editor { grid-template-columns: 1fr; } }

@@ -64,7 +64,7 @@ export default function ProjectWorkspace({
   const activeTask = action && action.kind !== "create" ? tasks.find((task) => task.id === action.taskId) : undefined;
   const activeAction = action !== null && (action.kind === "create" || activeTask !== undefined);
   const title = action?.kind === "create" ? "Nueva tarea"
-    : action?.kind === "child" ? `Nueva subtarea de ${activeTask?.name ?? ""}`
+    : action?.kind === "child" ? "Nueva subtarea"
     : action?.kind === "dependencies" ? `Dependencias de ${activeTask?.name ?? ""}`
     : action?.kind === "state" ? "Cambiar estado" : "Editar datos de tarea";
 
@@ -164,7 +164,9 @@ export default function ProjectWorkspace({
       {action && !activeAction && <p className="form-message form-message--error" role="alert">
         La tarea ya no está disponible. Vuelve a seleccionar una tarea de la lista.
       </p>}
-      {activeAction && <Modal busy={busy} title={title} onClose={() => setAction(null)}>{actionForm(project)}</Modal>}
+      {activeAction && <Modal busy={busy} title={title}
+        taskComposer={action?.kind === "create" || action?.kind === "edit" || action?.kind === "child"}
+        onClose={() => setAction(null)}>{actionForm(project)}</Modal>}
     </main>
   );
 }

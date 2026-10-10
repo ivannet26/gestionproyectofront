@@ -15,11 +15,12 @@ interface NavSectionProps {
   projectError: string
   canCreateTasks: boolean
   onCreateTask: (projectId: number) => void
+  onRetryProjects: () => void
 }
 
 function NavSection({
   section, currentPath, projects, canCreateProject, projectCreationDisabled, onCreateProject,
-  projectsLoading, projectError, canCreateTasks, onCreateTask,
+  projectsLoading, projectError, canCreateTasks, onCreateTask, onRetryProjects,
 }: NavSectionProps) {
   const itemsId = `${section.id}-navigation`
 
@@ -47,7 +48,8 @@ function NavSection({
         ))}
       </ul>
       {section.id === 'projects' && <ProjectNavigation projects={projects} currentPath={currentPath}
-        loading={projectsLoading} error={projectError} canCreateTasks={canCreateTasks} onCreateTask={onCreateTask} />}
+        loading={projectsLoading} error={projectError} canCreateTasks={canCreateTasks} onCreateTask={onCreateTask}
+        onRetry={onRetryProjects} />}
     </section>
   )
 }

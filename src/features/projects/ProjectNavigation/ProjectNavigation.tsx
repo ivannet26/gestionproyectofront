@@ -11,18 +11,20 @@ interface ProjectNavigationProps {
   error: string;
   canCreateTasks: boolean;
   onCreateTask: (projectId: number) => void;
+  onRetry: () => void;
 }
 
 export default function ProjectNavigation({
-  projects, currentPath, loading, error, canCreateTasks, onCreateTask,
+  projects, currentPath, loading, error, canCreateTasks, onCreateTask, onRetry,
 }: ProjectNavigationProps) {
   const [expandedProjects, setExpandedProjects] = useState<Record<number, boolean>>({});
   return (
     <div className={styles.navigation} aria-busy={loading}>
       {loading && <p className={styles.message} role="status">Cargando proyectos…</p>}
       {error && <p className={styles.message} role="alert">{error}</p>}
-      {!loading && !error && projects.length === 0 && <p className={styles.message}>No hay proyectos autorizados.</p>}
-      <ul className={styles.projects} aria-label="Proyectos autorizados">
+      {error && <button type="button" className={styles.retry} disabled={loading} onClick={onRetry}>Volver a cargar proyectos</button>}
+      {!loading && !error && projects.length === 0 && <p className={styles.message} role="status">No hay proyectos autorizados.</p>}
+      <ul className={styles.projects} aria-label="Proyectos autorizados" hidden={loading || Boolean(error)}>
         {projects.map((project) => {
           const path = projectPath(project.id);
           const active = currentPath === path || currentPath.startsWith(`${path}/`);
@@ -32,9 +34,16 @@ export default function ProjectNavigation({
             <li key={project.id}>
               <div className={`${styles.heading}${active ? ` ${styles.active}` : ""}`}>
                 <button className={styles.project} type="button" aria-expanded={expanded} aria-controls={childrenId}
+                  title={project.name}
                   aria-label={`${expanded ? "Contraer" : "Expandir"} proyecto ${project.name}`}
+                  onKeyDown={(event) => {
+                    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                      event.preventDefault();
+                      setExpandedProjects((current) => ({ ...current, [project.id]: event.key === "ArrowRight" }));
+                    }
+                  }}
                   onClick={() => setExpandedProjects((current) => ({ ...current, [project.id]: !expanded }))}>
-                  <span className={styles.chevron} aria-hidden="true">{expanded ? "⌄" : "›"}</span>
+                  <span className={`${styles.chevron}${expanded ? ` ${styles.expanded}` : ""}`} aria-hidden="true" />
                   <span>{project.name}</span>
                 </button>
                 {canCreateTasks && project.permissions.create_tasks && <button className={styles.create}
@@ -42,7 +51,7 @@ export default function ProjectNavigation({
                   title="Crear tarea" onClick={() => onCreateTask(project.id)}>+</button>}
               </div>
               <ul id={childrenId} className={styles.children} hidden={!expanded}>
-                <li><Link to={path} aria-current={active ? "page" : undefined}>Lista de tareas</Link></li>
+                <li><Link to={path} aria-label={`Lista de tareas de ${project.name}`} aria-current={active ? "page" : undefined}>Lista de tareas</Link></li>
               </ul>
             </li>
           );

@@ -1,7 +1,19 @@
-.modal { width: min(94vw, 690px); max-height: 90vh; padding: 0; overflow-y: auto; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-large); box-shadow: var(--shadow-card); }
+.modal { width: min(94vw, 690px); max-height: 90dvh; padding: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; color: var(--color-text); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-large); box-shadow: var(--shadow-card); }
 .modal::backdrop { background: rgb(24 36 40 / 55%); }
 .wide { width: min(94vw, 760px); max-height: 92dvh; }
 .header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 18px 22px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
-.header h2 { margin: 0; font-size: 1.05rem; overflow-wrap: anywhere; }
+.header h2 { margin: 0; font-size: 1.05rem; overflow-wrap: anywhere; text-wrap: balance; }
 .close { min-width: 40px; min-height: 40px; color: var(--color-heading); background: var(--color-surface-soft); border: 1px solid var(--color-border); border-radius: var(--radius-medium); font-size: 1.2rem; cursor: pointer; }
 .close:disabled { opacity: .6; cursor: not-allowed; }
+.close:hover:not(:disabled) { background: var(--color-hover); }
+.taskComposer { width: min(800px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow: hidden; scrollbar-gutter: auto; box-shadow: 0 16px 56px rgb(24 36 40 / 18%); }
+.taskComposer[open] { display: flex; flex-direction: column; }
+.taskComposer .header { position: static; flex: 0 0 auto; padding: 12px 24px; border-bottom-color: var(--color-border-light); }
+.taskComposer .header h2 { font-size: .92rem; font-weight: 600; }
+.taskComposer .close { min-width: 32px; min-height: 32px; border: 0; border-radius: 50%; font-size: 1.15rem; }
+@media (max-width: 600px) {
+  .modal, .wide { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }
+  .header { padding: 14px 16px; }
+  .taskComposer { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  .taskComposer .header { padding: 10px 16px; }
+}

@@ -9,7 +9,7 @@
 
 .heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
 .heading .nav-section__label { margin-bottom: 0; }
-.create { width: 28px; height: 28px; padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-small); color: var(--color-heading); background: var(--color-surface); font-size: 1.15rem; cursor: pointer; }
+.create { width: 32px; height: 32px; padding: 0; border: 1px solid var(--color-border); border-radius: var(--radius-small); color: var(--color-heading); background: var(--color-surface); font-size: 1.15rem; cursor: pointer; }
 .create:hover { background: var(--color-hover); }
 .create:disabled { opacity: .5; cursor: not-allowed; }
 .nav-section__items a[aria-current="page"] { color: var(--color-heading); background: var(--color-selected); font-weight: 650; box-shadow: inset 2px 0 var(--color-brand); }

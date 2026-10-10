@@ -23,6 +23,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const [catalogs, setCatalogs] = useState<ProjectCatalogs>({ areas: [], states: [], priorities: [] });
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [projectError, setProjectError] = useState("");
+  const [projectReload, setProjectReload] = useState(0);
   const [creating, setCreating] = useState(false);
   const [taskCreationRequest, setTaskCreationRequest] = useState<TaskCreationRequest | null>(null);
   const taskCreationSequence = useRef(0);
@@ -46,7 +47,13 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
       .catch((failure: unknown) => { if (current) setProjectError(errorText(failure)); })
       .finally(() => { if (current) setProjectsLoading(false); });
     return () => { current = false; };
-  }, [user]);
+  }, [user, projectReload]);
+
+  function retryProjects() {
+    setProjectsLoading(true);
+    setProjectError("");
+    setProjectReload((current) => current + 1);
+  }
 
   function openProjectCreation() {
     if (canCreateProject && !creationDisabled) setCreating(true);
@@ -100,6 +107,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         onCreateProject={openProjectCreation}
         projectsLoading={projectsLoading}
         projectError={projectError}
+        onRetryProjects={retryProjects}
         canCreateTasks={canCreateTasks}
         onCreateTask={openTaskCreation}
       />
