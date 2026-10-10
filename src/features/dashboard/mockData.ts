@@ -15,9 +15,6 @@ export const navigationSections: NavigationSection[] = [
     label: "G. Proyectos",
     items: [
       { label: "Resumen", path: "/proyectos/resumen" },
-      { label: "Proyectos", path: "/proyectos" },
-      { label: "Fases y actividades", path: "/proyectos/fases" },
-      { label: "Dependencias", path: "/proyectos/dependencias" },
     ],
   },
   {

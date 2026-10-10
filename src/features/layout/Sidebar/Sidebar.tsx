@@ -20,6 +20,10 @@ interface SidebarProps {
   canCreateProject: boolean;
   projectCreationDisabled: boolean;
   onCreateProject: () => void;
+  projectsLoading: boolean;
+  projectError: string;
+  canCreateTasks: boolean;
+  onCreateTask: (projectId: number) => void;
 }
 
 function Sidebar({
@@ -33,6 +37,10 @@ function Sidebar({
   canCreateProject,
   projectCreationDisabled,
   onCreateProject,
+  projectsLoading,
+  projectError,
+  canCreateTasks,
+  onCreateTask,
 }: SidebarProps) {
   const [activeModule, setActiveModule] = useState(navigationSections[0].id);
   const initials = user.name
@@ -104,7 +112,9 @@ function Sidebar({
           <div className={styles["sidebar__section-slot"]}>
             <NavSection section={activeSection} currentPath={currentPath}
               projects={projects} canCreateProject={canCreateProject}
-              projectCreationDisabled={projectCreationDisabled} onCreateProject={onCreateProject} />
+              projectCreationDisabled={projectCreationDisabled} onCreateProject={onCreateProject}
+              projectsLoading={projectsLoading} projectError={projectError}
+              canCreateTasks={canCreateTasks} onCreateTask={onCreateTask} />
           </div>
 
           {canViewAdmin && administrationItem.requiresAuthorization && (

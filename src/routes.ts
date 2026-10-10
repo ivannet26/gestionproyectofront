@@ -45,3 +45,7 @@ export const appRoutes: AppRoute[] = [
     requiresAdmin: true,
   },
 ];
+
+export function projectPath(projectId: number): string {
+  return `/proyectos/${projectId}`;
+}

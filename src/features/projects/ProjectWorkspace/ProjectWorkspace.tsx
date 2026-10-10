@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { errorText } from "../../auth/api";
 import DashboardSection from "../../dashboard/DashboardSection/DashboardSection";
 import { changeDependency, changeTaskState, createTask, getProject, getTasks, updateTask } from "../services";
-import type { Project, ProjectCatalogs, Task, TaskAction, TaskFormPayload, TaskStatePayload } from "../types";
+import type { Project, ProjectCatalogs, ProjectTaskConfiguration, Task, TaskAction, TaskFormPayload, TaskStatePayload } from "../types";
 import DependencyForm from "../DependencyForm/DependencyForm";
 import LabelList from "../LabelList/LabelList";
 import Modal from "../Modal/Modal";
@@ -16,16 +16,22 @@ import styles from "./ProjectWorkspace.module.css";
 interface ProjectWorkspaceProps {
   projectId: number;
   catalogs: ProjectCatalogs;
+  taskCreationSequence?: number;
+  onTaskCreationHandled?: (sequence: number) => void;
 }
 
-export default function ProjectWorkspace({ projectId, catalogs }: ProjectWorkspaceProps) {
+export default function ProjectWorkspace({
+  projectId, catalogs, taskCreationSequence, onTaskCreationHandled,
+}: ProjectWorkspaceProps) {
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [creationError, setCreationError] = useState("");
   const [action, setAction] = useState<TaskAction | null>(null);
   const [busy, setBusy] = useState(false);
+  const handledCreation = useRef<number | undefined>(undefined);
   const loadTasks = useCallback(async () => { setTasks(await getTasks(projectId)); }, [projectId]);
 
   useEffect(() => {
@@ -36,6 +42,24 @@ export default function ProjectWorkspace({ projectId, catalogs }: ProjectWorkspa
       .finally(() => { if (current) setLoading(false); });
     return () => { current = false; };
   }, [projectId]);
+
+  useEffect(() => {
+    if (!project || taskCreationSequence === undefined || handledCreation.current === taskCreationSequence) return;
+    let current = true;
+    void Promise.resolve().then(() => {
+      if (!current) return;
+      handledCreation.current = taskCreationSequence;
+      if (project.permissions.create_tasks) {
+        setCreationError("");
+        setMessage("");
+        setAction({ kind: "create" });
+      } else {
+        setCreationError("No tienes permiso efectivo para crear tareas en este proyecto.");
+      }
+      onTaskCreationHandled?.(taskCreationSequence);
+    });
+    return () => { current = false; };
+  }, [project, taskCreationSequence, onTaskCreationHandled]);
 
   const activeTask = action && action.kind !== "create" ? tasks.find((task) => task.id === action.taskId) : undefined;
   const activeAction = action !== null && (action.kind === "create" || activeTask !== undefined);
@@ -82,17 +106,25 @@ export default function ProjectWorkspace({ projectId, catalogs }: ProjectWorkspa
     } finally { setBusy(false); }
   }
 
+  function configured(configuration: ProjectTaskConfiguration) {
+    setProject((current) => current ? { ...current, task_states: configuration } : current);
+    setMessage("Estados del proyecto actualizados");
+    void loadTasks().catch((failure: unknown) => {
+      setMessage(`Estados guardados. No se pudo actualizar la lista: ${errorText(failure)}`);
+    });
+  }
+
   function actionForm(currentProject: Project): ReactNode {
     if (!action) return null;
     if (action.kind === "create") return <TaskForm project={currentProject} catalogs={catalogs}
-      onSubmit={save} onClose={() => setAction(null)} />;
+      onSubmit={save} onConfigured={configured} onClose={() => setAction(null)} />;
     if (!activeTask) return null;
     switch (action.kind) {
       case "edit": return <TaskForm project={currentProject} catalogs={catalogs} task={activeTask}
-        onSubmit={save} onClose={() => setAction(null)} />;
+        onSubmit={save} onConfigured={configured} onClose={() => setAction(null)} />;
       case "child": return <TaskForm project={currentProject} catalogs={catalogs} parent={activeTask}
-        onSubmit={save} onClose={() => setAction(null)} />;
-      case "state": return <TaskStateForm task={activeTask} catalogs={catalogs} onSubmit={state} />;
+        onSubmit={save} onConfigured={configured} onClose={() => setAction(null)} />;
+      case "state": return <TaskStateForm task={activeTask} states={currentProject.task_states.states} onSubmit={state} />;
       case "dependencies": return <DependencyForm task={activeTask} tasks={tasks} onChange={dependency} />;
     }
   }
@@ -120,6 +152,7 @@ export default function ProjectWorkspace({ projectId, catalogs }: ProjectWorkspa
           onClick={() => { setMessage(""); setAction({ kind: "create" }); }}>+ Nueva tarea</button>}
       </header>
       {message && <p className="form-message" role="status">{message}</p>}
+      {creationError && <p className="form-message form-message--error" role="alert">{creationError}</p>}
       {project.requirements.length > 0 && <section aria-label="Requisitos existentes del proyecto"><LabelList labels={project.requirements} /></section>}
       <DashboardSection title="Lista de trabajo" description={`${tasks.length} tareas y subtareas visibles`}>
         <div className={styles.taskList}>

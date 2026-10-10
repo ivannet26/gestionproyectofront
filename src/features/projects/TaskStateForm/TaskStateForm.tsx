@@ -1,17 +1,17 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { errorText } from "../../auth/api";
-import type { ProjectCatalogs, Task, TaskStatePayload } from "../types";
+import type { ProjectTaskState, Task, TaskStatePayload } from "../types";
 import ProjectForm from "../ProjectForm/ProjectForm";
 import formStyles from "../ProjectForm/ProjectForm.module.css";
 
 interface TaskStateFormProps {
   task: Task;
-  catalogs: ProjectCatalogs;
+  states: ProjectTaskState[];
   onSubmit: (data: TaskStatePayload) => Promise<void>;
 }
 
-export default function TaskStateForm({ task, catalogs, onSubmit }: TaskStateFormProps) {
+export default function TaskStateForm({ task, states, onSubmit }: TaskStateFormProps) {
   const [target, setTarget] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -39,7 +39,7 @@ export default function TaskStateForm({ task, catalogs, onSubmit }: TaskStateFor
           <option value="">Selecciona una transición</option>
           {task.transitions.map((item) => (
             <option value={item.target} key={item.target}>
-              {catalogs.states.find((state) => state.code === item.target)?.name ?? item.target}
+              {states.find((state) => state.code === item.target)?.name ?? item.target}
             </option>
           ))}
         </select>

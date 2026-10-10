@@ -29,7 +29,7 @@ export default function Modal({ title, onClose, busy = false, wide = false, chil
       ref={dialog}
       className={`${styles.modal}${wide ? ` ${styles.wide}` : ""}`}
       aria-labelledby={titleId}
-      onCancel={(event) => { event.preventDefault(); if (!busy) onClose(); }}
+      onCancel={(event) => { event.preventDefault(); event.stopPropagation(); if (!busy) onClose(); }}
     >
       <header className={styles.header}>
         <h2 id={titleId}>{title}</h2>

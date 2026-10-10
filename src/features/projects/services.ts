@@ -1,7 +1,8 @@
 import { apiRequest } from "../auth/api";
 import type {
   CreateProjectPayload, CreateTaskPayload, EditTaskPayload, Project,
-  ProjectCatalogs, ProjectSummary, Task, TaskStatePayload, WorkerCandidate,
+  ProjectCatalogs, ProjectSummary, ProjectTaskConfiguration, ProjectTaskConfigurationPayload,
+  Task, TaskStatePayload, WorkerCandidate,
 } from "./types";
 
 function projectRequest<T>(path = "", options: RequestInit = {}): Promise<T> {
@@ -22,6 +23,16 @@ export function getProject(projectId: number): Promise<Project> {
 
 export function getTasks(projectId: number): Promise<Task[]> {
   return projectRequest(`${projectId}/tasks/`);
+}
+
+export function getProjectTaskStates(projectId: number): Promise<ProjectTaskConfiguration> {
+  return projectRequest(`${projectId}/task-states/`);
+}
+
+export function configureProjectTaskStates(
+  projectId: number, payload: ProjectTaskConfigurationPayload,
+): Promise<ProjectTaskConfiguration> {
+  return projectRequest(`${projectId}/task-states/`, { method: "PATCH", body: JSON.stringify(payload) });
 }
 
 export function getWorkerCandidates(areaIds: number[], search: string): Promise<WorkerCandidate[]> {

@@ -44,6 +44,26 @@ export interface ProjectSummary {
 export interface Project extends ProjectSummary {
   participants: { id: number; name: string }[];
   requirements: ProjectRequirement[];
+  task_states: ProjectTaskConfiguration;
+}
+
+export interface ProjectTaskState {
+  code: string;
+  name: string;
+}
+
+export interface ProjectTaskConfiguration {
+  template: "standard" | "custom";
+  states: ProjectTaskState[];
+  available_states: ProjectTaskState[];
+  revision: string;
+  can_configure: boolean;
+}
+
+export interface ProjectTaskConfigurationPayload {
+  template: "standard" | "custom";
+  revision: string;
+  states: ProjectTaskState[];
 }
 
 export interface WorkerCandidate {
@@ -78,7 +98,9 @@ export interface Task {
   id: number;
   parent_id: number | null;
   name: string;
+  description: string;
   state_code: string;
+  state_name: string;
   priority: number;
   created_at: string;
   due_date: string;
@@ -98,6 +120,7 @@ export interface Task {
 
 export interface EditTaskPayload {
   name: string;
+  description?: string;
   priority: number;
   due_date: string;
   requirement_ids: number[];
@@ -123,3 +146,8 @@ export type TaskActionKind = "edit" | "state" | "child" | "dependencies";
 export type TaskAction =
   | { kind: "create" }
   | { kind: TaskActionKind; taskId: number };
+
+export interface TaskCreationRequest {
+  projectId: number;
+  sequence: number;
+}

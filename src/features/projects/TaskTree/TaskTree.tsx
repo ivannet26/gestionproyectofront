@@ -45,7 +45,7 @@ export default function TaskTree({ tasks, catalogs, onAction }: TaskTreeProps) {
                     </button>
                   )}
                   <strong>{task.name}</strong>
-                  <StatusBadge>{catalogs.states.find((state) => state.code === task.state_code)?.name ?? task.state_code}</StatusBadge>
+                  <StatusBadge>{task.state_name}</StatusBadge>
                   {hasActions && (
                     <details className={styles.menu}>
                       <summary aria-label={`Opciones de ${task.name}`}>⋯</summary>
@@ -66,6 +66,7 @@ export default function TaskTree({ tasks, catalogs, onAction }: TaskTreeProps) {
                   <span>Creada: {new Date(task.created_at).toLocaleDateString("es-PE")}</span>
                   {task.parent_id !== null && !ids.has(task.parent_id) && <span>Subtarea asignada</span>}
                 </div>
+                {task.description && <p className={styles.metadata}>{task.description}</p>}
                 <LabelList labels={task.labels} />
               </article>
               {children.length > 0 && <div id={`children-${task.id}`} hidden={!expanded}>{branch(children, next)}</div>}

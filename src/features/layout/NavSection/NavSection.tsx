@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 import type { NavigationSection } from '../../dashboard/mockData'
 import type { ProjectSummary } from '../../projects/types'
+import ProjectNavigation from '../../projects/ProjectNavigation/ProjectNavigation'
 import styles from './NavSection.module.css'
 
 interface NavSectionProps {
@@ -10,10 +11,15 @@ interface NavSectionProps {
   canCreateProject: boolean
   projectCreationDisabled: boolean
   onCreateProject: () => void
+  projectsLoading: boolean
+  projectError: string
+  canCreateTasks: boolean
+  onCreateTask: (projectId: number) => void
 }
 
 function NavSection({
   section, currentPath, projects, canCreateProject, projectCreationDisabled, onCreateProject,
+  projectsLoading, projectError, canCreateTasks, onCreateTask,
 }: NavSectionProps) {
   const itemsId = `${section.id}-navigation`
 
@@ -40,18 +46,8 @@ function NavSection({
           </li>
         ))}
       </ul>
-      {section.id === 'projects' && projects.length > 0 && (
-        <ul className={styles.projects} aria-label="Proyectos autorizados">
-          {projects.map((project) => (
-            <li key={project.id}>
-              <Link to={`/proyectos/${project.id}`}
-                aria-current={currentPath === `/proyectos/${project.id}` ? 'page' : undefined}>
-                {project.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      {section.id === 'projects' && <ProjectNavigation projects={projects} currentPath={currentPath}
+        loading={projectsLoading} error={projectError} canCreateTasks={canCreateTasks} onCreateTask={onCreateTask} />}
     </section>
   )
 }

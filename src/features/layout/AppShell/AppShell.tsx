@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 import type { SessionUser } from "../../auth/api";
 import { errorText } from "../../auth/api";
-import { appRoutes } from "../../../routes";
+import { appRoutes, projectPath } from "../../../routes";
 import type { AppRoute } from "../../../routes";
 import { getProjectCatalogs, getProjects } from "../../projects/services";
-import type { Project, ProjectCatalogs, ProjectSummary } from "../../projects/types";
+import type { Project, ProjectCatalogs, ProjectSummary, TaskCreationRequest } from "../../projects/types";
 import CreateProjectModal from "../../projects/CreateProjectModal/CreateProjectModal";
 import NotAvailable from "../NotAvailable/NotAvailable";
 import Sidebar from "../Sidebar/Sidebar";
@@ -24,17 +24,24 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [projectError, setProjectError] = useState("");
   const [creating, setCreating] = useState(false);
+  const [taskCreationRequest, setTaskCreationRequest] = useState<TaskCreationRequest | null>(null);
+  const taskCreationSequence = useRef(0);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const canViewAdmin = user.permissions.manage_accounts;
   const canCreateProject = user.role === "ADMINISTRADOR";
+  const canCreateTasks = user.role === "ADMINISTRADOR" || user.role === "TRABAJADOR";
   const creationDisabled = projectsLoading || Boolean(projectError);
 
   useEffect(() => {
     let current = true;
     void Promise.all([getProjects(), getProjectCatalogs()])
       .then(([items, options]) => {
-        if (current) { setProjects(items); setCatalogs(options); setProjectError(""); }
+        if (current) {
+          setProjects(items);
+          setCatalogs(options);
+          setProjectError("");
+        }
       })
       .catch((failure: unknown) => { if (current) setProjectError(errorText(failure)); })
       .finally(() => { if (current) setProjectsLoading(false); });
@@ -48,7 +55,19 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   function projectCreated(project: Project) {
     setProjects((current) => [project, ...current.filter((item) => item.id !== project.id)]);
     setCreating(false);
-    void navigate(`/proyectos/${project.id}`);
+    void navigate(projectPath(project.id));
+  }
+
+  function openTaskCreation(projectId: number) {
+    const project = projects.find((item) => item.id === projectId);
+    if (!canCreateTasks || projectsLoading || !project?.permissions.create_tasks) return;
+    taskCreationSequence.current += 1;
+    setTaskCreationRequest({ projectId, sequence: taskCreationSequence.current });
+    void navigate(projectPath(projectId));
+  }
+
+  function taskCreationHandled(sequence: number) {
+    setTaskCreationRequest((current) => current?.sequence === sequence ? null : current);
   }
 
   function routeElement(route: AppRoute) {
@@ -58,7 +77,8 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         onCreateProject={canCreateProject ? openProjectCreation : undefined} creationDisabled={creationDisabled} />;
       case "projectList": return <route.Component projects={projects} loading={projectsLoading}
         error={projectError} canCreate={canCreateProject} creationDisabled={creationDisabled} onCreate={openProjectCreation} />;
-      case "project": return <route.Component catalogs={catalogs} catalogLoading={projectsLoading} catalogError={projectError} />;
+      case "project": return <route.Component catalogs={catalogs} catalogLoading={projectsLoading}
+        catalogError={projectError} taskCreationRequest={taskCreationRequest} onTaskCreationHandled={taskCreationHandled} />;
       case "accounts": return <route.Component />;
     }
   }
@@ -78,6 +98,10 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         canCreateProject={canCreateProject}
         projectCreationDisabled={creationDisabled}
         onCreateProject={openProjectCreation}
+        projectsLoading={projectsLoading}
+        projectError={projectError}
+        canCreateTasks={canCreateTasks}
+        onCreateTask={openTaskCreation}
       />
       <div className={styles["app-content"]}>
         {logoutError && (

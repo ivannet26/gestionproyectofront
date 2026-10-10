@@ -1,0 +1,12 @@
+.loading { margin: 0; padding: 22px; }
+.standard { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.standard li { padding: 6px 9px; border: 1px solid var(--color-border); border-radius: var(--radius-medium); font-size: .78rem; }
+.states { display: grid; gap: 8px; max-height: 35dvh; overflow-y: auto; margin: 0; padding: 2px; list-style: none; }
+.state { display: flex; align-items: end; gap: 10px; }
+.state > div:first-child { display: grid; flex: 1; min-width: 0; gap: 4px; }
+.controls { display: flex; gap: 4px; }
+.controls button { min-width: 34px; min-height: 40px; border: 1px solid var(--color-border); border-radius: var(--radius-medium); color: var(--color-heading); background: var(--color-surface-soft); cursor: pointer; }
+.controls button:hover { background: var(--color-hover); }
+.add { display: flex; align-items: end; flex-wrap: wrap; gap: 8px; }
+.add > div { flex: 1; min-width: 140px; }
+@media (max-width: 480px) { .add { flex-direction: column; align-items: stretch; } }
