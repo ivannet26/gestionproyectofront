@@ -1,4 +1,4 @@
-export type TaskIconName = "state" | "person" | "date" | "priority" | "labels" | "settings" | "check";
+export type TaskIconName = "state" | "person" | "date" | "priority" | "labels" | "settings" | "check" | "area" | "previous" | "next";
 
 export default function TaskIcon({ name }: { name: TaskIconName }) {
   return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -10,5 +10,8 @@ export default function TaskIcon({ name }: { name: TaskIconName }) {
     {name === "labels" && <><path d="m3 12 9 9 9-9-9-9H3z" /><circle cx="8" cy="8" r="1" /></>}
     {name === "settings" && <><path d="M3 7h4m6 0h8M3 17h10m6 0h2" /><circle cx="10" cy="7" r="3" /><circle cx="16" cy="17" r="3" /></>}
     {name === "check" && <path d="m5 12 4 4L19 6" />}
+    {name === "area" && <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 7h2m4 0h2M8 11h2m4 0h2M10 21v-6h4v6" /></>}
+    {name === "previous" && <path d="m14 6-6 6 6 6" />}
+    {name === "next" && <path d="m10 6 6 6-6 6" />}
   </svg>;
 }

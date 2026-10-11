@@ -8,10 +8,11 @@ interface ModalProps {
   busy?: boolean;
   wide?: boolean;
   taskComposer?: boolean;
+  projectComposer?: boolean;
   children: ReactNode;
 }
 
-export default function Modal({ title, onClose, busy = false, wide = false, taskComposer = false, children }: ModalProps) {
+export default function Modal({ title, onClose, busy = false, wide = false, taskComposer = false, projectComposer = false, children }: ModalProps) {
   const dialog = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -29,10 +30,10 @@ export default function Modal({ title, onClose, busy = false, wide = false, task
   return (
     <dialog
       ref={dialog}
-      className={`${styles.modal}${wide ? ` ${styles.wide}` : ""}${taskComposer ? ` ${styles.taskComposer}` : ""}`}
+      className={`${styles.modal}${wide ? ` ${styles.wide}` : ""}${taskComposer ? ` ${styles.taskComposer}` : ""}${projectComposer ? ` ${styles.projectComposer}` : ""}`}
       aria-labelledby={titleId}
       onKeyDown={(event) => {
-        if (taskComposer && event.key === "Tab" && event.target instanceof HTMLElement
+        if ((taskComposer || projectComposer) && event.key === "Tab" && event.target instanceof HTMLElement
           && event.target.closest("dialog") === event.currentTarget) {
           const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>(
             'button, input, textarea, select, a[href], summary, [tabindex]:not([tabindex="-1"])',

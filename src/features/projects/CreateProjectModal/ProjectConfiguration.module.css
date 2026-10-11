@@ -1,7 +1,6 @@
 .summary { display: grid; gap: 5px; overflow-wrap: anywhere; }
 .summary > strong { font-size: .96rem; }
-.configuration { display: grid; grid-template-columns: .9fr 1.1fr; gap: 16px; align-items: start; }
-.permission { display: grid; gap: 7px; padding: 12px; border: 1px solid var(--color-border); border-radius: var(--radius-medium); font-size: .82rem; }
+.permission { display: grid; gap: 6px; padding-block: 14px; border-block: 1px solid var(--color-border-light); font-size: .8125rem; }
 .permissionHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .switch { flex: 0 0 auto; width: 48px; height: 32px; padding: 6px 4px; border: 0; border-radius: 20px; background: #899397; cursor: pointer; }
 .switch span { display: block; width: 20px; height: 20px; border-radius: 50%; background: var(--color-white); transition: transform .15s; }
@@ -18,7 +17,6 @@
 .results input { accent-color: var(--color-brand); }
 .results small { display: block; margin-top: 3px; color: var(--color-text-muted); }
 @media (max-width: 600px) {
-  .configuration, .assigned { grid-template-columns: 1fr; }
-  .search { flex-direction: column; }
+  .assigned { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { .switch span { transition: none; } }

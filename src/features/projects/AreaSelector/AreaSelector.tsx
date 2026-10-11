@@ -1,6 +1,8 @@
-import { useId } from "react";
+import { useState } from "react";
 import type { ProjectArea } from "../types";
-import styles from "./AreaSelector.module.css";
+import TaskProperty from "../TaskForm/TaskProperty";
+import TaskIcon from "../TaskForm/TaskIcon";
+import styles from "../TaskForm/TaskProperties.module.css";
 
 interface AreaSelectorProps {
   options: ProjectArea[];
@@ -10,49 +12,33 @@ interface AreaSelectorProps {
 }
 
 export default function AreaSelector({ options, selected, onChange, error = "" }: AreaSelectorProps) {
-  const selectId = "project-areas";
-  const hintId = useId();
-  const remaining = options.filter((area) => !selected.includes(area.id));
-  const atLimit = selected.length >= 100;
-  const placeholder = options.length === 0 ? "No hay áreas disponibles"
-    : atLimit ? "Máximo de áreas alcanzado"
-    : remaining.length === 0 ? "Todas las áreas seleccionadas" : "Seleccionar un área…";
+  const [search, setSearch] = useState("");
+  const area = options.find((item) => item.id === selected[0]);
+  const results = options.filter((item) => item.name.toLocaleLowerCase("es")
+    .includes(search.trim().toLocaleLowerCase("es")));
 
   return (
-    <div className={styles.selector}>
-      <label htmlFor={selectId}>Áreas participantes *</label>
-      <select
-        id={selectId}
-        name="area_ids"
-        value=""
-        required={selected.length === 0}
-        disabled={remaining.length === 0 || atLimit}
-        aria-invalid={Boolean(error)}
-        aria-describedby={`${hintId}${error ? " project-areas-error" : ""}`}
-        onChange={(event) => {
-          const id = Number(event.target.value);
-          if (remaining.some((area) => area.id === id)) onChange([...selected, id]);
-        }}
-      >
-        <option value="">{placeholder}</option>
-        {remaining.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}
-      </select>
-      <p id={hintId} className="field-hint">Selecciona una o más áreas. Puedes retirarlas antes de continuar.</p>
-      {error && <p id="project-areas-error" className={styles.error}>{error}</p>}
-      {selected.length > 0 && (
-        <ul className={styles.selected} aria-label="Áreas seleccionadas">
-          {selected.map((id) => {
-            const area = options.find((item) => item.id === id);
-            return (
-              <li key={id}>
-                <span>{area?.name ?? "Área no disponible"}</span>
-                <button type="button" aria-label={`Retirar área ${area?.name ?? id}`}
-                  onClick={() => onChange(selected.filter((item) => item !== id))}>×</button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
+    <TaskProperty id="project-areas" label="Área obligatoria" icon="area" error={error}
+      value={area?.name ?? "Área *"}>
+      {(close) => <>
+        <label htmlFor="project-area-search">Buscar área</label>
+        <input id="project-area-search" name="area_search" type="search" autoComplete="off"
+          maxLength={100} placeholder="Buscar por nombre…" value={search}
+          onChange={(event) => setSearch(event.target.value)} />
+        <div className={styles.options} role="group" aria-label="Áreas disponibles">
+          {results.map((item) => <button key={item.id} type="button" className={styles.option}
+            aria-pressed={selected[0] === item.id} onClick={() => {
+              if (selected[0] !== item.id) onChange([item.id]);
+              close();
+            }}>
+            <span>{item.name}</span>{selected[0] === item.id && <TaskIcon name="check" />}
+          </button>)}
+          {results.length === 0 && <p className={styles.hint} role="status">{options.length === 0
+            ? "No hay áreas disponibles." : "No hay áreas que coincidan."}</p>}
+        </div>
+        {selected.length > 0 && <button type="button" className={styles.done}
+          onClick={() => { onChange([]); close(); }}>Quitar selección</button>}
+      </>}
+    </TaskProperty>
   );
 }

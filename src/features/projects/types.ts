@@ -87,7 +87,7 @@ export interface ProjectDraft {
 export interface CreateProjectPayload {
   name: string;
   description: string;
-  end_date: string;
+  end_date: string | null;
   area_ids: number[];
   mode: ProjectMode;
   worker_ids: number[];

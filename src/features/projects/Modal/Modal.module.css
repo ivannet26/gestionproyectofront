@@ -11,9 +11,16 @@
 .taskComposer .header { position: static; flex: 0 0 auto; padding: 12px 24px; border-bottom-color: var(--color-border-light); }
 .taskComposer .header h2 { font-size: .92rem; font-weight: 600; }
 .taskComposer .close { min-width: 32px; min-height: 32px; border: 0; border-radius: 50%; font-size: 1.15rem; }
+.projectComposer { width: min(800px, calc(100vw - 32px)); max-height: calc(100dvh - 48px); overflow: hidden; scrollbar-gutter: auto; box-shadow: 0 16px 56px rgb(24 36 40 / 18%); }
+.projectComposer[open] { display: flex; flex-direction: column; }
+.projectComposer .header { position: static; flex: 0 0 auto; padding: 12px 24px; border-bottom-color: var(--color-border-light); }
+.projectComposer .header h2 { font-size: .92rem; font-weight: 600; }
+.projectComposer .close { min-width: 32px; min-height: 32px; border: 0; border-radius: 50%; font-size: 1.15rem; }
 @media (max-width: 600px) {
   .modal, .wide { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); }
   .header { padding: 14px 16px; }
   .taskComposer { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
   .taskComposer .header { padding: 10px 16px; }
+  .projectComposer { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); }
+  .projectComposer .header { padding: 10px 16px; }
 }
