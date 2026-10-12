@@ -3,11 +3,39 @@ import FolderIcon from "../../shared/icons/FolderIcon";
 import HomeIcon from "../../shared/icons/HomeIcon";
 import TeamsIcon from "../../shared/icons/TeamsIcon";
 
+<<<<<<< HEAD
 export const navigation = [
   { label: "Inicio", path: "/", icon: HomeIcon },
   { label: "Trabajadores", path: "/trabajadores", icon: TeamsIcon },
   { label: "Organización", path: "/organizacion", icon: FolderIcon },
   { label: "Administración", path: "/administracion", icon: AdminIcon },
+=======
+export interface NavigationSection {
+  id: string
+  label: string
+  items: NavigationItem[]
+}
+
+export const navigationSections: NavigationSection[] = [
+  {
+    id: "projects",
+    label: "G. Proyectos",
+    items: [
+      { label: "Resumen", path: "/proyectos/resumen" },
+    ],
+  },
+  {
+    id: "equipment",
+    label: "G. Equipos",
+    items: [
+      { label: "Resumen", path: "/equipos/resumen" },
+      { label: "Trabajadores", path: "/equipos/trabajadores" },
+      { label: "Equipos", path: "/equipos/lista" },
+      { label: "Disponibilidad", path: "/equipos/disponibilidad" },
+      { label: "Asignaciones y carga", path: "/equipos/asignaciones" },
+    ],
+  },
+>>>>>>> 47dc5b9c738548e13591fced629cd8c8aa1effdc
 ];
 
 export const portfolioSummary = {

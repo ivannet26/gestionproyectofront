@@ -1,0 +1,4 @@
+.workspace h1, .workspace :global(.page-header__copy) { overflow-wrap: anywhere; min-width: 0; }
+.taskList { padding: 20px; min-width: 0; }
+.taskList > p { margin: 0; font-size: .86rem; }
+@media (max-width: 600px) { .taskList { padding: 12px; } }

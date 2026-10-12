@@ -13,7 +13,12 @@ import KpiCard from "../KpiCard/KpiCard";
 import ProgressBar from "../../../shared/ProgressBar/ProgressBar";
 import StatusBadge from "../../../shared/StatusBadge/StatusBadge";
 
-function DashboardPage() {
+export interface DashboardPageProps {
+  onCreateProject?: () => void;
+  creationDisabled?: boolean;
+}
+
+function DashboardPage({ onCreateProject, creationDisabled = false }: DashboardPageProps) {
   return (
     <main id="main-content" className="dashboard">
       <header className="page-header">
@@ -29,10 +34,11 @@ function DashboardPage() {
             equipos desde un solo lugar.
           </p>
         </div>
-        <button className="primary-button" type="button">
+        {onCreateProject && <button className="primary-button" type="button"
+          disabled={creationDisabled} onClick={onCreateProject}>
           <span aria-hidden="true">+</span>
           Nuevo proyecto
-        </button>
+        </button>}
       </header>
 
       <section className={styles["kpi-zone"]} aria-labelledby="kpi-heading">

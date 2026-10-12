@@ -1,0 +1,27 @@
+.form { display: grid; gap: 12px; padding: 22px; }
+.fields { display: grid; gap: 12px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.form label, .form legend { font-size: .82rem; font-weight: 600; }
+.form input:not([type="checkbox"]):not([type="radio"]), .form select, .form textarea { width: 100%; min-height: 40px; padding: 9px 11px; color: var(--color-heading); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-medium); font: inherit; font-size: .84rem; }
+.form textarea { min-height: 85px; resize: vertical; }
+.form :where(input, select, textarea, button, [tabindex]):focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.field { display: grid; gap: 7px; min-width: 0; }
+.row { display: flex; align-items: end; gap: 12px; }
+.row > div { flex: 1; min-width: 0; display: grid; gap: 8px; }
+.actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.options { display: grid; gap: 10px; margin: 5px 0; padding: 14px; border: 1px solid var(--color-border); border-radius: var(--radius-medium); min-width: 0; }
+.options label { display: flex; align-items: flex-start; gap: 9px; font-weight: 400; }
+.options input { flex: 0 0 auto; accent-color: var(--color-brand); }
+.options small { display: block; margin-top: 3px; color: var(--color-text-muted); }
+.secondary { min-height: 40px; padding: 8px 12px; color: var(--color-heading); background: var(--color-surface-soft); border: 1px solid var(--color-border); border-radius: var(--radius-medium); font-size: .82rem; cursor: pointer; }
+.secondary:hover { background: var(--color-hover); }
+.form button:disabled { opacity: .6; cursor: not-allowed; }
+.compact .fields { gap: 16px; }
+.compact textarea { min-height: 58px; max-height: 120px; }
+.compact :global(.field-hint) { margin: 0; line-height: 1.45; }
+.compact .options { margin: 0; padding: 12px; }
+.compact .actions { gap: 9px; margin-top: 2px; }
+@media (max-width: 600px) {
+  .row { flex-direction: column; align-items: stretch; }
+  .actions { flex-direction: column; }
+  .form { padding: 16px; }
+}

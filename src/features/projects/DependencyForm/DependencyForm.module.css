@@ -1,0 +1,4 @@
+.intro { margin: 0; font-size: .84rem; line-height: 1.6; }
+.list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.list span { min-width: 0; overflow-wrap: anywhere; }
