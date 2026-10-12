@@ -1,43 +1,14 @@
-export interface NavigationItem {
-  label: string
-  path: string
-}
+import AdminIcon from "../../shared/icons/AdminIcon";
+import FolderIcon from "../../shared/icons/FolderIcon";
+import HomeIcon from "../../shared/icons/HomeIcon";
+import TeamsIcon from "../../shared/icons/TeamsIcon";
 
-export interface NavigationSection {
-  id: string
-  label: string
-  items: NavigationItem[]
-}
-
-export const navigationSections: NavigationSection[] = [
-  {
-    id: "projects",
-    label: "G. Proyectos",
-    items: [
-      { label: "Resumen", path: "/proyectos/resumen" },
-      { label: "Proyectos", path: "/proyectos/lista" },
-      { label: "Fases y actividades", path: "/proyectos/fases" },
-      { label: "Dependencias", path: "/proyectos/dependencias" },
-    ],
-  },
-  {
-    id: "equipment",
-    label: "G. Equipos",
-    items: [
-      { label: "Resumen", path: "/equipos/resumen" },
-      { label: "Trabajadores", path: "/equipos/trabajadores" },
-      { label: "Equipos", path: "/equipos/lista" },
-      { label: "Disponibilidad", path: "/equipos/disponibilidad" },
-      { label: "Asignaciones y carga", path: "/equipos/asignaciones" },
-    ],
-  },
+export const navigation = [
+  { label: "Inicio", path: "/", icon: HomeIcon },
+  { label: "Trabajadores", path: "/trabajadores", icon: TeamsIcon },
+  { label: "Organización", path: "/organizacion", icon: FolderIcon },
+  { label: "Administración", path: "/administracion", icon: AdminIcon },
 ];
-
-export const administrationItem = {
-  id: "administration",
-  label: "Administración",
-  requiresAuthorization: true,
-};
 
 export const portfolioSummary = {
   totalProjects: 18,

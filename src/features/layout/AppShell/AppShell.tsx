@@ -26,7 +26,6 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
         user={user}
         onLogout={onLogout}
-        canViewAdmin={canViewAdmin}
         currentPath={pathname}
       />
       <div className={styles["app-content"]}>

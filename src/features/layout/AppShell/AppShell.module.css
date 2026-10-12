@@ -2,7 +2,7 @@
   display: grid;
   grid-template-columns: 270px minmax(0, 1fr);
   min-height: 100vh;
-  background: var(--color-page);
+  background: white;
 }
 
 .app-shell:global(.sidebar--collapsed) {

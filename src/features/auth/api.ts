@@ -119,6 +119,7 @@ export async function refreshSession(): Promise<SessionUser> {
         headers: { "X-CSRFToken": csrfCookie() },
       });
       const payload = await parseResponse<AuthPayload>(response);
+      localStorage.setItem("token", payload.access!);
       accessToken = payload.access ?? null;
       return payload.user;
     })().finally(() => {
@@ -156,6 +157,10 @@ export async function logout(): Promise<void> {
 
 export function clearAccess(): void {
   accessToken = null;
+}
+
+export function getAccessToken(): string | null {
+  return accessToken;
 }
 
 export async function apiRequest<T>(
