@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import styles from "./StatusBadge.module.css";
 
 interface StatusBadgeProps {
   children: ReactNode;
@@ -7,9 +6,14 @@ interface StatusBadgeProps {
 }
 
 function StatusBadge({ children, tone = "neutral" }: StatusBadgeProps) {
+  const muted = tone === "neutral";
   return (
     <span
-      className={`${styles["status-badge"]} ${styles[`status-badge--${tone}`]}`}
+      className={`inline-flex items-center min-h-6 px-3 py-1 text-xs font-semibold whitespace-nowrap border border-neutral-200 shadow-none ${
+        muted
+          ? "text-neutral-600 bg-neutral-50"
+          : "text-neutral-900 bg-neutral-100"
+      }`}
     >
       {children}
     </span>

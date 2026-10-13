@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import type { Account, Area, RecoveryRequest } from "../api";
 import { apiRequest, errorText } from "../api";
 import InvitationForm from "../InvitationForm/InvitationForm";
-import styles from "./AdminAccountsPage.module.css";
 import { roleLabel } from "../roles";
 
 interface DetailResult {
@@ -84,43 +83,43 @@ export default function AdminAccountsPage() {
   }
 
   return (
-    <main className={`dashboard ${styles["account-page"]}`} id="main-content">
-      <header className="page-header">
-        <div className="page-header__copy">
-          <nav className="breadcrumb" aria-label="Ruta de navegación">
-            <ol>
+    <main className="min-h-screen bg-neutral-50 text-neutral-900 p-6" id="main-content">
+      <header className="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div className="max-w-2xl">
+          <nav className="text-xs text-neutral-600" aria-label="Ruta de navegación">
+            <ol className="flex gap-2 m-0 p-0 list-none">
               <li>Administración</li>
             </ol>
           </nav>
-          <h1>Cuentas y accesos</h1>
-          <p>
+          <h1 className="m-0 mt-1 text-xl font-semibold text-neutral-900">Cuentas y accesos</h1>
+          <p className="m-0 mt-1 text-sm text-neutral-600">
             Registra trabajadores, asigna sus áreas y gestiona el acceso al
             sistema.
           </p>
         </div>
       </header>
       {error && (
-        <p className="form-message form-message--error" role="alert">
+        <p className="border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-none" role="alert">
           {error}
         </p>
       )}
       {message && (
-        <p className="form-message" role="status">
+        <p className="border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 shadow-none" role="status">
           {message}
         </p>
       )}
       {loading ? (
-        <p role="status">Cargando cuentas…</p>
+        <p role="status" className="text-sm text-neutral-600">Cargando cuentas…</p>
       ) : (
-        <div className={styles["account-grid"]}>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <section
-            className={`dashboard-section ${styles["account-panel"]}`}
+            className="bg-white border border-neutral-200 shadow-none"
             aria-labelledby="invite-title"
           >
-            <div className="dashboard-section__header">
+            <div className="px-5 pt-5 pb-0">
               <div>
-                <h2 id="invite-title">Registrar e invitar</h2>
-                <p>
+                <h2 id="invite-title" className="m-0 text-base font-semibold text-neutral-900">Registrar e invitar</h2>
+                <p className="m-0 mt-1 text-sm text-neutral-600">
                   La cuenta quedará pendiente hasta que se defina la contraseña.
                 </p>
               </div>
@@ -133,23 +132,23 @@ export default function AdminAccountsPage() {
             />
           </section>
           <section
-            className={`dashboard-section ${styles["account-panel"]}`}
+            className="bg-white border border-neutral-200 shadow-none"
             aria-labelledby="recovery-title"
           >
-            <div className="dashboard-section__header">
+            <div className="px-5 pt-5 pb-0">
               <div>
-                <h2 id="recovery-title">Solicitudes de recuperación</h2>
-                <p>Verifica la identidad antes de emitir un enlace.</p>
+                <h2 id="recovery-title" className="m-0 text-base font-semibold text-neutral-900">Solicitudes de recuperación</h2>
+                <p className="m-0 mt-1 text-sm text-neutral-600">Verifica la identidad antes de emitir un enlace.</p>
               </div>
             </div>
-            <div className={styles["account-list"]}>
-              {requests.length === 0 && <p>No hay solicitudes pendientes.</p>}
+            <div className="px-5 py-4">
+              {requests.length === 0 && <p className="text-sm text-neutral-600">No hay solicitudes pendientes.</p>}
               {requests.map((entry) => (
-                <div className={styles["account-row"]} key={entry.id}>
-                  <div>
-                    <strong>{entry.name}</strong>
-                    <small>{entry.email}</small>
-                    <small>
+                <div className="flex items-center justify-between gap-4 py-3 border-b border-neutral-200 last:border-b-0" key={entry.id}>
+                  <div className="min-w-0">
+                    <strong className="block text-sm text-neutral-900">{entry.name}</strong>
+                    <small className="block mt-0.5 text-xs text-neutral-600">{entry.email}</small>
+                    <small className="block mt-0.5 text-xs text-neutral-600">
                       Solicitada:{" "}
                       {new Date(entry.requested_at).toLocaleString("es-PE")}
                     </small>
@@ -158,6 +157,7 @@ export default function AdminAccountsPage() {
                     type="button"
                     disabled={busy}
                     onClick={() => issueReset(entry.id)}
+                    className="px-3 py-2 text-neutral-900 bg-neutral-100 border border-neutral-200 text-sm whitespace-nowrap cursor-pointer shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     Verificar y enviar
                   </button>
@@ -166,30 +166,30 @@ export default function AdminAccountsPage() {
             </div>
           </section>
           <section
-            className={`dashboard-section ${styles["account-panel"]} ${styles["account-panel--wide"]}`}
+            className="bg-white border border-neutral-200 shadow-none lg:col-span-2"
             aria-labelledby="accounts-title"
           >
-            <div className="dashboard-section__header">
+            <div className="px-5 pt-5 pb-0">
               <div>
-                <h2 id="accounts-title">Cuentas</h2>
-                <p>Estado y rol global de las cuentas vinculadas.</p>
+                <h2 id="accounts-title" className="m-0 text-base font-semibold text-neutral-900">Cuentas</h2>
+                <p className="m-0 mt-1 text-sm text-neutral-600">Estado y rol global de las cuentas vinculadas.</p>
               </div>
             </div>
-            <div className={styles["account-list"]}>
-              {accounts.length === 0 && <p>No hay cuentas registradas.</p>}
+            <div className="px-5 py-4">
+              {accounts.length === 0 && <p className="text-sm text-neutral-600">No hay cuentas registradas.</p>}
               {accounts.map((account) => (
-                <div className={styles["account-row"]} key={account.id}>
-                  <div>
-                    <strong>{account.name}</strong>
-                    <small>{account.email}</small>
-                    <small>
+                <div className="flex items-center justify-between gap-4 py-3 border-b border-neutral-200 last:border-b-0 max-sm:flex-col max-sm:items-start" key={account.id}>
+                  <div className="min-w-0">
+                    <strong className="block text-sm text-neutral-900">{account.name}</strong>
+                    <small className="block mt-0.5 text-xs text-neutral-600">{account.email}</small>
+                    <small className="block mt-0.5 text-xs text-neutral-600">
                       {account.all_areas
                         ? "Todas las áreas activas"
                         : account.areas.map((area) => area.name).join(", ") ||
                           "Sin áreas activas"}
                     </small>
                   </div>
-                  <div className={styles["account-row__meta"]}>
+                  <div className="flex flex-wrap gap-3 mt-0.5 text-xs text-neutral-600">
                     <span>{roleLabel(account.role)}</span>
                     <span>{account.active ? "Activa" : "Pendiente"}</span>
                     {!account.active && (
@@ -204,6 +204,7 @@ export default function AdminAccountsPage() {
                       type="button"
                       disabled={busy}
                       onClick={() => resend(account.id)}
+                      className="px-3 py-2 text-neutral-900 bg-neutral-100 border border-neutral-200 text-sm whitespace-nowrap cursor-pointer shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       Reenviar invitación
                     </button>

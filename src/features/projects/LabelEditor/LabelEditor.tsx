@@ -1,8 +1,7 @@
 import { useId, useState } from "react";
 import type { Label, LabelKind } from "../types";
 import LabelList from "../LabelList/LabelList";
-import formStyles from "../ProjectForm/ProjectForm.module.css";
-import styles from "./LabelEditor.module.css";
+import { fieldClass, inputClass, labelClass, secondaryButtonClass } from "../ProjectForm/ProjectForm";
 
 interface LabelEditorProps {
   title: string;
@@ -31,23 +30,23 @@ export default function LabelEditor({ title, labels, onChange }: LabelEditorProp
   }
 
   return (
-    <fieldset className={formStyles.options}>
-      <legend>{title}</legend>
-      <div className={styles.editor}>
-        <div className={formStyles.field}>
-          <label htmlFor={nameId}>Etiqueta</label>
-          <input id={nameId} value={name} maxLength={120} onChange={(event) => setName(event.target.value)}
+    <fieldset className="grid gap-2.5 p-3.5 border border-neutral-200 shadow-none min-w-0">
+      <legend className="text-sm font-semibold text-neutral-900">{title}</legend>
+      <div className="grid grid-cols-1 gap-2.5 items-end sm:grid-cols-[1fr_1fr_auto]">
+        <div className={fieldClass}>
+          <label htmlFor={nameId} className={labelClass}>Etiqueta</label>
+          <input id={nameId} value={name} maxLength={120} onChange={(event) => setName(event.target.value)} className={inputClass}
             onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); addLabel(); } }} />
         </div>
-        <div className={formStyles.field}>
-          <label htmlFor={kindId}>Clasificación</label>
-          <select id={kindId} value={kind} onChange={(event) => setKind(event.target.value === "technical" ? "technical" : "nontechnical")}>
+        <div className={fieldClass}>
+          <label htmlFor={kindId} className={labelClass}>Clasificación</label>
+          <select id={kindId} value={kind} onChange={(event) => setKind(event.target.value === "technical" ? "technical" : "nontechnical")} className={inputClass}>
             <option value="technical">Técnica</option><option value="nontechnical">No técnica</option>
           </select>
         </div>
-        <button type="button" className={formStyles.secondary} onClick={addLabel}>Agregar</button>
+        <button type="button" className={secondaryButtonClass} onClick={addLabel}>Agregar</button>
       </div>
-      {error && <p className="form-message form-message--error" role="alert">{error}</p>}
+      {error && <p className="border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-none" role="alert">{error}</p>}
       <LabelList labels={labels} onRemove={(index) => onChange(labels.filter((_, position) => position !== index))} />
     </fieldset>
   );

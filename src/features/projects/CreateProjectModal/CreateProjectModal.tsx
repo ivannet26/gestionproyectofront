@@ -5,9 +5,8 @@ import { createProject, getWorkerCandidates } from "../services";
 import type { Project, ProjectCatalogs, ProjectDraft, WorkerCandidate } from "../types";
 import AreaSelector from "../AreaSelector/AreaSelector";
 import Modal from "../Modal/Modal";
-import ProjectForm from "../ProjectForm/ProjectForm";
+import ProjectForm, { fieldClass, inputClass, labelClass, primaryButtonClass, secondaryButtonClass } from "../ProjectForm/ProjectForm";
 import ProjectConfiguration from "./ProjectConfiguration";
-import formStyles from "../ProjectForm/ProjectForm.module.css";
 
 interface CreateProjectModalProps {
   catalogs: ProjectCatalogs;
@@ -101,10 +100,10 @@ export default function CreateProjectModal({ catalogs, onClose, onCreated }: Cre
     <Modal title={`Crear proyecto · Paso ${step} de 2`} onClose={onClose} busy={busy} wide>
       <ProjectForm busy={busy} error={error} compact onSubmit={submit} actions={
         <>
-          <button type="button" className={formStyles.secondary} disabled={busy} onClick={onClose}>Cancelar</button>
-          {step === 2 && <button type="button" className={formStyles.secondary} disabled={busy}
+          <button type="button" className={secondaryButtonClass} disabled={busy} onClick={onClose}>Cancelar</button>
+          {step === 2 && <button type="button" className={secondaryButtonClass} disabled={busy}
             onClick={() => { setError(""); setStep(1); }}>Volver</button>}
-          <button type="submit" className="primary-button"
+          <button type="submit" className={primaryButtonClass}
             disabled={busy || catalogs.areas.length === 0 || (step === 2 && draft.mode === "assigned" && searching)}>
             {busy ? "Creando…" : step === 1 ? "Continuar" : draft.mode === "available"
               ? "Publicar dentro del sistema" : "Crear con asignados"}
@@ -113,14 +112,14 @@ export default function CreateProjectModal({ catalogs, onClose, onCreated }: Cre
       }>
         {step === 1 ? (
           <>
-            <div className={formStyles.field}>
-              <label htmlFor="project-name">Nombre *</label>
-              <input id="project-name" ref={nameInput} value={draft.name} maxLength={180} required
+            <div className={fieldClass}>
+              <label htmlFor="project-name" className={labelClass}>Nombre *</label>
+              <input id="project-name" ref={nameInput} value={draft.name} maxLength={180} required className={inputClass}
                 onChange={(event) => updateDraft({ name: event.target.value })} />
             </div>
-            <div className={formStyles.field}>
-              <label htmlFor="project-description">Descripción <span className="field-hint">(opcional)</span></label>
-              <textarea id="project-description" rows={2} maxLength={10000} value={draft.description}
+            <div className={fieldClass}>
+              <label htmlFor="project-description" className={labelClass}>Descripción <span className="text-xs text-neutral-600 font-normal">(opcional)</span></label>
+              <textarea id="project-description" rows={2} maxLength={10000} value={draft.description} className={inputClass}
                 onChange={(event) => updateDraft({ description: event.target.value })} />
             </div>
             <AreaSelector options={catalogs.areas} selected={draft.areaIds}

@@ -8,7 +8,6 @@ import type {
   Worker,
   WorkerUpdateData,
 } from "../../core/interfaces/worker.interface";
-import styles from "./WorkersPage.module.css";
 
 function WorkersPage() {
   const { data, error, loading, refetch } = useWorkers();
@@ -30,62 +29,57 @@ function WorkersPage() {
   };
 
   return (
-    <main className="dashboard" id="main-content">
-      <header className="page-header">
-        <div className={styles["workers-header"]}>
-          <h2>Gestión de Trabajadores</h2>
-          <p>Listado de trabajadores registrados y su disponibilidad.</p>
+    <main className="min-h-screen bg-neutral-50 text-neutral-900 p-6" id="main-content">
+      <header className="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div className="max-w-[680px]">
+          <h2 className="m-0 text-xl font-semibold text-neutral-900">Gestión de Trabajadores</h2>
+          <p className="m-0 mt-1 text-sm text-neutral-600">Listado de trabajadores registrados y su disponibilidad.</p>
         </div>
       </header>
       {error && (
-        <p className="form-message form-message--error" role="alert">
+        <p className="border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-none" role="alert">
           {error.message}
         </p>
       )}
       {loading ? (
-        <p role="status">Cargando trabajadores…</p>
+        <p role="status" className="text-sm text-neutral-600">Cargando trabajadores…</p>
       ) : data.length === 0 && !error ? (
-        <p role="status">No hay trabajadores registrados.</p>
+        <p role="status" className="text-sm text-neutral-600">No hay trabajadores registrados.</p>
       ) : (
-        <section>
-          <div className="data-table-wrap">
-            <table className="data-table">
-              <caption className="sr-only">
-                Listado de trabajadores
-              </caption>
+        <section className="bg-white border border-neutral-200 shadow-none">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full border-collapse text-sm text-neutral-600 text-left">
+              <caption className="sr-only">Listado de trabajadores</caption>
               <thead>
-                <tr>
-                  <th scope="col">Código</th>
-                  <th scope="col">Trabajador</th>
-                  <th scope="col">Correo</th>
-                  <th scope="col">Área</th>
-                  <th scope="col">Horas/sem</th>
-                  <th scope="col">Estado</th>
-                  <th scope="col">Acciones</th>
+                <tr className="border-b border-neutral-200">
+                  <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-600 whitespace-nowrap">Código</th>
+                  <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-600 whitespace-nowrap">Trabajador</th>
+                  <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-600 whitespace-nowrap">Correo</th>
+                  <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-600 whitespace-nowrap">Área</th>
+                  <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-600 whitespace-nowrap">Horas/sem</th>
+                  <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-600 whitespace-nowrap">Estado</th>
+                  <th scope="col" className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-600 whitespace-nowrap">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {data.map((worker) => (
-                  <tr key={worker.id}>
-                    <td data-label="Código">{worker.code}</td>
-                    <td data-label="Trabajador">
+                  <tr key={worker.id} className="border-b border-neutral-200 last:border-b-0">
+                    <td className="px-4 py-3">{worker.code}</td>
+                    <td className="px-4 py-3 text-neutral-900">
                       {worker.first_names} {worker.last_names}
                     </td>
-                    <td data-label="Correo">{worker.email}</td>
-                    <td data-label="Área">{worker.area ?? "—"}</td>
-                    <td data-label="Horas/sem">{worker.weekly_hours} h</td>
-                    <td data-label="Estado">
+                    <td className="px-4 py-3">{worker.email}</td>
+                    <td className="px-4 py-3">{worker.area ?? "—"}</td>
+                    <td className="px-4 py-3">{worker.weekly_hours} h</td>
+                    <td className="px-4 py-3">
                       <StatusBadge tone={worker.active ? "green" : "neutral"}>
                         {worker.active ? "Activo" : "Inactivo"}
                       </StatusBadge>
                     </td>
-                    <td
-                      className="actions-cell"
-                      data-label="Acciones"
-                    >
+                    <td className="px-4 py-3">
                       <button
                         type="button"
-                        className="icon-button icon-button--edit"
+                        className="grid place-items-center w-8 h-8 text-neutral-600 bg-white border border-neutral-200 cursor-pointer shadow-none"
                         onClick={() => setEditingWorker(worker)}
                         aria-label={`Editar ${worker.first_names} ${worker.last_names}`}
                       >

@@ -5,10 +5,8 @@ import type {
   EditTaskPayload, Label, Project, ProjectCatalogs, ProjectTaskConfiguration, Task, TaskFormPayload,
 } from "../types";
 import LabelEditor from "../LabelEditor/LabelEditor";
-import ProjectForm from "../ProjectForm/ProjectForm";
+import ProjectForm, { fieldClass, inputClass, labelClass, primaryButtonClass, secondaryButtonClass } from "../ProjectForm/ProjectForm";
 import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
-import formStyles from "../ProjectForm/ProjectForm.module.css";
-import styles from "./TaskForm.module.css";
 
 interface TaskFormProps {
   project: Project;
@@ -65,74 +63,74 @@ export default function TaskForm({ project, catalogs, task, parent, onSubmit, on
     <>
       <ProjectForm compact busy={busy} error={error} onSubmit={submit} actions={
         <>
-          <button type="button" className={formStyles.secondary} disabled={busy} onClick={onClose}>Cancelar</button>
-          <button type="submit" className="primary-button" disabled={busy}>
+          <button type="button" className={secondaryButtonClass} disabled={busy} onClick={onClose}>Cancelar</button>
+          <button type="submit" className={primaryButtonClass} disabled={busy}>
             {busy ? "Guardando…" : task ? "Guardar cambios" : parent ? "Crear subtarea" : "Crear tarea"}
           </button>
         </>
       }>
-        <p className={styles.context}>{project.name}{parent && ` · Subtarea de ${parent.name}`}</p>
-        <div className={formStyles.field}>
-          <label htmlFor="task-name">Nombre de tarea *</label>
-          <input id="task-name" className={styles.name} required maxLength={180} value={name}
+        <p className="m-0 text-xs text-neutral-600">{project.name}{parent && ` · Subtarea de ${parent.name}`}</p>
+        <div className={fieldClass}>
+          <label htmlFor="task-name" className={labelClass}>Nombre de tarea *</label>
+          <input id="task-name" className={`${inputClass} font-semibold`} required maxLength={180} value={name}
             placeholder="Nombre de tarea" onChange={(event) => setName(event.target.value)} />
         </div>
-        <div className={formStyles.field}>
-          <label htmlFor="task-description">Descripción (opcional)</label>
-          <textarea id="task-description" rows={2} maxLength={10000} value={description}
+        <div className={fieldClass}>
+          <label htmlFor="task-description" className={labelClass}>Descripción (opcional)</label>
+          <textarea id="task-description" rows={2} maxLength={10000} value={description} className={inputClass}
             readOnly={Boolean(task && !project.permissions.manage)}
             placeholder="Añade una descripción breve" onChange={(event) => setDescription(event.target.value)} />
         </div>
-        <div className={styles.controls}>
-          <div className={formStyles.field}>
-            <label htmlFor="task-initial-state">{task ? "Estado actual" : "Estado inicial"}</label>
-            <div className={styles.state}>
-              <select id="task-initial-state" disabled={Boolean(task) || !canAssign}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className={fieldClass}>
+            <label htmlFor="task-initial-state" className={labelClass}>{task ? "Estado actual" : "Estado inicial"}</label>
+            <div className="flex gap-1.5 items-center">
+              <select id="task-initial-state" disabled={Boolean(task) || !canAssign} className={`${inputClass} flex-1 min-w-0`}
                 value={task?.state_code ?? stateCode} onChange={(event) => setStateCode(event.target.value)}>
                 {states.filter((state) => task || canAssign || state.code === "PENDIENTE")
                   .map((state) => <option value={state.code} key={state.code}>{state.name}</option>)}
               </select>
-              {project.task_states.can_configure && <button type="button" className={styles.configure}
+              {project.task_states.can_configure && <button type="button" className="flex-none w-10 min-h-[40px] border border-neutral-200 bg-neutral-50 text-neutral-900 cursor-pointer shadow-none"
                 aria-label="Configurar estados del proyecto" title="Configurar estados del proyecto"
                 onClick={() => setConfiguring(true)}>⚙</button>}
             </div>
           </div>
-          <div className={formStyles.field}>
-            <label htmlFor="task-responsible">Responsable</label>
+          <div className={fieldClass}>
+            <label htmlFor="task-responsible" className={labelClass}>Responsable</label>
             {canAssign ? (
-              <select id="task-responsible" value={responsible} onChange={(event) => setResponsible(event.target.value)}>
+              <select id="task-responsible" value={responsible} onChange={(event) => setResponsible(event.target.value)} className={inputClass}>
                 <option value="">Sin responsable</option>
                 {project.participants.map((worker) => <option key={worker.id} value={worker.id}>{worker.name}</option>)}
               </select>
-            ) : <p className={styles.readonly}>{task?.responsible_name ?? "Tú"} · Asignación administrada</p>}
+            ) : <p className="m-0 py-2.5 min-h-[40px] text-sm text-neutral-600">{task?.responsible_name ?? "Tú"} · Asignación administrada</p>}
           </div>
-          <div className={formStyles.field}>
-            <label htmlFor="task-due">Fecha límite *</label>
-            <input id="task-due" required type="date" min={project.start_date ?? undefined}
+          <div className={fieldClass}>
+            <label htmlFor="task-due" className={labelClass}>Fecha límite *</label>
+            <input id="task-due" required type="date" min={project.start_date ?? undefined} className={inputClass}
               max={parent?.due_date ?? project.end_date ?? undefined} value={dueDate}
               onChange={(event) => setDueDate(event.target.value)} />
           </div>
-          <div className={formStyles.field}>
-            <label htmlFor="task-priority">Prioridad</label>
-            <select id="task-priority" value={priority} onChange={(event) => setPriority(Number(event.target.value))}>
+          <div className={fieldClass}>
+            <label htmlFor="task-priority" className={labelClass}>Prioridad</label>
+            <select id="task-priority" value={priority} onChange={(event) => setPriority(Number(event.target.value))} className={inputClass}>
               {catalogs.priorities.map((item) => <option key={item.code} value={item.code}>{item.name}</option>)}
             </select>
           </div>
         </div>
-        {!task && !canAssign && <p className={styles.metadata}>
+        {!task && !canAssign && <p className="m-0 text-xs text-neutral-600 leading-relaxed">
           La tarea nace pendiente y asignada a ti. Después podrás usar las transiciones autorizadas.
         </p>}
-        {canAssign && project.participants.length === 0 && <p className={styles.metadata}>
+        {canAssign && project.participants.length === 0 && <p className="m-0 text-xs text-neutral-600 leading-relaxed">
           Sin participantes confirmados: puedes crear tareas pendientes sin responsable. La asignación estará disponible posteriormente.
         </p>}
         {!task && ["BLOQUEADA", "CANCELADA"].includes(stateCode) && (
-          <div className={formStyles.field}>
-            <label htmlFor="task-reason">Motivo obligatorio</label>
-            <input id="task-reason" required maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} />
+          <div className={fieldClass}>
+            <label htmlFor="task-reason" className={labelClass}>Motivo obligatorio</label>
+            <input id="task-reason" required maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} className={inputClass} />
           </div>
         )}
         <LabelEditor title="Etiquetas de la tarea" labels={labels} onChange={setLabels} />
-        <p className={styles.metadata}>Creación: {task
+        <p className="m-0 text-xs text-neutral-600 leading-relaxed">Creación: {task
           ? new Date(task.created_at).toLocaleString("es-PE")
           : "La fecha será asignada por el servidor al guardar."}</p>
       </ProjectForm>

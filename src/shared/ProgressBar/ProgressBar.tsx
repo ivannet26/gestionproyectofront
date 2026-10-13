@@ -1,5 +1,4 @@
 import type { CSSProperties } from "react";
-import styles from "./ProgressBar.module.css";
 
 interface ProgressBarProps {
   value: number;
@@ -7,18 +6,20 @@ interface ProgressBarProps {
   label: string;
 }
 
-function ProgressBar({ value, tone = "blue", label }: ProgressBarProps) {
+function ProgressBar({ value, label }: ProgressBarProps) {
   return (
     <div
-      className={`${styles["progress-bar"]} ${styles[`progress-bar--${tone}`]}`}
+      className="h-1.5 overflow-hidden bg-neutral-200 shadow-none"
       role="progressbar"
       aria-label={label}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={value}
-      style={{ "--progress-value": `${value}%` } as CSSProperties}
     >
-      <span className={styles["progress-bar__fill"]} />
+      <span
+        className="block h-full bg-neutral-900"
+        style={{ width: `${value}%` } as CSSProperties}
+      />
     </div>
   );
 }
