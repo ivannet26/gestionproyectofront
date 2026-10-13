@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Project } from "../types";
 import TaskProperty from "../TaskForm/TaskProperty";
 import TaskIcon from "../TaskForm/TaskIcon";
-import styles from "../TaskForm/TaskProperties.module.css";
+import { propertyClasses as styles } from "../ProjectForm/formClasses";
 
 interface ResponsiblePickerProps {
   participants: Project["participants"];

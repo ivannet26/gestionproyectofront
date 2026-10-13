@@ -11,7 +11,6 @@ import Modal from "../Modal/Modal";
 import TaskForm from "../TaskForm/TaskForm";
 import TaskStateForm from "../TaskStateForm/TaskStateForm";
 import TaskTree from "../TaskTree/TaskTree";
-import styles from "./ProjectWorkspace.module.css";
 
 interface ProjectWorkspaceProps {
   projectId: number;
@@ -129,39 +128,39 @@ export default function ProjectWorkspace({
     }
   }
 
-  if (loading) return <main className="dashboard" id="main-content"><p role="status">Cargando proyecto…</p></main>;
-  if (error || !project) return <main className="dashboard" id="main-content">
-    <p className="form-message form-message--error" role="alert">{error || "Proyecto no disponible"}</p>
-    <Link to="/proyectos">Volver a proyectos</Link>
+  if (loading) return <main className="min-h-screen bg-neutral-50 text-neutral-900 p-6" id="main-content"><p role="status" className="text-sm text-neutral-600">Cargando proyecto…</p></main>;
+  if (error || !project) return <main className="min-h-screen bg-neutral-50 text-neutral-900 p-6" id="main-content">
+    <p className="border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-none" role="alert">{error || "Proyecto no disponible"}</p>
+    <Link to="/proyectos" className="text-sm text-neutral-600 font-semibold">Volver a proyectos</Link>
   </main>;
 
   return (
-    <main className={`dashboard ${styles.workspace}`} id="main-content">
-      <header className="page-header">
-        <div className="page-header__copy">
-          <nav className="breadcrumb" aria-label="Ruta de navegación">
-            <ol><li><Link to="/proyectos">G. Proyectos</Link></li><li aria-current="page">{project.name}</li></ol>
+    <main className="min-h-screen bg-neutral-50 text-neutral-900 p-6" id="main-content">
+      <header className="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div className="min-w-0 max-w-3xl">
+          <nav className="text-xs text-neutral-600" aria-label="Ruta de navegación">
+            <ol className="flex flex-wrap gap-2 m-0 p-0 list-none"><li><Link to="/proyectos" className="text-neutral-600">G. Proyectos</Link></li><li aria-current="page" className="text-neutral-900">{project.name}</li></ol>
           </nav>
-          <h1>{project.name}</h1>
-          <p>{project.description}</p>
-          <p className="field-hint">{project.areas.map((area) => area.name).join(" · ")} · {
+          <h1 className="m-0 mt-1 text-xl font-semibold text-neutral-900">{project.name}</h1>
+          <p className="m-0 mt-1 text-sm text-neutral-600">{project.description}</p>
+          <p className="m-0 mt-1 text-xs text-neutral-600">{project.areas.map((area) => area.name).join(" · ")} · {
             project.available ? "Disponible dentro del sistema" : "Con participantes asignados"}</p>
-          <p className="field-hint">{project.start_date ?? "Sin fecha inicial"} — {project.end_date ?? "Sin fecha final"}</p>
+          <p className="m-0 mt-1 text-xs text-neutral-600">{project.start_date ?? "Sin fecha inicial"} — {project.end_date ?? "Sin fecha final"}</p>
         </div>
-        {project.permissions.create_tasks && <button className="primary-button" type="button" disabled={busy}
+        {project.permissions.create_tasks && <button className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium shadow-none disabled:opacity-50 disabled:cursor-not-allowed" type="button" disabled={busy}
           onClick={() => { setMessage(""); setAction({ kind: "create" }); }}>+ Nueva tarea</button>}
       </header>
-      {message && <p className="form-message" role="status">{message}</p>}
-      {creationError && <p className="form-message form-message--error" role="alert">{creationError}</p>}
+      {message && <p className="border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 shadow-none" role="status">{message}</p>}
+      {creationError && <p className="border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-none" role="alert">{creationError}</p>}
       {project.requirements.length > 0 && <section aria-label="Requisitos existentes del proyecto"><LabelList labels={project.requirements} /></section>}
       <DashboardSection title="Lista de trabajo" description={`${tasks.length} tareas y subtareas visibles`}>
-        <div className={styles.taskList}>
+        <div className="p-5 min-w-0 max-sm:p-3">
           {tasks.length > 0 ? <TaskTree tasks={tasks} catalogs={catalogs}
             onAction={(kind, taskId) => { setMessage(""); setAction({ kind, taskId }); }} />
-            : <p>No hay tareas disponibles para tu asignación. {project.permissions.create_tasks && "Crea la primera tarea para comenzar."}</p>}
+            : <p className="m-0 text-sm text-neutral-600">No hay tareas disponibles para tu asignación. {project.permissions.create_tasks && "Crea la primera tarea para comenzar."}</p>}
         </div>
       </DashboardSection>
-      {action && !activeAction && <p className="form-message form-message--error" role="alert">
+      {action && !activeAction && <p className="border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-none" role="alert">
         La tarea ya no está disponible. Vuelve a seleccionar una tarea de la lista.
       </p>}
       {activeAction && <Modal busy={busy} title={title}

@@ -5,7 +5,6 @@ import gmLogo from "../../../assets/gm-logo.png";
 import type { ActivationDetails, SessionUser } from "../api";
 import { apiRequest, errorText, login } from "../api";
 import { roleLabel } from "../roles";
-import styles from "./AuthPages.module.css";
 
 interface AuthFrameProps {
   title: string;
@@ -15,17 +14,26 @@ interface AuthFrameProps {
 
 function AuthFrame({ title, intro, children }: AuthFrameProps) {
   return (
-    <main className="auth-page">
-      <section className={styles["auth-card"]} aria-labelledby="auth-title">
+    <main className="min-h-screen grid place-items-center bg-white text-neutral-900 p-6">
+      <section
+        className="w-full max-w-110 p-6 bg-white border-0 shadow-none"
+        aria-labelledby="auth-title"
+      >
         <img
-          className={styles["auth-logo"]}
+          className="block w-full max-w-50 h-18 object-contain object-left"
           src={gmLogo}
           alt="GM Ingenieros y Consultores"
         />
-        <div className={styles["auth-card__heading"]}>
-          <p className={styles["auth-eyebrow"]}>Acceso al sistema</p>
-          <h1 id="auth-title">{title}</h1>
-          <p>{intro}</p>
+        <div className="my-5">
+          <h1
+            id="auth-title"
+            className="m-0 text-neutral-900 text-2xl font-semibold"
+          >
+            {title}
+          </h1>
+          <p className="mb-0 text-neutral-600 text-sm leading-relaxed">
+            {intro}
+          </p>
         </div>
         {children}
       </section>
@@ -61,9 +69,15 @@ export function LoginPage({
       title="Iniciar sesión"
       intro="Ingresa con tu correo de trabajador y contraseña."
     >
-      <form className={styles["auth-form"]} onSubmit={submit}>
-        <label htmlFor="login-email">Correo electrónico</label>
+      <form className="grid gap-2.5" onSubmit={submit}>
+        <label
+          className="text-neutral-900 text-sm font-medium"
+          htmlFor="login-email"
+        >
+          Correo electrónico
+        </label>
         <input
+          className="w-full min-h-10 px-3 py-2 text-neutral-900 bg-white border border-neutral-200 rounded-md shadow-none focus:ring-0 focus-visible:outline-none focus:border-neutral-400"
           id="login-email"
           type="email"
           autoComplete="username"
@@ -71,8 +85,14 @@ export function LoginPage({
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
-        <label htmlFor="login-password">Contraseña</label>
+        <label
+          className="text-neutral-900 text-sm font-medium"
+          htmlFor="login-password"
+        >
+          Contraseña
+        </label>
         <input
+          className="w-full min-h-10 px-3 py-2 text-neutral-900 bg-white border border-neutral-200 rounded-md shadow-none focus:ring-0 focus-visible:outline-none focus:border-neutral-400"
           id="login-password"
           type="password"
           autoComplete="current-password"
@@ -81,15 +101,22 @@ export function LoginPage({
           onChange={(event) => setPassword(event.target.value)}
         />
         {error && (
-          <p className="form-message form-message--error" role="alert">
+          <p className="px-0 py-2 text-sm text-neutral-900" role="alert">
             {error}
           </p>
         )}
-        <button className="primary-button" type="submit" disabled={busy}>
+        <button
+          className="w-full mt-2 min-h-10 px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-xl shadow-none hover:bg-neutral-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          type="submit"
+          disabled={busy}
+        >
           {busy ? "Ingresando…" : "Ingresar"}
         </button>
       </form>
-      <Link className={styles["auth-link"]} to="/recuperar">
+      <Link
+        className="inline-block mt-5 text-neutral-600 text-sm font-semibold hover:text-neutral-900"
+        to="/recuperar"
+      >
         Solicitar recuperación de acceso
       </Link>
     </AuthFrame>
@@ -125,9 +152,15 @@ export function RecoveryPage() {
       title="Recuperar acceso"
       intro="Un administrador revisará tu solicitud antes de enviarte un enlace."
     >
-      <form className={styles["auth-form"]} onSubmit={submit}>
-        <label htmlFor="recovery-email">Correo electrónico</label>
+      <form className="grid gap-2.5" onSubmit={submit}>
+        <label
+          className="text-neutral-900 text-sm font-medium"
+          htmlFor="recovery-email"
+        >
+          Correo electrónico
+        </label>
         <input
+          className="w-full min-h-10 px-3 py-2 text-neutral-900 bg-white border border-neutral-200 rounded-md shadow-none focus:ring-0 focus-visible:outline-none focus:border-neutral-400"
           id="recovery-email"
           type="email"
           autoComplete="email"
@@ -136,20 +169,27 @@ export function RecoveryPage() {
           onChange={(event) => setEmail(event.target.value)}
         />
         {error && (
-          <p className="form-message form-message--error" role="alert">
+          <p className="px-0 py-2 text-sm text-neutral-900" role="alert">
             {error}
           </p>
         )}
         {message && (
-          <p className="form-message" role="status">
+          <p className="px-0 py-2 text-sm text-neutral-900" role="status">
             {message}
           </p>
         )}
-        <button className="primary-button" type="submit" disabled={busy}>
+        <button
+          className="w-full mt-2 min-h-10 px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-xl shadow-none hover:bg-neutral-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          type="submit"
+          disabled={busy}
+        >
           {busy ? "Enviando…" : "Solicitar revisión"}
         </button>
       </form>
-      <Link className={styles["auth-link"]} to="/">
+      <Link
+        className="inline-block mt-5 text-neutral-600 text-sm font-semibold hover:text-neutral-900"
+        to="/"
+      >
         Volver al acceso
       </Link>
     </AuthFrame>
@@ -238,20 +278,20 @@ export function PasswordPage({ mode }: { mode: "activar" | "restablecer" }) {
       intro="Define una contraseña segura para tu cuenta."
     >
       {!token && (
-        <p className="form-message form-message--error" role="alert">
+        <p className="px-0 py-2 text-sm text-neutral-900" role="alert">
           El enlace no contiene un token válido.
         </p>
       )}
       {loading && <p role="status">Comprobando enlace…</p>}
       {error && (
-        <p className="form-message form-message--error" role="alert">
+        <p className="px-0 py-2 text-sm text-neutral-900" role="alert">
           {error}
         </p>
       )}
       {details && !message && (
         <>
           {activation && (
-            <dl className={styles["activation-details"]}>
+            <dl className="grid gap-3 m-0 mb-5 p-0 bg-white border-0 shadow-none">
               <div>
                 <dt>Nombres</dt>
                 <dd>{details.first_names}</dd>
@@ -278,9 +318,15 @@ export function PasswordPage({ mode }: { mode: "activar" | "restablecer" }) {
               </div>
             </dl>
           )}
-          <form className={styles["auth-form"]} onSubmit={submit}>
-            <label htmlFor="new-password">Contraseña</label>
+          <form className="grid gap-2.5" onSubmit={submit}>
+            <label
+              className="text-neutral-900 text-sm font-medium"
+              htmlFor="new-password"
+            >
+              Contraseña
+            </label>
             <input
+              className="w-full min-h-10 px-3 py-2 text-neutral-900 bg-white border border-neutral-200 rounded-md shadow-none focus:ring-0 focus-visible:outline-none focus:border-neutral-400"
               id="new-password"
               type="password"
               autoComplete="new-password"
@@ -291,12 +337,21 @@ export function PasswordPage({ mode }: { mode: "activar" | "restablecer" }) {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
             />
-            <p className="field-hint" id="password-hint">
+            <p
+              className="m-0 text-xs text-neutral-600 leading-relaxed"
+              id="password-hint"
+            >
               Usa al menos 12 caracteres. Evita contraseñas comunes o parecidas
               a tu nombre o correo.
             </p>
-            <label htmlFor="confirm-password">Confirmar contraseña</label>
+            <label
+              className="text-neutral-900 text-sm font-medium"
+              htmlFor="confirm-password"
+            >
+              Confirmar contraseña
+            </label>
             <input
+              className="w-full min-h-10 px-3 py-2 text-neutral-900 bg-white border border-neutral-200 rounded-md shadow-none focus:ring-0 focus-visible:outline-none focus:border-neutral-400"
               id="confirm-password"
               type="password"
               autoComplete="new-password"
@@ -306,18 +361,25 @@ export function PasswordPage({ mode }: { mode: "activar" | "restablecer" }) {
               value={confirmation}
               onChange={(event) => setConfirmation(event.target.value)}
             />
-            <button className="primary-button" type="submit" disabled={busy}>
+            <button
+              className="w-full mt-2 min-h-10 px-4 py-2 bg-neutral-900 text-white text-sm font-medium rounded-xl shadow-none hover:bg-neutral-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              type="submit"
+              disabled={busy}
+            >
               {busy ? "Guardando…" : "Guardar contraseña"}
             </button>
           </form>
         </>
       )}
       {message && (
-        <p className="form-message" role="status">
+        <p className="px-0 py-2 text-sm text-neutral-900" role="status">
           {message}
         </p>
       )}
-      <Link className={styles["auth-link"]} to="/">
+      <Link
+        className="inline-block mt-5 text-neutral-600 text-sm font-semibold hover:text-neutral-900"
+        to="/"
+      >
         Ir al acceso
       </Link>
     </AuthFrame>

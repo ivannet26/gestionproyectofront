@@ -1,10 +1,12 @@
 import type { ComponentType } from "react";
 import AdminAccountsPage from "./features/auth/AdminAccountsPage/AdminAccountsPage";
 import DashboardPage from "./features/dashboard/DashboardPage/DashboardPage";
-import type { DashboardPageProps } from "./features/dashboard/DashboardPage/DashboardPage";
 import ProjectList from "./features/projects/ProjectList/ProjectList";
-import type { ProjectListProps } from "./features/projects/ProjectList/ProjectList";
 import ProjectRoute from "./features/projects/ProjectRoute/ProjectRoute";
+import WorkersPage from "./features/workers/WorkersPage";
+import OrganizationPage from "./features/organization/OrganizationPage";
+import type { DashboardPageProps } from "./features/dashboard/DashboardPage/DashboardPage";
+import type { ProjectListProps } from "./features/projects/ProjectList/ProjectList";
 import type { ProjectRouteProps } from "./features/projects/ProjectRoute/ProjectRoute";
 
 export type AppRoute = {
@@ -43,6 +45,17 @@ export const appRoutes: AppRoute[] = [
     kind: "accounts",
     Component: AdminAccountsPage,
     requiresAdmin: true,
+  },
+  {
+    path: "/trabajadores",
+    kind: "dashboard",
+    Component: WorkersPage,
+    requiresAdmin: true,
+  },
+  {
+    path: "/organizacion",
+    kind: "dashboard",
+    Component: OrganizationPage,
   },
 ];
 

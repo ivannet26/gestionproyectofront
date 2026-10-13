@@ -1,8 +1,11 @@
 import { useId, useRef, useState } from "react";
 import type { Label, LabelKind } from "../types";
 import LabelList from "../LabelList/LabelList";
-import formStyles from "../ProjectForm/ProjectForm.module.css";
-import styles from "./LabelEditor.module.css";
+import { formClasses as formStyles } from "../ProjectForm/formClasses";
+const styles = {
+  "compact": "m-0 min-w-0 border-0 p-0 [&>legend]:mb-2.5 [&>legend]:text-[13px] [&>legend]:font-semibold [&>div]:grid-cols-[1fr_auto] [&>div>div:first-child]:col-span-full [&>ul]:max-h-30 [&>ul]:overflow-y-auto",
+  "editor": "grid grid-cols-1 items-end gap-2.5 sm:grid-cols-[1fr_1fr_auto]"
+};
 
 interface LabelEditorProps {
   title: string;

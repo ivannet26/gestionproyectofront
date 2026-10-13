@@ -1,8 +1,18 @@
 import { useId } from "react";
 import type { ProjectDraft, WorkerCandidate } from "../types";
 import type { FieldErrors } from "../formErrors";
-import formStyles from "./CreateProjectModal.module.css";
-import styles from "./ProjectConfiguration.module.css";
+import { formClasses as formStyles } from "../ProjectForm/formClasses";
+const styles = {
+  "summary": "grid gap-1 [overflow-wrap:anywhere] [&>strong]:text-base",
+  "permission": "grid gap-1.5 border-y border-neutral-200 py-3.5 text-[13px]",
+  "permissionHeading": "flex items-center justify-between gap-3",
+  "switch": "h-8 w-12 shrink-0 rounded-md border-0 bg-neutral-300 px-1 py-1.5 aria-checked:bg-neutral-900 cursor-pointer [&>span]:block [&>span]:h-5 [&>span]:w-5 [&>span]:rounded-full [&>span]:bg-white [&[aria-checked=true]>span]:ml-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
+  "modeContent": "grid items-start gap-4",
+  "assigned": "sm:grid-cols-[1fr_1.3fr]",
+  "workerPicker": "grid min-w-0 gap-2 text-[13px]",
+  "search": "flex gap-2 [&>input]:min-w-0 [&>input]:flex-1",
+  "results": "grid max-h-[138px] gap-2 overflow-y-auto overscroll-contain rounded-md border border-neutral-200 p-2.5 [&_p]:m-0 [&_p]:text-[13px] [&_label]:flex [&_label]:items-start [&_label]:gap-2 [&_label]:py-1 [&_label]:font-normal [&_input]:accent-neutral-900 [&_small]:mt-1 [&_small]:block [&_small]:text-xs [&_small]:text-neutral-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"
+};
 
 interface ProjectConfigurationProps {
   draft: ProjectDraft;
@@ -27,7 +37,7 @@ export default function ProjectConfiguration({
     <>
       <div className={styles.summary}>
         <strong>{draft.name}</strong>
-        <p className="field-hint">{areaName}</p>
+        <p className="m-0 text-xs leading-relaxed text-neutral-600">{areaName}</p>
       </div>
       <div className={styles.permission}>
         <div className={styles.permissionHeading}>
@@ -40,7 +50,7 @@ export default function ProjectConfiguration({
           </button>
         </div>
         <strong>{draft.workerContribute ? "Edición" : "Solo lectura"}</strong>
-        <p id={permissionHint} className="field-hint">
+        <p id={permissionHint} className="m-0 text-xs leading-relaxed text-neutral-600">
           {draft.workerContribute
             ? "Permite a participantes crear tareas propias y cambiar estados autorizados. No permite editar otros datos ni asignar responsables."
             : "Permite consultar la información autorizada, sin crear tareas ni cambiar estados."}
@@ -94,7 +104,7 @@ export default function ProjectConfiguration({
                   </label>
                 ))}
             </div>
-            <p className="field-hint" role="status">
+            <p className="m-0 text-xs leading-relaxed text-neutral-600" role="status">
               {draft.workerIds.length} seleccionados. Hasta 100 resultados; afina la búsqueda si hace falta.
             </p>
           </div>

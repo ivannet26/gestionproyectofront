@@ -6,7 +6,7 @@ import LabelEditor from "../LabelEditor/LabelEditor";
 import ResponsiblePicker from "../ResponsiblePicker/ResponsiblePicker";
 import TaskProperty from "./TaskProperty";
 import TaskIcon from "./TaskIcon";
-import styles from "./TaskProperties.module.css";
+import { propertyClasses as styles } from "../ProjectForm/formClasses";
 
 interface TaskPropertiesProps {
   project: Project;

@@ -1,6 +1,13 @@
 import { useEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
-import styles from "./Modal.module.css";
+const styles = {
+  modal: "m-auto max-h-[90dvh] w-[min(94vw,690px)] overflow-y-auto overscroll-contain rounded-xl border border-neutral-200 bg-white p-0 text-neutral-900 backdrop:bg-neutral-900/50",
+  wide: "w-[min(94vw,760px)] max-h-[92dvh]",
+  taskComposer: "w-[min(800px,calc(100vw-32px))] max-h-[calc(100dvh-48px)] overflow-hidden open:flex open:flex-col max-sm:w-[calc(100vw-16px)] max-sm:max-h-[calc(100dvh-16px)]",
+  projectComposer: "w-[min(800px,calc(100vw-32px))] max-h-[calc(100dvh-48px)] overflow-hidden open:flex open:flex-col max-sm:w-[calc(100vw-16px)] max-sm:max-h-[calc(100dvh-16px)]",
+  header: "sticky top-0 z-2 flex shrink-0 items-center justify-between gap-4 border-b border-neutral-200 bg-white px-6 py-3 max-sm:px-4 [&_h2]:m-0 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h2]:break-words",
+  close: "min-h-8 min-w-8 rounded-md border-0 bg-neutral-50 text-xl text-neutral-900 hover:bg-neutral-100 cursor-pointer disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
+};
 
 interface ModalProps {
   title: string;

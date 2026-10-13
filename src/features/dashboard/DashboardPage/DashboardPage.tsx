@@ -8,7 +8,6 @@ import {
   teamWorkload,
 } from "../mockData";
 import DashboardSection from "../DashboardSection/DashboardSection";
-import styles from "./DashboardPage.module.css";
 import KpiCard from "../KpiCard/KpiCard";
 import ProgressBar from "../../../shared/ProgressBar/ProgressBar";
 import StatusBadge from "../../../shared/StatusBadge/StatusBadge";
@@ -20,32 +19,32 @@ export interface DashboardPageProps {
 
 function DashboardPage({ onCreateProject, creationDisabled = false }: DashboardPageProps) {
   return (
-    <main id="main-content" className="dashboard">
-      <header className="page-header">
-        <div className="page-header__copy">
-          <nav className="breadcrumb" aria-label="Ruta de navegación">
-            <ol>
+    <main id="main-content" className="min-h-screen bg-neutral-50 text-neutral-900 p-6">
+      <header className="flex flex-wrap items-end justify-between gap-4 mb-6">
+        <div className="max-w-2xl">
+          <nav className="text-xs text-neutral-600" aria-label="Ruta de navegación">
+            <ol className="flex gap-2 m-0 p-0 list-none">
               <li aria-current="page">Inicio</li>
             </ol>
           </nav>
-          <h1>Resumen general</h1>
-          <p>
+          <h1 className="m-0 mt-1 text-xl font-semibold text-neutral-900">Resumen general</h1>
+          <p className="m-0 mt-1 text-sm text-neutral-600">
             Supervisa el avance de los proyectos y la disponibilidad de los
             equipos desde un solo lugar.
           </p>
         </div>
-        {onCreateProject && <button className="primary-button" type="button"
+        {onCreateProject && <button className="px-4 py-2 bg-neutral-900 text-white text-sm font-medium shadow-none disabled:opacity-50 disabled:cursor-not-allowed" type="button"
           disabled={creationDisabled} onClick={onCreateProject}>
           <span aria-hidden="true">+</span>
-          Nuevo proyecto
+          {" "}Nuevo proyecto
         </button>}
       </header>
 
-      <section className={styles["kpi-zone"]} aria-labelledby="kpi-heading">
-        <h2 id="kpi-heading" className={styles["sr-only"]}>
+      <section className="mb-5" aria-labelledby="kpi-heading">
+        <h2 id="kpi-heading" className="sr-only">
           Indicadores principales
         </h2>
-        <div className={styles["kpi-grid"]}>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {kpis.map((kpi) => (
             <KpiCard key={kpi.id} {...kpi} />
           ))}
@@ -55,161 +54,156 @@ function DashboardPage({ onCreateProject, creationDisabled = false }: DashboardP
       <DashboardSection
         title="Resumen de proyectos"
         description="Estado y avance del portafolio activo."
-        className={styles["project-summary"]}
       >
-        <div className={styles["status-summary"]}>
-          <div className={styles["subsection-heading"]}>
-            <div>
-              <h3>Distribución por estado</h3>
-              <p>{portfolioSummary.totalProjects} proyectos registrados</p>
+        <div className="grid grid-cols-1 lg:grid-cols-[0.76fr_1.8fr]">
+          <div className="min-w-0 p-5 border-b border-neutral-200 lg:border-b-0 lg:border-r">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 className="m-0 text-sm text-neutral-900 font-semibold">Distribución por estado</h3>
+                <p className="m-0 mt-1 text-xs text-neutral-600">{portfolioSummary.totalProjects} proyectos registrados</p>
+              </div>
             </div>
-          </div>
 
-          <div
-            className={styles["status-stack"]}
-            role="img"
-            aria-label="Distribución porcentual de proyectos"
-          >
-            {projectStatusSummary.map((status) => (
-              <span
-                key={status.id}
-                className={`${styles["status-stack__segment"]} ${styles[`status-stack__segment--${status.tone}`]}`}
-                style={
-                  { "--segment-size": `${status.percentage}%` } as CSSProperties
-                }
-                title={`${status.label}: ${status.percentage}%`}
-              />
-            ))}
-          </div>
-
-          <ul className={styles["status-list"]}>
-            {projectStatusSummary.map((status) => (
-              <li key={status.id}>
+            <div
+              className="flex h-2 gap-1 overflow-hidden bg-neutral-200"
+              role="img"
+              aria-label="Distribución porcentual de proyectos"
+            >
+              {projectStatusSummary.map((status) => (
                 <span
-                  className={`${styles["status-list__dot"]} ${styles[`status-list__dot--${status.tone}`]}`}
-                  aria-hidden="true"
+                  key={status.id}
+                  className="min-w-1 bg-neutral-500"
+                  style={
+                    { width: `${status.percentage}%` } as CSSProperties
+                  }
+                  title={`${status.label}: ${status.percentage}%`}
                 />
-                <span>{status.label}</span>
-                <strong>{status.count}</strong>
-                <small>{status.percentage}%</small>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className={styles["project-progress"]}>
-          <div className={styles["subsection-heading"]}>
-            <div>
-              <h3>Avance general</h3>
-              <p>Proyectos que requieren seguimiento</p>
+              ))}
             </div>
+
+            <ul className="grid gap-1 m-0 mt-4 p-0 list-none">
+              {projectStatusSummary.map((status) => (
+                <li key={status.id} className="grid grid-cols-[8px_1fr_auto_36px] items-center gap-2 min-h-[34px] text-xs text-neutral-600">
+                  <span className="w-[7px] h-[7px] bg-neutral-500" aria-hidden="true" />
+                  <span>{status.label}</span>
+                  <strong className="text-neutral-900 text-xs">{status.count}</strong>
+                  <small className="text-neutral-600 text-xs text-right">{status.percentage}%</small>
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className={styles["project-progress__list"]}>
-            {projectProgress.map((project) => (
-              <article
-                className={styles["project-progress__item"]}
-                key={project.id}
-              >
-                <div className={styles["project-progress__meta"]}>
-                  <div>
-                    <h4>{project.name}</h4>
-                    <span>{project.stage}</span>
+
+          <div className="min-w-0 p-5">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 className="m-0 text-sm text-neutral-900 font-semibold">Avance general</h3>
+                <p className="m-0 mt-1 text-xs text-neutral-600">Proyectos que requieren seguimiento</p>
+              </div>
+            </div>
+            <div className="grid gap-4">
+              {projectProgress.map((project) => (
+                <article className="min-w-0" key={project.id}>
+                  <div className="flex items-end justify-between gap-4 mb-2">
+                    <div className="min-w-0">
+                      <h4 className="m-0 text-sm text-neutral-900 font-semibold">{project.name}</h4>
+                      <span className="block mt-0.5 text-xs text-neutral-600">{project.stage}</span>
+                    </div>
+                    <strong className="flex-none text-xs text-neutral-900">{project.progress}%</strong>
                   </div>
-                  <strong>{project.progress}%</strong>
-                </div>
-                <ProgressBar
-                  value={project.progress}
-                  tone={project.tone}
-                  label={`Avance de ${project.name}`}
-                />
-              </article>
-            ))}
+                  <ProgressBar
+                    value={project.progress}
+                    tone={project.tone}
+                    label={`Avance de ${project.name}`}
+                  />
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </DashboardSection>
 
+      <div className="mt-4">
       <DashboardSection
         title="Seguimiento operativo"
         description="Prioridades inmediatas y carga actual de los equipos."
-        className={styles["operations"]}
       >
-        <div className={styles["activities-panel"]}>
-          <div className={styles["subsection-heading"]}>
-            <div>
-              <h3>Actividades prioritarias</h3>
-              <p>Vencidas o próximas a su fecha límite</p>
+        <div className="grid grid-cols-1 lg:grid-cols-[2.15fr_0.85fr]">
+          <div className="min-w-0 p-5 border-b border-neutral-200 lg:border-b-0 lg:border-r">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 className="m-0 text-sm text-neutral-900 font-semibold">Actividades prioritarias</h3>
+                <p className="m-0 mt-1 text-xs text-neutral-600">Vencidas o próximas a su fecha límite</p>
+              </div>
+              <span className="flex-none px-2 py-1 text-neutral-600 text-xs font-semibold bg-neutral-50 border border-neutral-200">
+                {priorityActivities.length} actividades
+              </span>
             </div>
-            <span className={styles["subsection-heading__count"]}>
-              {priorityActivities.length} actividades
-            </span>
-          </div>
 
-          <div className={styles["activities-table-wrap"]}>
-            <table className={styles["activities-table"]}>
-              <caption className={styles["sr-only"]}>
-                Actividades prioritarias o próximas a su fecha límite
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Actividad</th>
-                  <th scope="col">Proyecto</th>
-                  <th scope="col">Responsable</th>
-                  <th scope="col">Fecha</th>
-                  <th scope="col">Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                {priorityActivities.map((item) => (
-                  <tr key={item.id}>
-                    <td data-label="Actividad">
-                      <strong>{item.activity}</strong>
-                    </td>
-                    <td data-label="Proyecto">{item.project}</td>
-                    <td data-label="Responsable">{item.owner}</td>
-                    <td data-label="Fecha">{item.dueDate}</td>
-                    <td data-label="Estado">
-                      <StatusBadge tone={item.tone}>{item.status}</StatusBadge>
-                    </td>
+            <div className="w-full overflow-x-auto">
+              <table className="w-full border-collapse text-xs text-neutral-600 text-left">
+                <caption className="sr-only">
+                  Actividades prioritarias o próximas a su fecha límite
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col" className="px-3 pb-2 text-neutral-600 text-xs font-semibold uppercase tracking-wide whitespace-nowrap">Actividad</th>
+                    <th scope="col" className="px-3 pb-2 text-neutral-600 text-xs font-semibold uppercase tracking-wide whitespace-nowrap">Proyecto</th>
+                    <th scope="col" className="px-3 pb-2 text-neutral-600 text-xs font-semibold uppercase tracking-wide whitespace-nowrap">Responsable</th>
+                    <th scope="col" className="px-3 pb-2 text-neutral-600 text-xs font-semibold uppercase tracking-wide whitespace-nowrap">Fecha</th>
+                    <th scope="col" className="px-3 pb-2 text-neutral-600 text-xs font-semibold uppercase tracking-wide whitespace-nowrap">Estado</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <aside
-          className={styles["workload-panel"]}
-          aria-labelledby="workload-heading"
-        >
-          <div className={styles["subsection-heading"]}>
-            <div>
-              <h3 id="workload-heading">Carga por equipo</h3>
-              <p>Ocupación estimada de la semana</p>
+                </thead>
+                <tbody>
+                  {priorityActivities.map((item) => (
+                    <tr key={item.id} className="border-t border-neutral-200">
+                      <td className="px-3 py-3 max-w-[190px] leading-snug">
+                        <strong className="text-neutral-900 text-xs font-semibold">{item.activity}</strong>
+                      </td>
+                      <td className="px-3 py-3 max-w-[190px]">{item.project}</td>
+                      <td className="px-3 py-3 max-w-[190px]">{item.owner}</td>
+                      <td className="px-3 py-3 max-w-[190px]">{item.dueDate}</td>
+                      <td className="px-3 py-3 max-w-[190px]">
+                        <StatusBadge tone={item.tone}>{item.status}</StatusBadge>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
-          <div className={styles["workload-list"]}>
-            {teamWorkload.map((team) => (
-              <article className={styles["workload-item"]} key={team.id}>
-                <div className={styles["workload-item__meta"]}>
-                  <div>
-                    <h4>{team.name}</h4>
-                    <span>{team.label}</span>
+
+          <aside className="bg-neutral-50 p-5" aria-labelledby="workload-heading">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 id="workload-heading" className="m-0 text-sm text-neutral-900 font-semibold">Carga por equipo</h3>
+                <p className="m-0 mt-1 text-xs text-neutral-600">Ocupación estimada de la semana</p>
+              </div>
+            </div>
+            <div className="grid gap-4">
+              {teamWorkload.map((team) => (
+                <article className="min-w-0" key={team.id}>
+                  <div className="flex items-end justify-between gap-4 mb-2">
+                    <div className="min-w-0">
+                      <h4 className="m-0 text-sm text-neutral-900 font-semibold">{team.name}</h4>
+                      <span className="block mt-0.5 text-xs text-neutral-600">{team.label}</span>
+                    </div>
+                    <strong className="flex-none text-xs text-neutral-900">{team.value}%</strong>
                   </div>
-                  <strong>{team.value}%</strong>
-                </div>
-                <ProgressBar
-                  value={team.value}
-                  tone={team.tone}
-                  label={`Carga de ${team.name}`}
-                />
-              </article>
-            ))}
-          </div>
-          <p className={styles["workload-panel__note"]}>
-            La carga es referencial y utiliza datos simulados.
-          </p>
-        </aside>
+                  <ProgressBar
+                    value={team.value}
+                    tone={team.tone}
+                    label={`Carga de ${team.name}`}
+                  />
+                </article>
+              ))}
+            </div>
+            <p className="m-0 mt-5 pt-3 text-neutral-600 text-xs leading-relaxed border-t border-neutral-200">
+              La carga es referencial y utiliza datos simulados.
+            </p>
+          </aside>
+        </div>
       </DashboardSection>
+      </div>
     </main>
   );
 }

@@ -6,8 +6,16 @@ import type { Project, ProjectTaskConfiguration, ProjectTaskState } from "../typ
 import { groupTaskStates, stateCategory } from "../stateGroups";
 import Modal from "../Modal/Modal";
 import ProjectForm from "../ProjectForm/ProjectForm";
-import formStyles from "../ProjectForm/ProjectForm.module.css";
-import styles from "./TaskStatusConfiguration.module.css";
+import { formClasses as formStyles } from "../ProjectForm/formClasses";
+const styles = {
+  "loading": "m-0 p-5 text-sm text-neutral-600",
+  "groups": "grid min-w-0 gap-4 [&_h3]:mb-2 [&_h3]:text-[13px] [&_h3]:text-neutral-600",
+  "standard": "m-0 flex list-none flex-wrap gap-2 p-0 [&_li]:rounded-md [&_li]:border [&_li]:border-neutral-200 [&_li]:px-2 [&_li]:py-1.5 [&_li]:text-[13px] [&_li]:break-words",
+  "states": "m-0 grid list-none gap-2 p-0.5",
+  "state": "flex items-end gap-2.5 rounded-md border border-neutral-200 bg-neutral-50 p-2.5 [&>div:first-child]:grid [&>div:first-child]:min-w-0 [&>div:first-child]:flex-1 [&>div:first-child]:gap-1",
+  "controls": "flex gap-1 [&_button]:min-w-[34px] [&_button]:min-h-10 [&_button]:rounded-md [&_button]:border [&_button]:border-neutral-200 [&_button]:bg-white [&_button]:cursor-pointer hover:[&_button]:bg-neutral-100",
+  "add": "flex flex-wrap items-end gap-2 max-sm:flex-col max-sm:items-stretch [&>div]:min-w-[140px] [&>div]:flex-1"
+};
 
 interface TaskStatusConfigurationProps {
   project: Project;
@@ -101,7 +109,7 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
             <button type="button" className={formStyles.secondary} disabled={busy}
               onClick={() => { setLoading(true); setReload((value) => value + 1); }}>Recargar configuración</button>
             <button type="button" className={formStyles.secondary} disabled={busy} onClick={onClose}>Cancelar</button>
-            <button type="submit" className="primary-button" disabled={busy || !configuration?.can_configure || !project.permissions.manage}>
+            <button type="submit" className="min-h-10 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700" disabled={busy || !configuration?.can_configure || !project.permissions.manage}>
               {busy ? "Guardando…" : "Aplicar cambios"}
             </button>
           </>
@@ -114,7 +122,7 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
               <option value="custom">Personalizado para este proyecto</option>
             </select>
           </div>
-          <p className="field-hint">
+          <p className="m-0 text-xs leading-relaxed text-neutral-600">
             PENDIENTE → EN CURSO → CERRADO. Se conservan los estados intermedios, motivos y revisión que exigen las transiciones actuales.
           </p>
           {template === "standard" ? (
@@ -126,7 +134,7 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
             ))}</div>
           ) : (
             <>
-              <p className="field-hint">Personaliza nombres y orden sobre el catálogo existente. No se crean códigos ni transiciones globales.</p>
+              <p className="m-0 text-xs leading-relaxed text-neutral-600">Personaliza nombres y orden sobre el catálogo existente. No se crean códigos ni transiciones globales.</p>
               <div className={styles.groups}>{groupTaskStates(states).map((group) => (
                 <section key={group.label} aria-label={group.label}>
                   <h3>{group.label}</h3>

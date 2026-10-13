@@ -2,7 +2,19 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { projectPath } from "../../../routes";
 import type { ProjectSummary } from "../types";
-import styles from "./ProjectNavigation.module.css";
+const styles = {
+  "navigation": "mt-3 border-t border-neutral-200 pt-3",
+  "projects": "m-0 grid list-none gap-1 p-0 max-md:max-h-[40dvh] max-md:overflow-y-auto",
+  "children": "mb-2 ml-5 mt-1 grid list-none gap-1 border-l border-neutral-200 pl-2 hidden:hidden [&_a]:block [&_a]:min-h-9 [&_a]:rounded-md [&_a]:px-2 [&_a]:py-2 [&_a]:text-[13px] [&_a]:text-neutral-600 [&_a]:no-underline hover:[&_a]:bg-neutral-50 [&_a[aria-current=page]]:bg-neutral-100 [&_a[aria-current=page]]:font-semibold [&_a[aria-current=page]]:text-neutral-900 [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-neutral-700",
+  "heading": "flex items-center gap-1 rounded-md",
+  "active": "bg-neutral-100",
+  "project": "flex min-h-[38px] min-w-0 flex-1 items-center gap-2 rounded-md border-0 bg-transparent p-2 text-left text-[13px] font-semibold text-neutral-900 hover:bg-neutral-50 cursor-pointer [&_span:last-child]:min-w-0 [&_span:last-child]:break-words focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
+  "chevron": "mx-0.5 h-2 w-2 shrink-0 -rotate-45 border-b border-r border-current",
+  "expanded": "rotate-45",
+  "create": "mr-1 min-h-8 w-8 shrink-0 rounded-md border border-neutral-200 bg-white text-lg text-neutral-900 hover:bg-neutral-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
+  "message": "mx-2 mb-2 mt-1 text-xs leading-relaxed text-neutral-600 [overflow-wrap:anywhere]",
+  "retry": "min-h-10 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 mx-2 mb-3 text-xs"
+};
 
 interface ProjectNavigationProps {
   projects: ProjectSummary[];

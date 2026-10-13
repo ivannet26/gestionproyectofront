@@ -2,7 +2,12 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import TaskIcon from "./TaskIcon";
 import type { TaskIconName } from "./TaskIcon";
-import styles from "./TaskProperty.module.css";
+const styles = {
+  property: "min-w-0 max-w-full",
+  trigger: "inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-[13px] leading-snug text-neutral-700 cursor-pointer hover:enabled:bg-neutral-50 aria-expanded:bg-neutral-50 aria-expanded:border-neutral-600 aria-invalid:border-red-700 disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-default [&>svg]:shrink-0 [&>span]:max-w-[150px] [&>span]:truncate focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 [@media(pointer:coarse)]:min-h-10",
+  error: "mb-0 mt-1 max-w-[230px] text-xs leading-relaxed text-red-700 [overflow-wrap:anywhere]",
+  panel: "fixed inset-auto m-0 w-72 max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-xl border border-neutral-200 bg-white p-3 text-[13px] text-neutral-900 backdrop:bg-transparent [&_label]:mb-1.5 [&_label]:block [&_label]:text-xs [&_label]:font-medium [&_label]:text-neutral-600 [&_input:not([type=radio])]:w-full [&_input:not([type=radio])]:min-h-9 [&_input:not([type=radio])]:rounded-md [&_input:not([type=radio])]:border [&_input:not([type=radio])]:border-neutral-200 [&_input:not([type=radio])]:bg-white [&_input:not([type=radio])]:px-2 [&_input:not([type=radio])]:py-1.5 [&_select]:w-full [&_select]:min-h-9 [&_select]:rounded-md [&_select]:border [&_select]:border-neutral-200 [&_select]:bg-white [&_select]:px-2 [&_select]:py-1.5 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700 [&_button:disabled]:opacity-60"
+};
 
 interface TaskPropertyProps {
   id: string;

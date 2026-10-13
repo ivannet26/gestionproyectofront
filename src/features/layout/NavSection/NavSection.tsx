@@ -1,8 +1,12 @@
 import { Link } from 'react-router'
-import type { NavigationSection } from '../../dashboard/mockData'
 import type { ProjectSummary } from '../../projects/types'
 import ProjectNavigation from '../../projects/ProjectNavigation/ProjectNavigation'
-import styles from './NavSection.module.css'
+
+interface NavigationSection {
+  id: string
+  label: string
+  items: { path: string; label: string }[]
+}
 
 interface NavSectionProps {
   section: NavigationSection
@@ -25,22 +29,23 @@ function NavSection({
   const itemsId = `${section.id}-navigation`
 
   return (
-    <section className={styles['nav-section']} aria-labelledby={`${section.id}-heading`}>
-      <div className={styles.heading}>
-        <p id={`${section.id}-heading`} className={styles['nav-section__label']}>{section.label}</p>
+    <section aria-labelledby={`${section.id}-heading`}>
+      <div className="flex items-center justify-between gap-2.5 mb-1.5">
+        <p id={`${section.id}-heading`} className="m-0 mx-2 text-neutral-600 text-xs font-semibold tracking-widest uppercase">{section.label}</p>
         {section.id === 'projects' && canCreateProject && (
-          <button className={styles.create} type="button" aria-label="Crear proyecto"
+          <button className="w-7 h-7 p-0 border border-neutral-200 bg-neutral-50 text-neutral-900 text-lg cursor-pointer shadow-none disabled:opacity-50 disabled:cursor-not-allowed" type="button" aria-label="Crear proyecto"
             disabled={projectCreationDisabled}
             title={projectCreationDisabled ? 'Crear proyecto: esperando servicio y catálogos' : 'Crear proyecto'}
             onClick={onCreateProject}>+</button>
         )}
       </div>
-      <ul id={itemsId} className={styles['nav-section__items']}>
+      <ul id={itemsId} className="grid gap-0.5 m-0 p-0 list-none">
         {section.items.map((item) => (
           <li key={item.path}>
             <Link
               to={item.path}
               aria-current={currentPath === item.path ? 'page' : undefined}
+              className={`flex items-center w-full min-h-[38px] px-2.5 py-2 text-sm leading-snug no-underline shadow-none ${currentPath === item.path ? "text-neutral-900 bg-neutral-200 font-semibold" : "text-neutral-600 bg-white font-normal"}`}
             >
               {item.label}
             </Link>

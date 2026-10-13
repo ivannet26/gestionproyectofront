@@ -9,7 +9,25 @@ import type {
 import LabelList from "../LabelList/LabelList";
 import TaskProperties from "./TaskProperties";
 import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
-import styles from "./TaskForm.module.css";
+const styles = {
+  "form": "flex min-h-0 flex-col text-neutral-900 [&_[aria-invalid=true]]:border-red-700 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700",
+  "body": "min-h-0 overflow-y-auto overscroll-contain px-7 pb-7 pt-[22px] max-sm:p-4",
+  "fields": "m-0 grid min-w-0 gap-[18px] border-0 p-0",
+  "context": "m-0 text-xs leading-relaxed text-neutral-600 [overflow-wrap:anywhere]",
+  "titleField": "grid min-w-0 gap-1",
+  "descriptionField": "grid min-w-0 gap-1 [&_textarea]:w-full [&_textarea]:min-h-[88px] [&_textarea]:max-h-[180px] [&_textarea]:resize-y [&_textarea]:rounded-md [&_textarea]:border [&_textarea]:border-transparent [&_textarea]:bg-white [&_textarea]:px-1 [&_textarea]:py-2 [&_textarea]:text-[15px] [&_textarea]:leading-relaxed [&_textarea]:placeholder:text-neutral-600 hover:[&_textarea]:border-neutral-200",
+  "reasonField": "grid min-w-0 gap-1 [&_label]:text-xs [&_label]:text-neutral-600 [&_input]:min-h-9 [&_input]:w-full [&_input]:rounded-md [&_input]:border [&_input]:border-neutral-200 [&_input]:px-2 [&_input]:py-1.5 [&_input]:text-[13px]",
+  "name": "min-h-11 w-full rounded-md border border-transparent border-b-neutral-200 bg-white px-1 py-2 text-[22px] leading-snug font-medium tracking-tight text-neutral-900 placeholder:text-neutral-600 hover:border-neutral-200",
+  "fieldError": "m-0 px-1 text-xs leading-relaxed text-red-700 [overflow-wrap:anywhere]",
+  "metadata": "m-0 text-[11px] leading-relaxed text-neutral-600 [overflow-wrap:anywhere]",
+  "labels": "min-w-0",
+  "footer": "shrink-0 border-t border-neutral-200 bg-white px-7 py-3.5 max-sm:px-4",
+  "footerRow": "flex items-center justify-between gap-3 max-sm:flex-wrap",
+  "actions": "flex shrink-0 items-center gap-2 max-sm:ml-auto",
+  "cancel": "min-h-9 rounded-md border border-transparent bg-white px-3 py-2 text-[13px] text-neutral-600 hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 cursor-pointer disabled:opacity-50",
+  "generalError": "mb-2.5 mt-0 text-[13px] leading-relaxed text-red-700 [overflow-wrap:anywhere]",
+  "srOnly": "sr-only"
+};
 
 interface TaskFormProps {
   project: Project;
@@ -160,7 +178,7 @@ export default function TaskForm({ project, catalogs, task, parent, onSubmit, on
               : "La fecha de creación se registra al guardar."}</p>
             <div className={styles.actions}>
               <button type="button" className={styles.cancel} disabled={busy} onClick={onClose}>Cancelar</button>
-              <button type="submit" className="primary-button" disabled={busy}>
+              <button type="submit" className="min-h-10 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700" disabled={busy}>
                 {busy ? "Guardando…" : task ? "Guardar cambios" : parent ? "Crear subtarea" : "Crear tarea"}
               </button>
             </div>

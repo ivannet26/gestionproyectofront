@@ -9,7 +9,18 @@ import AreaSelector from "../AreaSelector/AreaSelector";
 import Modal from "../Modal/Modal";
 import ProjectConfiguration from "./ProjectConfiguration";
 import ProjectEndDateSelector from "./ProjectEndDateSelector";
-import formStyles from "./CreateProjectModal.module.css";
+const formStyles = {
+  "form": "flex min-h-0 flex-col",
+  "body": "min-h-0 overflow-y-auto overscroll-contain px-6 py-5 max-sm:p-4",
+  "fields": "m-0 grid min-w-0 gap-[18px] border-0 p-0",
+  "field": "grid min-w-0 content-start gap-1.5",
+  "properties": "flex flex-wrap items-start gap-2",
+  "footer": "shrink-0 border-t border-neutral-200 bg-white px-6 py-3.5 max-sm:px-4",
+  "actions": "flex flex-wrap items-center justify-end gap-2",
+  "secondary": "min-h-10 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
+  "fieldError": "m-0 text-xs leading-relaxed text-red-700 [overflow-wrap:anywhere]",
+  "generalError": "mb-2.5 mt-0 text-[13px] text-red-700 [overflow-wrap:anywhere]"
+};
 
 interface CreateProjectModalProps {
   catalogs: ProjectCatalogs;
@@ -142,7 +153,7 @@ export default function CreateProjectModal({ catalogs, onClose, onCreated }: Cre
 
   return (
     <Modal title={`Crear proyecto · Paso ${step} de 2`} onClose={onClose} busy={busy} projectComposer>
-      <form ref={form} className={formStyles.form} noValidate aria-busy={busy} onSubmit={submit}>
+      <form ref={form} className={`${formStyles.form} [&_label]:text-[13px] [&_label]:font-semibold [&_input:not([type=radio]):not([type=checkbox])]:min-h-10 [&_input:not([type=radio]):not([type=checkbox])]:w-full [&_input:not([type=radio]):not([type=checkbox])]:rounded-md [&_input:not([type=radio]):not([type=checkbox])]:border [&_input]:border-neutral-200 [&_input:not([type=radio]):not([type=checkbox])]:px-3 [&_input:not([type=radio]):not([type=checkbox])]:py-2 [&_input]:text-sm [&_textarea]:min-h-[74px] [&_textarea]:w-full [&_textarea]:rounded-md [&_textarea]:border [&_textarea]:border-neutral-200 [&_textarea]:px-3 [&_textarea]:py-2 [&_textarea]:text-sm [&_select]:w-full [&_select]:min-h-9 [&_select]:rounded-md [&_select]:border [&_select]:border-neutral-200 [&_select]:px-2 [&_select]:py-1 [&_select]:text-sm [&_[aria-invalid=true]]:border-red-700 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700`} noValidate aria-busy={busy} onSubmit={submit}>
         <div className={formStyles.body}>
           <fieldset className={formStyles.fields} disabled={busy}>
             {step === 1 ? (
@@ -155,7 +166,7 @@ export default function CreateProjectModal({ catalogs, onClose, onCreated }: Cre
                   {fieldErrors["project-name"] && <p id="project-name-error" className={formStyles.fieldError} role="alert">{fieldErrors["project-name"]}</p>}
                 </div>
                 <div className={formStyles.field}>
-                  <label htmlFor="project-description">Descripción <span className="field-hint">(opcional)</span></label>
+                  <label htmlFor="project-description">Descripción <span className="m-0 text-xs leading-relaxed text-neutral-600">(opcional)</span></label>
                   <textarea id="project-description" name="description" rows={2} maxLength={10000} value={draft.description}
                     aria-invalid={Boolean(fieldErrors["project-description"])} aria-describedby={fieldErrors["project-description"] ? "project-description-error" : undefined}
                     onChange={(event) => updateDraft({ description: event.target.value })} />
@@ -182,7 +193,7 @@ export default function CreateProjectModal({ catalogs, onClose, onCreated }: Cre
           <div className={formStyles.actions}>
             {step === 2 && <button type="button" className={formStyles.secondary} disabled={busy}
               onClick={() => { setError(""); setStep(1); }}>Volver</button>}
-            <button type="submit" className="primary-button"
+            <button type="submit" className="min-h-10 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"
               disabled={busy || catalogs.areas.length === 0 || (step === 2 && draft.mode === "assigned" && searching)}>
               {busy ? "Creando…" : step === 1 ? "Continuar" : draft.mode === "available"
                 ? "Publicar dentro del sistema" : "Crear con asignados"}
