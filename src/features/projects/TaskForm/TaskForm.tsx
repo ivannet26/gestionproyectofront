@@ -34,6 +34,7 @@ interface TaskFormProps {
   catalogs: ProjectCatalogs;
   task?: Task;
   parent?: Task;
+  initialState?: string;
   onSubmit: (data: TaskFormPayload) => Promise<void>;
   onConfigured: (configuration: ProjectTaskConfiguration) => void;
   onClose: () => void;
@@ -45,10 +46,10 @@ const taskFields: Record<string, string> = {
   reason: "task-reason", labels: "task-labels", requirement_ids: "task-labels",
 };
 
-export default function TaskForm({ project, catalogs, task, parent, onSubmit, onConfigured, onClose }: TaskFormProps) {
+export default function TaskForm({ project, catalogs, task, parent, initialState, onSubmit, onConfigured, onClose }: TaskFormProps) {
   const [name, setName] = useState(task?.name ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
-  const [stateCode, setStateCode] = useState("PENDIENTE");
+  const [stateCode, setStateCode] = useState(initialState ?? "PENDIENTE");
   const [priority, setPriority] = useState(task?.priority ?? 3);
   const [dueDate, setDueDate] = useState(task?.due_date ?? parent?.due_date ?? project.end_date ?? "");
   const [responsible, setResponsible] = useState(task?.responsible_id?.toString() ?? "");

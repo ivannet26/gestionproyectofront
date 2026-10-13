@@ -48,7 +48,7 @@ export function createTask(projectId: number, payload: CreateTaskPayload): Promi
   return projectRequest(`${projectId}/tasks/`, { method: "POST", body: JSON.stringify(payload) });
 }
 
-export function updateTask(projectId: number, taskId: number, payload: EditTaskPayload): Promise<Task> {
+export function updateTask(projectId: number, taskId: number, payload: Partial<EditTaskPayload>): Promise<Task> {
   return projectRequest(`${projectId}/tasks/${taskId}/`, { method: "PATCH", body: JSON.stringify(payload) });
 }
 

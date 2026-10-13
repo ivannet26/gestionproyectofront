@@ -1,12 +1,16 @@
-import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import TaskIcon from "./TaskIcon";
+import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { TaskIconName } from "./TaskIcon";
+import TaskIcon from "./TaskIcon";
 const styles = {
   property: "min-w-0 max-w-full",
-  trigger: "inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-[13px] leading-snug text-neutral-700 cursor-pointer hover:enabled:bg-neutral-50 aria-expanded:bg-neutral-50 aria-expanded:border-neutral-600 aria-invalid:border-red-700 disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-default [&>svg]:shrink-0 [&>span]:max-w-[150px] [&>span]:truncate focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 [@media(pointer:coarse)]:min-h-10",
-  error: "mb-0 mt-1 max-w-[230px] text-xs leading-relaxed text-red-700 [overflow-wrap:anywhere]",
-  panel: "fixed inset-auto m-0 w-72 max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-xl border border-neutral-200 bg-white p-3 text-[13px] text-neutral-900 backdrop:bg-transparent [&_label]:mb-1.5 [&_label]:block [&_label]:text-xs [&_label]:font-medium [&_label]:text-neutral-600 [&_input:not([type=radio])]:w-full [&_input:not([type=radio])]:min-h-9 [&_input:not([type=radio])]:rounded-md [&_input:not([type=radio])]:border [&_input:not([type=radio])]:border-neutral-200 [&_input:not([type=radio])]:bg-white [&_input:not([type=radio])]:px-2 [&_input:not([type=radio])]:py-1.5 [&_select]:w-full [&_select]:min-h-9 [&_select]:rounded-md [&_select]:border [&_select]:border-neutral-200 [&_select]:bg-white [&_select]:px-2 [&_select]:py-1.5 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700 [&_button:disabled]:opacity-60"
+  cell: "w-full min-h-10 border-transparent !px-1.5 !py-1.5 text-left disabled:bg-transparent disabled:text-neutral-700 disabled:opacity-100",
+  trigger:
+    "inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-md border border-neutral-200 bg-white px-2.5 py-1.5 text-[13px] leading-snug text-neutral-700 cursor-pointer hover:enabled:bg-neutral-50 aria-expanded:bg-neutral-50 aria-expanded:border-neutral-600 aria-invalid:border-red-700 disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-default [&>svg]:shrink-0 [&>span]:max-w-[150px] [&>span]:truncate focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 [@media(pointer:coarse)]:min-h-10",
+  error:
+    "mb-0 mt-1 max-w-[230px] text-xs leading-relaxed text-red-700 [overflow-wrap:anywhere]",
+  panel:
+    "fixed inset-auto m-0 w-72 max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-xl border border-neutral-200 bg-white p-3 text-[13px] text-neutral-900 shadow-[0_6px_24px_rgba(24,36,40,0.15)] backdrop:bg-transparent [&_label]:mb-1.5 [&_label]:block [&_label]:text-xs [&_label]:font-medium [&_label]:text-neutral-600 [&_input:not([type=radio])]:w-full [&_input:not([type=radio])]:min-h-9 [&_input:not([type=radio])]:rounded-md [&_input:not([type=radio])]:border [&_input:not([type=radio])]:border-neutral-200 [&_input:not([type=radio])]:bg-white [&_input:not([type=radio])]:px-2 [&_input:not([type=radio])]:py-1.5 [&_select]:w-full [&_select]:min-h-9 [&_select]:rounded-md [&_select]:border [&_select]:border-neutral-200 [&_select]:bg-white [&_select]:px-2 [&_select]:py-1.5 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700 [&_button:disabled]:opacity-60",
 };
 
 interface TaskPropertyProps {
@@ -16,10 +20,12 @@ interface TaskPropertyProps {
   icon: TaskIconName;
   error?: string;
   disabled?: boolean;
+  cell?: boolean;
+  content?: ReactNode;
   children: (close: () => void) => ReactNode;
 }
 
-export default function TaskProperty({ id, label, value, icon, error, disabled, children }: TaskPropertyProps) {
+export default function TaskProperty({ id, label, value, icon, error, disabled, cell, content, children }: TaskPropertyProps) {
   const panelId = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -68,11 +74,11 @@ export default function TaskProperty({ id, label, value, icon, error, disabled, 
   }
 
   return <div className={styles.property}>
-    <button ref={trigger} id={id} type="button" className={styles.trigger} popoverTarget={panelId}
+    <button ref={trigger} id={id} type="button" className={`${styles.trigger}${cell ? ` ${styles.cell}` : ""}`} popoverTarget={panelId}
       disabled={disabled} aria-label={`${label}: ${value}`} title={`${label}: ${value}`}
       aria-expanded={open} aria-controls={panelId} aria-haspopup="dialog"
       aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-error` : undefined}>
-      <TaskIcon name={icon} /><span>{value}</span>
+      {content ?? <><TaskIcon name={icon} /><span>{value}</span></>}
     </button>
     {error && <p id={`${id}-error`} className={styles.error} role="alert">{error}</p>}
     <div ref={panel} id={panelId} popover="auto" role="dialog" aria-label={label} className={styles.panel}
@@ -85,7 +91,7 @@ export default function TaskProperty({ id, label, value, icon, error, disabled, 
         if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); close(); }
         if (event.key === "Enter" && event.target instanceof HTMLInputElement) event.preventDefault();
       }}>
-      {children(close)}
+      {(!cell || open) && children(close)}
     </div>
   </div>;
 }

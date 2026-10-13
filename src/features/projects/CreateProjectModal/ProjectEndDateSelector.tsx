@@ -32,7 +32,9 @@ function readDate(value: string) {
   return new Date(`${value}T12:00:00`);
 }
 
-function Calendar({ value, min, onChange, close }: ProjectEndDateSelectorProps & { close: () => void }) {
+export function Calendar({ value, min, max, label = "Fecha de fin estimada", optional = true, onChange, close }: ProjectEndDateSelectorProps & {
+  close: () => void; max?: string; label?: string; optional?: boolean;
+}) {
   const today = dateKey(new Date());
   const initial = value || min || today;
   const [month, setMonth] = useState(() => new Date(readDate(initial).getFullYear(), readDate(initial).getMonth(), 1, 12));
@@ -65,7 +67,7 @@ function Calendar({ value, min, onChange, close }: ProjectEndDateSelectorProps &
       next.setDate(Math.min(current.getDate(), lastDay));
     }
     const key = dateKey(next);
-    if (min && key < min) return;
+    if ((min && key < min) || (max && key > max)) return;
     setMonth(new Date(next.getFullYear(), next.getMonth(), 1, 12));
     setFocusedDate(key);
     requestAnimationFrame(() => grid.current?.querySelector<HTMLElement>(`[data-date="${key}"]`)?.focus());
@@ -78,12 +80,12 @@ function Calendar({ value, min, onChange, close }: ProjectEndDateSelectorProps &
         ?? grid.current?.querySelector<HTMLElement>("[data-date]:not(:disabled)");
       day?.focus({ preventScroll: true });
     }}>
-    <p className={styles.caption}>Fecha de fin estimada <span>(opcional)</span></p>
+    <p className={styles.caption}>{label} <span>({optional ? "opcional" : "obligatoria"})</span></p>
     <div className={styles.heading}>
       <button type="button" aria-label="Mes anterior" disabled={Boolean(min && previousEnd < min)}
         onClick={() => changeMonth(-1)}><TaskIcon name="previous" /></button>
       <strong aria-live="polite">{monthName.format(month)}</strong>
-      <button type="button" aria-label="Mes siguiente" onClick={() => changeMonth(1)}><TaskIcon name="next" /></button>
+      <button type="button" aria-label="Mes siguiente" disabled={Boolean(max && dateKey(new Date(month.getFullYear(), month.getMonth() + 1, 1, 12)) > max)} onClick={() => changeMonth(1)}><TaskIcon name="next" /></button>
     </div>
     <div ref={grid} role="grid" aria-label={monthName.format(month)} onKeyDown={navigate}>
       <div role="row" className={styles.week}>
@@ -92,7 +94,7 @@ function Calendar({ value, min, onChange, close }: ProjectEndDateSelectorProps &
       {Array.from({ length: 6 }, (_, week) => <div key={week} role="row" className={styles.week}>
         {days.slice(week * 7, week * 7 + 7).map((date) => {
           const key = dateKey(date);
-          const disabled = Boolean(min && key < min);
+          const disabled = Boolean((min && key < min) || (max && key > max));
           return <button type="button" key={key} role="gridcell" data-date={key}
             className={`${styles.day}${date.getMonth() !== month.getMonth() ? ` ${styles.outside}` : ""}`}
             aria-label={fullDate.format(date)} aria-selected={value === key}
@@ -108,10 +110,10 @@ function Calendar({ value, min, onChange, close }: ProjectEndDateSelectorProps &
         })}
       </div>)}
     </div>
-    <div className={styles.actions}>
+    {optional && <div className={styles.actions}>
       <button type="button" disabled={!value} onClick={() => { onChange(""); close(); }}>Quitar fecha</button>
       <button type="button" onClick={close}>Listo</button>
-    </div>
+    </div>}
   </div>;
 }
 

@@ -12,6 +12,7 @@ import {
   errorText,
   logout,
   refreshSession,
+  sessionKey,
 } from "./features/auth/api";
 
 function App() {
@@ -39,8 +40,15 @@ function App() {
 
   useEffect(() => {
     const expire = () => setUser(null);
+    const update = (event: Event) => {
+      if (event instanceof CustomEvent) setUser(event.detail as SessionUser);
+    };
     window.addEventListener("gm-session-expired", expire);
-    return () => window.removeEventListener("gm-session-expired", expire);
+    window.addEventListener("gm-session-updated", update);
+    return () => {
+      window.removeEventListener("gm-session-expired", expire);
+      window.removeEventListener("gm-session-updated", update);
+    };
   }, []);
 
   async function signOut() {
@@ -72,6 +80,7 @@ function App() {
             <LoginPage onLogin={setUser} />
           ) : (
             <AppShell
+              key={sessionKey(user)}
               user={user}
               onLogout={signOut}
               logoutError={logoutError}

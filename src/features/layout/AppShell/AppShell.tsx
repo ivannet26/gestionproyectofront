@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
+import type { AppRoute } from "../../../routes";
+import { appRoutes, projectPath } from "../../../routes";
 import type { SessionUser } from "../../auth/api";
 import { errorText } from "../../auth/api";
-import { appRoutes, projectPath } from "../../../routes";
-import type { AppRoute } from "../../../routes";
+import CreateProjectModal from "../../projects/CreateProjectModal/CreateProjectModal";
+import Modal from "../../projects/Modal/Modal";
 import { getProjectCatalogs, getProjects } from "../../projects/services";
 import type {
   Project,
@@ -11,7 +13,6 @@ import type {
   ProjectSummary,
   TaskCreationRequest,
 } from "../../projects/types";
-import CreateProjectModal from "../../projects/CreateProjectModal/CreateProjectModal";
 import NotAvailable from "../NotAvailable/NotAvailable";
 import Sidebar from "../Sidebar/Sidebar";
 
@@ -33,6 +34,9 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const [projectError, setProjectError] = useState("");
   const [projectReload, setProjectReload] = useState(0);
   const [creating, setCreating] = useState(false);
+  const [catalogsReady, setCatalogsReady] = useState(false);
+  const [catalogError, setCatalogError] = useState("");
+  const [catalogReload, setCatalogReload] = useState(0);
   const [taskCreationRequest, setTaskCreationRequest] =
     useState<TaskCreationRequest | null>(null);
   const taskCreationSequence = useRef(0);
@@ -43,21 +47,42 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const canCreateTasks =
     user.role === "ADMINISTRADOR" || user.role === "TRABAJADOR";
   const creationDisabled = projectsLoading || Boolean(projectError);
+  const needsCatalogs = creating || /^\/proyectos\/\d+$/.test(pathname);
+  const catalogLoading = !catalogsReady && !catalogError;
 
   useEffect(() => {
     let current = true;
-    void Promise.all([getProjects(), getProjectCatalogs()])
-      .then(([items, options]) => {
+    void getProjects()
+      .then((items) => {
         if (current) {
           setProjects(items);
-          setCatalogs(options);
           setProjectError("");
         }
       })
       .catch((failure: unknown) => { if (current) setProjectError(errorText(failure)); })
       .finally(() => { if (current) setProjectsLoading(false); });
     return () => { current = false; };
-  }, [user, projectReload]);
+  }, [projectReload]);
+
+  useEffect(() => {
+    if (!needsCatalogs || catalogsReady) return;
+    let current = true;
+    void getProjectCatalogs()
+      .then((options) => {
+        if (current) {
+          setCatalogs(options);
+          setCatalogsReady(true);
+          setCatalogError("");
+        }
+      })
+      .catch((failure: unknown) => { if (current) setCatalogError(errorText(failure)); });
+    return () => { current = false; };
+  }, [needsCatalogs, catalogsReady, catalogReload]);
+
+  function retryCatalogs() {
+    setCatalogError("");
+    setCatalogReload(current => current + 1);
+  }
 
   function retryProjects() {
     setProjectsLoading(true);
@@ -125,8 +150,9 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         return (
           <route.Component
             catalogs={catalogs}
-            catalogLoading={projectsLoading}
-            catalogError={projectError}
+            catalogLoading={catalogLoading}
+            catalogError={catalogError}
+            onRetryCatalogs={retryCatalogs}
             taskCreationRequest={taskCreationRequest}
             onTaskCreationHandled={taskCreationHandled}
           />
@@ -184,13 +210,32 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         </Routes>
       </div>
       {creating && canCreateProject && (
-        <CreateProjectModal
-          catalogs={catalogs}
-          onClose={() => setCreating(false)}
-          onCreated={projectCreated}
-        />
+        catalogsReady ? (
+          <CreateProjectModal
+            catalogs={catalogs}
+            onClose={() => setCreating(false)}
+            onCreated={projectCreated}
+          />
+        ) : (
+          <Modal
+            title="Crear proyecto"
+            onClose={() => setCreating(false)}
+            projectComposer
+          >
+            {catalogError ? (
+              <>
+                <p role="alert">{catalogError}</p>
+                <button type="button" onClick={retryCatalogs}>
+                  Reintentar catálogos
+                </button>
+              </>
+            ) : (
+              <p role="status">Cargando catálogos…</p>
+            )}
+          </Modal>
+        )
       )}
-    </div>
+    </div >
   );
 }
 
