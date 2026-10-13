@@ -34,3 +34,16 @@ export interface TeamWriteData {
   name: string;
   active: boolean;
 }
+
+export interface TeamMember {
+  id: number;
+  worker: number;
+  worker_name: string;
+  joined_date: string;
+  left_date: string | null;
+}
+
+export interface TeamMemberWriteData {
+  worker_id: number;
+  joined_date?: string;
+}

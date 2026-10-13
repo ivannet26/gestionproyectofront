@@ -25,3 +25,19 @@ export interface WorkerUpdateData {
   weekly_hours: string;
   active: boolean;
 }
+
+export interface WorkerFilters {
+  search?: string;
+  disponible?: boolean;
+}
+
+export interface MySpecialty {
+  id: number;
+  name: string;
+  level: number;
+}
+
+export interface MySpecialtyWriteData {
+  specialty_id: number;
+  level?: number;
+}

@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import gmLogo from "../../../assets/gm-logo.png";
 import type { SessionUser } from "../../auth/api";
 import { navigation } from "../../dashboard/mockData";
 import LogoutIcon from "../../../shared/icons/LogoutIcon";
 import ProfileIcon from "../../../shared/icons/ProfileIcon";
+import ProfileModal from "../../profile/ProfileModal";
 import { roleLabel } from "../../auth/roles";
 
 interface SidebarProps {
@@ -12,14 +14,6 @@ interface SidebarProps {
   user: SessionUser;
   onLogout: () => void;
   currentPath: string;
-  projects: any[];
-  canCreateProject: boolean;
-  projectCreationDisabled: boolean;
-  onCreateProject: () => void;
-  projectsLoading: boolean;
-  projectError: string;
-  canCreateTasks: boolean;
-  onCreateTask: (projectId: number) => void;
 }
 
 function Sidebar({
@@ -29,35 +23,50 @@ function Sidebar({
   onLogout,
   currentPath,
 }: SidebarProps) {
+  const [profileOpen, setProfileOpen] = useState(false);
+
   return (
-    <aside className={`sticky top-0 z-10 flex h-screen min-w-0 flex-col bg-white p-3 text-neutral-900 border-r border-neutral-200 shadow-none ${isCollapsed ? "items-center px-2" : ""}`}>
-      <div className="flex items-center justify-center min-h-[78px]">
+    <aside
+      className={`sticky top-0 z-10 flex h-screen shrink-0 flex-col bg-white p-4 border-r border-neutral-200 ${
+        isCollapsed ? "w-20 items-center px-2" : "w-64"
+      }`}
+    >
+      <div className="flex items-center justify-center py-2">
         <button
-          className="p-0 bg-white border-0 cursor-pointer leading-none"
           type="button"
           onClick={onToggleCollapse}
+          className="cursor-pointer"
         >
           <img
-            className={`block h-auto ${isCollapsed ? "w-[52px]" : "w-[204px] max-w-full"}`}
             src={gmLogo}
             alt="GM Ingenieros y Consultores"
+            className={`block h-auto brightness-105 ${isCollapsed ? "w-8" : "w-48"}`}
           />
         </button>
       </div>
-      <nav className="min-w-0 flex-1 overflow-y-auto px-1">
-        <div className={`flex flex-col gap-2 ${isCollapsed ? "mt-3" : "mt-5"}`}>
+
+      <nav className="flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-1.5 mt-3">
           {navigation.map((entry) => {
             const Icon = entry.icon;
             const isActive = entry.path === currentPath;
+
             return (
               <Link
                 key={entry.path}
-                className={`flex items-center gap-2.5 px-2.5 py-1.5 min-h-11 text-sm font-normal no-underline border-0 shadow-none ${isActive ? "text-neutral-900 bg-neutral-50" : "text-neutral-600 bg-white"} ${isCollapsed ? "w-12 justify-center p-1.5 mx-auto" : "w-full text-left"}`}
                 to={entry.path}
                 aria-current={isActive ? "page" : undefined}
+                className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-md ${
+                  isActive
+                    ? "bg-neutral-100 text-neutral-800"
+                    : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800"
+                } ${isCollapsed ? "justify-center px-0" : ""}`}
               >
-                <span className="grid w-7 h-7 flex-none place-items-center text-neutral-600" aria-hidden="true">
-                  <Icon />
+                <span
+                  className="size-5 flex-none flex items-center justify-center"
+                  aria-hidden="true"
+                >
+                  <Icon className="size-5" />
                 </span>
                 {!isCollapsed && <span>{entry.label}</span>}
               </Link>
@@ -66,20 +75,51 @@ function Sidebar({
         </div>
       </nav>
 
-      <div className={`flex items-center gap-2.5 min-h-[60px] p-2 bg-white border-0 shadow-none ${isCollapsed ? "w-[52px] flex-col justify-center p-1.5" : ""}`}>
-        <span className="grid w-9 h-9 flex-none place-items-center text-neutral-600 text-xs font-medium bg-neutral-200 border-0" aria-hidden="true">
-          <ProfileIcon />
-        </span>
-        {!isCollapsed && (
-          <span className="flex flex-col flex-1 min-w-0">
-            <strong className="overflow-hidden text-ellipsis whitespace-nowrap text-neutral-600 text-xs font-normal leading-snug">{user.name}</strong>
-            <small className="mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap text-neutral-600 text-xs leading-snug">{roleLabel(user.role)}</small>
-          </span>
-        )}
-        <button className="flex flex-none items-center text-neutral-600 bg-white border-0 cursor-pointer p-2" type="button" onClick={onLogout} aria-label="Cerrar sesión">
-          <LogoutIcon className="w-5 h-5" />
+      <div
+        className={`flex items-center ${
+          isCollapsed ? "justify-center" : "justify-between"
+        } gap-2 pt-3 border-t border-neutral-100`}
+      >
+        <button
+          type="button"
+          onClick={() => setProfileOpen(true)}
+          aria-label="Abrir mi perfil"
+          aria-haspopup="dialog"
+          className={`flex min-w-0 ${
+            isCollapsed
+              ? "justify-center p-0"
+              : "flex-1 items-center gap-2.5 p-1 text-left"
+          } rounded-md hover:bg-neutral-50 cursor-pointer`}
+        >
+          <ProfileIcon
+            className="size-8 flex-none text-neutral-600"
+            aria-hidden="true"
+          />
+          {!isCollapsed && (
+            <div className="flex flex-col min-w-0 text-left">
+              <span className="truncate text-sm font-medium text-neutral-800 leading-tight">
+                {user.name}
+              </span>
+              <span className="truncate text-xs text-neutral-600 leading-tight mt-0.5">
+                {roleLabel(user.role)}
+              </span>
+            </div>
+          )}
         </button>
+
+        {!isCollapsed && (
+          <button
+            type="button"
+            onClick={onLogout}
+            aria-label="Cerrar sesión"
+            className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-full cursor-pointer flex-none inline-flex items-center"
+          >
+            <LogoutIcon className="size-4" />
+          </button>
+        )}
       </div>
+
+      {profileOpen && <ProfileModal onClose={() => setProfileOpen(false)} />}
     </aside>
   );
 }

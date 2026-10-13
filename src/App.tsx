@@ -65,8 +65,10 @@ function App() {
         path="/*"
         element={
           loading ? (
-            <main className="min-h-screen grid place-items-center bg-neutral-50 text-neutral-900 p-6">
-              <p role="status" className="text-sm text-neutral-600">Comprobando sesión…</p>
+            <main className="min-h-screen grid place-items-center  text-neutral-900 p-6">
+              <p role="status" className="text-sm text-neutral-600">
+                Comprobando sesión…
+              </p>
             </main>
           ) : !user ? (
             <LoginPage onLogin={setUser} />

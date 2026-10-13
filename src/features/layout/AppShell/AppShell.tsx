@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 import type { SessionUser } from "../../auth/api";
 import { errorText } from "../../auth/api";
@@ -34,13 +34,10 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const [creating, setCreating] = useState(false);
   const [taskCreationRequest, setTaskCreationRequest] =
     useState<TaskCreationRequest | null>(null);
-  const taskCreationSequence = useRef(0);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const canViewAdmin = user.permissions.manage_accounts;
   const canCreateProject = user.role === "ADMINISTRADOR";
-  const canCreateTasks =
-    user.role === "ADMINISTRADOR" || user.role === "TRABAJADOR";
   const creationDisabled = projectsLoading || Boolean(projectError);
 
   useEffect(() => {
@@ -75,22 +72,6 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
     ]);
     setCreating(false);
     void navigate(projectPath(project.id));
-  }
-
-  function openTaskCreation(projectId: number) {
-    const project = projects.find((item) => item.id === projectId);
-    if (
-      !canCreateTasks ||
-      projectsLoading ||
-      !project?.permissions.create_tasks
-    )
-      return;
-    taskCreationSequence.current += 1;
-    setTaskCreationRequest({
-      projectId,
-      sequence: taskCreationSequence.current,
-    });
-    void navigate(projectPath(projectId));
   }
 
   function taskCreationHandled(sequence: number) {
@@ -135,40 +116,16 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
     }
   }
 
-  const gridClasses = isSidebarCollapsed
-    ? "grid-cols-[82px_1fr]"
-    : "grid-cols-[270px_1fr]";
-
   return (
-    <div className={`grid min-h-screen bg-neutral-50 text-neutral-900 ${gridClasses}`}>
-      <div className="flex flex-col h-full bg-white border-r border-neutral-200">
-        <Sidebar
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
-          user={user}
-          onLogout={onLogout}
-          currentPath={pathname}
-          projects={projects}
-          canCreateProject={canCreateProject}
-          projectCreationDisabled={creationDisabled}
-          onCreateProject={openProjectCreation}
-          projectsLoading={projectsLoading}
-          projectError={projectError}
-          canCreateTasks={canCreateTasks}
-          onCreateTask={openTaskCreation}
-        />
-      </div>
-      <div className="min-w-0 flex-1 overflow-hidden">
-        {logoutError && (
-          <p className="mx-6 mt-4 border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900" role="alert">
-            {logoutError}
-          </p>
-        )}
-        {pathname === "/" && projectError && (
-          <p className="mx-6 mt-4 border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900" role="alert">
-            Gestión de proyectos: {projectError}
-          </p>
-        )}
+    <div className="flex min-h-screen bg-white text-neutral-900">
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
+        user={user}
+        onLogout={onLogout}
+        currentPath={pathname}
+      />
+      <div className="w-full flex-1 p-10 bg-white">
         <Routes>
           {appRoutes.map((route) => (
             <Route

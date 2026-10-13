@@ -5,6 +5,8 @@ import type {
   Specialty,
   SpecialtyWriteData,
   Team,
+  TeamMember,
+  TeamMemberWriteData,
   TeamWriteData,
 } from "../interfaces/organization.interface";
 
@@ -79,4 +81,29 @@ export async function updateTeam(id: number, payload: TeamWriteData): Promise<Te
 
 export async function removeTeam(id: number): Promise<void> {
   await httpClient.delete(`teams/teams/${id}/`);
+}
+
+export async function listTeamMembers(teamId: number): Promise<TeamMember[]> {
+  const { data } = await httpClient.get<TeamMember[]>(
+    `teams/teams/${teamId}/members/`,
+  );
+  return data;
+}
+
+export async function addTeamMember(
+  teamId: number,
+  payload: TeamMemberWriteData,
+): Promise<TeamMember> {
+  const { data } = await httpClient.post<TeamMember>(
+    `teams/teams/${teamId}/members/`,
+    payload,
+  );
+  return data;
+}
+
+export async function removeTeamMember(
+  teamId: number,
+  memberId: number,
+): Promise<void> {
+  await httpClient.delete(`teams/teams/${teamId}/members/${memberId}/`);
 }

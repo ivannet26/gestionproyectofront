@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { TeamWriteData } from "../../../core/interfaces/organization.interface";
+import type { TeamWriteData } from "../../../../core/interfaces/organization.interface";
 
 export interface TeamFormState {
   area: string;

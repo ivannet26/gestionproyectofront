@@ -113,7 +113,12 @@ export default function InvitationForm({
       >
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="grid gap-2">
-            <label htmlFor="invite-first-names" className="text-neutral-900 text-sm font-medium">Nombres</label>
+            <label
+              htmlFor="invite-first-names"
+              className="text-neutral-900 text-sm font-medium"
+            >
+              Nombres
+            </label>
             <input
               id="invite-first-names"
               autoComplete="given-name"
@@ -125,7 +130,12 @@ export default function InvitationForm({
             />
           </div>
           <div className="grid gap-2">
-            <label htmlFor="invite-last-names" className="text-neutral-900 text-sm font-medium">Apellidos</label>
+            <label
+              htmlFor="invite-last-names"
+              className="text-neutral-900 text-sm font-medium"
+            >
+              Apellidos
+            </label>
             <input
               id="invite-last-names"
               autoComplete="family-name"
@@ -137,7 +147,12 @@ export default function InvitationForm({
             />
           </div>
         </div>
-        <label htmlFor="invite-email" className="text-neutral-900 text-sm font-medium">Correo electrónico</label>
+        <label
+          htmlFor="invite-email"
+          className="text-neutral-900 text-sm font-medium"
+        >
+          Correo electrónico
+        </label>
         <input
           id="invite-email"
           type="email"
@@ -151,7 +166,10 @@ export default function InvitationForm({
         <div className="grid gap-2">
           {selections.map((selection, index) => (
             <div className="grid gap-2" key={selection.key}>
-              <label htmlFor={`invite-area-${selection.key}`} className="text-neutral-900 text-sm font-medium">
+              <label
+                htmlFor={`invite-area-${selection.key}`}
+                className="text-neutral-900 text-sm font-medium"
+              >
                 {index === 0 ? "Área o áreas" : `Área ${index + 1}`}
               </label>
               <div className="flex gap-2">
@@ -214,7 +232,12 @@ export default function InvitationForm({
             </button>
           )}
         </div>
-        <label htmlFor="invite-role" className="text-neutral-900 text-sm font-medium">Rol global</label>
+        <label
+          htmlFor="invite-role"
+          className="text-neutral-900 text-sm font-medium"
+        >
+          Rol global
+        </label>
         <select
           id="invite-role"
           value={role}
@@ -227,12 +250,18 @@ export default function InvitationForm({
             </option>
           ))}
         </select>
-        <button className="w-full min-h-[42px] px-4 py-2 bg-neutral-900 text-white text-sm font-medium shadow-none disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
+        <button
+          className="w-full min-h-[42px] px-4 py-2 bg-neutral-900 text-white text-sm shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
+          type="submit"
+        >
           {busy ? "Registrando y enviando…" : "Registrar e invitar"}
         </button>
       </fieldset>
       {areas.length === 0 && (
-        <p className="m-0 text-xs text-neutral-600 leading-relaxed" role="status">
+        <p
+          className="m-0 text-xs text-neutral-600 leading-relaxed"
+          role="status"
+        >
           No hay áreas activas disponibles para registrar cuentas.
         </p>
       )}

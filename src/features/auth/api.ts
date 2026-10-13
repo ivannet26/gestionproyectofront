@@ -4,6 +4,13 @@ export interface SessionUser {
   permissions: { manage_accounts: boolean };
 }
 
+export interface SessionProfile {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export interface Area {
   id: number;
   name: string;
@@ -181,4 +188,8 @@ export async function apiRequest<T>(
     }
   }
   return parseResponse<T>(response);
+}
+
+export async function getSessionProfile(): Promise<SessionProfile> {
+  return apiRequest<SessionProfile>("me/");
 }

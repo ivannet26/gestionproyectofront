@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SpecialtyWriteData } from "../../../core/interfaces/organization.interface";
+import type { SpecialtyWriteData } from "../../../../core/interfaces/organization.interface";
 
 export function useSpecialtyForm(initial: SpecialtyWriteData) {
   const [formData, setFormData] = useState<SpecialtyWriteData>(initial);

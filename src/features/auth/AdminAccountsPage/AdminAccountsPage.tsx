@@ -83,15 +83,20 @@ export default function AdminAccountsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-50 text-neutral-900 p-6" id="main-content">
+    <main className="min-h-screen  text-neutral-900 p-6" id="main-content">
       <header className="flex flex-wrap items-end justify-between gap-4 mb-6">
         <div className="max-w-2xl">
-          <nav className="text-xs text-neutral-600" aria-label="Ruta de navegación">
+          <nav
+            className="text-xs text-neutral-600"
+            aria-label="Ruta de navegación"
+          >
             <ol className="flex gap-2 m-0 p-0 list-none">
               <li>Administración</li>
             </ol>
           </nav>
-          <h1 className="m-0 mt-1 text-xl font-semibold text-neutral-900">Cuentas y accesos</h1>
+          <h1 className="m-0 mt-1 text-xl font-semibold text-neutral-900">
+            Cuentas y accesos
+          </h1>
           <p className="m-0 mt-1 text-sm text-neutral-600">
             Registra trabajadores, asigna sus áreas y gestiona el acceso al
             sistema.
@@ -99,17 +104,25 @@ export default function AdminAccountsPage() {
         </div>
       </header>
       {error && (
-        <p className="border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-none" role="alert">
+        <p
+          className="border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 shadow-none"
+          role="alert"
+        >
           {error}
         </p>
       )}
       {message && (
-        <p className="border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 shadow-none" role="status">
+        <p
+          className="border border-neutral-200  px-3 py-2 text-sm text-neutral-900 shadow-none"
+          role="status"
+        >
           {message}
         </p>
       )}
       {loading ? (
-        <p role="status" className="text-sm text-neutral-600">Cargando cuentas…</p>
+        <p role="status" className="text-sm text-neutral-600">
+          Cargando cuentas…
+        </p>
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <section
@@ -118,7 +131,12 @@ export default function AdminAccountsPage() {
           >
             <div className="px-5 pt-5 pb-0">
               <div>
-                <h2 id="invite-title" className="m-0 text-base font-semibold text-neutral-900">Registrar e invitar</h2>
+                <h2
+                  id="invite-title"
+                  className="m-0 text-base font-semibold text-neutral-900"
+                >
+                  Registrar e invitar
+                </h2>
                 <p className="m-0 mt-1 text-sm text-neutral-600">
                   La cuenta quedará pendiente hasta que se defina la contraseña.
                 </p>
@@ -137,17 +155,35 @@ export default function AdminAccountsPage() {
           >
             <div className="px-5 pt-5 pb-0">
               <div>
-                <h2 id="recovery-title" className="m-0 text-base font-semibold text-neutral-900">Solicitudes de recuperación</h2>
-                <p className="m-0 mt-1 text-sm text-neutral-600">Verifica la identidad antes de emitir un enlace.</p>
+                <h2
+                  id="recovery-title"
+                  className="m-0 text-base font-semibold text-neutral-900"
+                >
+                  Solicitudes de recuperación
+                </h2>
+                <p className="m-0 mt-1 text-sm text-neutral-600">
+                  Verifica la identidad antes de emitir un enlace.
+                </p>
               </div>
             </div>
             <div className="px-5 py-4">
-              {requests.length === 0 && <p className="text-sm text-neutral-600">No hay solicitudes pendientes.</p>}
+              {requests.length === 0 && (
+                <p className="text-sm text-neutral-600">
+                  No hay solicitudes pendientes.
+                </p>
+              )}
               {requests.map((entry) => (
-                <div className="flex items-center justify-between gap-4 py-3 border-b border-neutral-200 last:border-b-0" key={entry.id}>
+                <div
+                  className="flex items-center justify-between gap-4 py-3 border-b border-neutral-200 last:border-b-0"
+                  key={entry.id}
+                >
                   <div className="min-w-0">
-                    <strong className="block text-sm text-neutral-900">{entry.name}</strong>
-                    <small className="block mt-0.5 text-xs text-neutral-600">{entry.email}</small>
+                    <strong className="block text-sm text-neutral-900">
+                      {entry.name}
+                    </strong>
+                    <small className="block mt-0.5 text-xs text-neutral-600">
+                      {entry.email}
+                    </small>
                     <small className="block mt-0.5 text-xs text-neutral-600">
                       Solicitada:{" "}
                       {new Date(entry.requested_at).toLocaleString("es-PE")}
@@ -171,17 +207,35 @@ export default function AdminAccountsPage() {
           >
             <div className="px-5 pt-5 pb-0">
               <div>
-                <h2 id="accounts-title" className="m-0 text-base font-semibold text-neutral-900">Cuentas</h2>
-                <p className="m-0 mt-1 text-sm text-neutral-600">Estado y rol global de las cuentas vinculadas.</p>
+                <h2
+                  id="accounts-title"
+                  className="m-0 text-base font-semibold text-neutral-900"
+                >
+                  Cuentas
+                </h2>
+                <p className="m-0 mt-1 text-sm text-neutral-600">
+                  Estado y rol global de las cuentas vinculadas.
+                </p>
               </div>
             </div>
             <div className="px-5 py-4">
-              {accounts.length === 0 && <p className="text-sm text-neutral-600">No hay cuentas registradas.</p>}
+              {accounts.length === 0 && (
+                <p className="text-sm text-neutral-600">
+                  No hay cuentas registradas.
+                </p>
+              )}
               {accounts.map((account) => (
-                <div className="flex items-center justify-between gap-4 py-3 border-b border-neutral-200 last:border-b-0 max-sm:flex-col max-sm:items-start" key={account.id}>
+                <div
+                  className="flex items-center justify-between gap-4 py-3 border-b border-neutral-200 last:border-b-0 max-sm:flex-col max-sm:items-start"
+                  key={account.id}
+                >
                   <div className="min-w-0">
-                    <strong className="block text-sm text-neutral-900">{account.name}</strong>
-                    <small className="block mt-0.5 text-xs text-neutral-600">{account.email}</small>
+                    <strong className="block text-sm text-neutral-900">
+                      {account.name}
+                    </strong>
+                    <small className="block mt-0.5 text-xs text-neutral-600">
+                      {account.email}
+                    </small>
                     <small className="block mt-0.5 text-xs text-neutral-600">
                       {account.all_areas
                         ? "Todas las áreas activas"
