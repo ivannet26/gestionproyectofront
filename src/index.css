@@ -1,8 +1,1 @@
 @import "tailwindcss";
-
-body {
-  font-family: "Inter Tight";
-  scroll-behavior: smooth;
-  margin: 0;
-  -webkit-font-smoothing: antialiased;
-}

@@ -2,7 +2,8 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { errorText } from "../../auth/api";
 import type { ProjectTaskState, Task, TaskStatePayload } from "../types";
-import ProjectForm, { fieldClass, inputClass, labelClass, primaryButtonClass } from "../ProjectForm/ProjectForm";
+import ProjectForm from "../ProjectForm/ProjectForm";
+import { fieldClass, inputClass, labelClass, primaryButtonClass } from "../ProjectForm/formClasses";
 
 interface TaskStateFormProps {
   task: Task;

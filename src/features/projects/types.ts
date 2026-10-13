@@ -87,7 +87,7 @@ export interface ProjectDraft {
 export interface CreateProjectPayload {
   name: string;
   description: string;
-  end_date: string;
+  end_date: string | null;
   area_ids: number[];
   mode: ProjectMode;
   worker_ids: number[];
@@ -103,6 +103,7 @@ export interface Task {
   state_name: string;
   priority: number;
   created_at: string;
+  start_date: string;
   due_date: string;
   responsible_id: number | null;
   responsible_name: string | null;
@@ -119,6 +120,7 @@ export interface Task {
 }
 
 export interface EditTaskPayload {
+  start_date?: string;
   name: string;
   description?: string;
   priority: number;
@@ -141,10 +143,10 @@ export interface TaskStatePayload {
   reason: string;
 }
 
-export type TaskActionKind = "edit" | "state" | "child" | "dependencies";
+export type TaskActionKind = "edit" | "state" | "child" | "dependencies" | "detail";
 
 export type TaskAction =
-  | { kind: "create" }
+  | { kind: "create"; stateCode?: string }
   | { kind: TaskActionKind; taskId: number };
 
 export interface TaskCreationRequest {

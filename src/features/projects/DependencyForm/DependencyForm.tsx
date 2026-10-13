@@ -2,12 +2,17 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { errorText } from "../../auth/api";
 import type { Task } from "../types";
+<<<<<<< HEAD
 import ProjectForm, {
   fieldClass,
   inputClass,
   labelClass,
   secondaryButtonClass,
 } from "../ProjectForm/ProjectForm";
+=======
+import ProjectForm from "../ProjectForm/ProjectForm";
+import { fieldClass, inputClass, labelClass, secondaryButtonClass } from "../ProjectForm/formClasses";
+>>>>>>> 331bd8aac01bb01bd27cb5de894aadc6824d9591
 
 interface DependencyFormProps {
   task: Task;
