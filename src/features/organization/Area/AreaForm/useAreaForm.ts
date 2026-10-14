@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { AreaWriteData } from "../../../core/interfaces/organization.interface";
+import type { AreaWriteData } from "../../../../core/interfaces/organization.interface";
 
 export function useAreaForm(initial: AreaWriteData) {
   const [formData, setFormData] = useState<AreaWriteData>(initial);

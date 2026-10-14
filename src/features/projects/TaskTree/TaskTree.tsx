@@ -46,7 +46,7 @@ export default function TaskTree({ tasks, catalogs, onAction }: TaskTreeProps) {
                   <div className="flex items-center gap-2.5 min-w-0 max-sm:flex-wrap">
                     {children.length > 0 && (
                       <button
-                        className="flex-none w-[27px] h-[27px] border border-neutral-200 bg-neutral-100 text-neutral-900 cursor-pointer shadow-none"
+                        className="w-[27px] h-[27px] border border-neutral-200 bg-neutral-50 text-neutral-900 cursor-pointer shadow-none"
                         type="button"
                         aria-label={`${expanded ? "Contraer" : "Expandir"} subtareas de ${task.name}`}
                         aria-expanded={expanded}
@@ -61,7 +61,7 @@ export default function TaskTree({ tasks, catalogs, onAction }: TaskTreeProps) {
                     </strong>
                     <StatusBadge>{task.state_name}</StatusBadge>
                     {hasActions && (
-                      <details className="relative flex-none ml-auto">
+                      <details className="relative ml-auto">
                         <summary
                           aria-label={`Opciones de ${task.name}`}
                           className="grid w-8 h-[30px] place-items-center list-none cursor-pointer border border-neutral-200 bg-white shadow-none"

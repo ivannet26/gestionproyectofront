@@ -64,7 +64,7 @@ function TeamsSection() {
         <h3 className="m-0 text-sm text-neutral-800">Equipos</h3>
         <button
           type="button"
-          className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs rounded-md cursor-pointer inline-flex items-center gap-1.5"
+          className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs rounded-lg cursor-pointer inline-flex items-center gap-1.5"
           onClick={() => setModal({ mode: "create" })}
           aria-label="Nuevo equipo"
         >
@@ -80,10 +80,10 @@ function TeamsSection() {
           {data.map((team) => (
             <li
               key={team.id}
-              className="px-3 py-2 rounded-md hover:bg-neutral-50 flex items-center justify-between text-xs"
+              className="px-3 py-2 rounded-lg hover:bg-neutral-50 flex items-center justify-between text-xs"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="text-neutral-600 flex-none" aria-hidden="true">
+                <span className="inline-flex items-center" aria-hidden="true">
                   <TeamsIcon className="size-4" />
                 </span>
                 <span className="text-neutral-800 truncate">{team.name}</span>
@@ -98,15 +98,15 @@ function TeamsSection() {
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-md cursor-pointer inline-flex items-center"
+                  className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-lg cursor-pointer inline-flex items-center"
                   onClick={() => setMembersTeam(team)}
                   aria-label={`Miembros de ${team.name}`}
                 >
-                  <TeamsIcon className="size-4" />
+                  <PlusIcon className="size-4" />
                 </button>
                 <button
                   type="button"
-                  className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-md cursor-pointer inline-flex items-center"
+                  className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-lg cursor-pointer inline-flex items-center"
                   onClick={() => setModal({ mode: "edit", team })}
                   aria-label={`Editar ${team.name}`}
                 >
@@ -114,7 +114,7 @@ function TeamsSection() {
                 </button>
                 <button
                   type="button"
-                  className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-md cursor-pointer inline-flex items-center"
+                  className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-lg cursor-pointer inline-flex items-center"
                   onClick={() => handleDelete(team)}
                   aria-label={`Eliminar ${team.name}`}
                 >

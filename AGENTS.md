@@ -38,22 +38,22 @@
 - **Fondos:** `bg-white` (base, tarjetas, inputs). Hover de filas: `hover:bg-neutral-50`.
 - **Textos:** Primario `text-neutral-800` | Acciones `text-neutral-700` | Muted / Celdas `text-neutral-600`.
 - **Bordes:** `border border-neutral-200` (estructural), `border-neutral-100` (divisores y filas).
-- **Radios:** `rounded-md` (controles, tags, inputs), `rounded-xl` (paneles, tarjetas, modales), `rounded-full` (botón cerrar).
-- **Tipografía:** Inter únicamente 400 y 500 (`font-medium`). **Prohibido `font-semibold` y `bold`**.
+- **Radios:** `rounded-lg` (controles, tags, inputs), `rounded-xl` (paneles, tarjetas, modales), `rounded-full` (botón cerrar).
+- **Tipografía:** Inter únicamente 400, 500 y 600. **Prohibido `bold`**.
   - Escala: `text-[10px]` (tags), `text-xs` (UI base, tablas, inputs), `text-sm` (subtítulos, nav), `text-lg` (títulos).
-- **Sombras:** `shadow-none` en reposo. Exclusivo `shadow-lg` para modales y capas flotantes.
+- **Sombras:** No utilizar sombras en ninguno de los casos.
 - **Iconos:** `size-4` en toda la app (`size-5` únicamente en navegación del sidebar).
 
 ### Convenciones de Construcción
 
 - **Densidad por padding (Prohibido `h-*` o `min-h-*` en controles interactivos):**
-  - Controles e inputs: `px-3 py-1.5 text-xs font-medium rounded-md`
+  - Controles e inputs: `px-3 py-1.5 text-xs font-medium rounded-lg`
   - Filas y tablas: `px-3 py-2 text-xs`
   - Micro tags: `px-2 py-0.5 text-[10px] font-medium rounded bg-neutral-50`
-  - Sidebar Nav (+1 escala): `px-3 py-2.5 text-sm font-medium rounded-md gap-3`
+  - Sidebar Nav (+1 escala): `px-3 py-2.5 text-sm font-medium rounded-lg gap-3`
 - **Acciones (`cursor-pointer` obligatorio):**
   - Primaria: `bg-neutral-800 text-white hover:bg-neutral-700`
   - Secundaria: `bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-50`
   - Iconos de acción: `p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800`
-- **Inputs:** `bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 px-3 py-1.5 text-xs rounded-md focus:border-neutral-400 focus:outline-none`.
+- **Inputs:** `bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 px-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none`.
 - **Tablas:** `<thead>` sin fondo con `border-b border-neutral-200 font-medium text-neutral-700`; filas con `border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50`.

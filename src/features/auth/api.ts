@@ -155,8 +155,11 @@ async function rawRequest(
   });
 }
 
-export async function refreshSession(): Promise<SessionUser> {
-  if (!renewal) {
+export async function getSessionProfile(): Promise<SessionProfile> {
+  return apiRequest<SessionProfile>("me/");
+}
+
+export async function refreshSession(): Promise<SessionUser> {  if (!renewal) {
     const epoch = sessionEpoch;
 
     const operation = (async () => {

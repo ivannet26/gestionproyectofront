@@ -1,8 +1,6 @@
-interface TrashIconProps {
-  className?: string;
-}
+import type { IconProps } from "./types";
 
-function XIcon({ className }: TrashIconProps) {
+function XIcon({ className }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

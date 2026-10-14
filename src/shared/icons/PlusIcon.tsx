@@ -1,8 +1,6 @@
-interface PlusIconProps {
-  className?: string;
-}
+import type { IconProps } from "./types";
 
-function PlusIcon({ className }: PlusIconProps) {
+function PlusIcon({ className }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

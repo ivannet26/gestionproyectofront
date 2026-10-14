@@ -1,8 +1,6 @@
-interface LogoutIconProps {
-  className?: string;
-}
+import type { IconProps } from "./types";
 
-function LogoutIcon({ className }: LogoutIconProps) {
+function LogoutIcon({ className }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

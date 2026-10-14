@@ -4,6 +4,7 @@ import { getProjects } from "../../projects/services";
 import type { ProjectSummary } from "../../projects/types";
 import { projectPath } from "../../../routes";
 import EmptyState from "../../../shared/EmptyState/EmptyState";
+import ProjectsIcon from "../../../shared/icons/ProjectsIcon";
 
 function ProjectsSection() {
   const [data, setData] = useState<ProjectSummary[]>([]);
@@ -38,15 +39,24 @@ function ProjectsSection() {
           {data.map((project) => (
             <li
               key={project.id}
-              className="px-3 py-2 rounded-md hover:bg-neutral-50 flex items-center justify-between text-xs"
+              className="px-3 py-2 rounded-lg hover:bg-neutral-50 flex items-center gap-2 text-xs"
             >
+              <span
+                className="inline-flex items-center text-orange-500"
+                aria-hidden="true"
+              >
+                <ProjectsIcon className="size-4" />
+              </span>
               <Link
                 to={projectPath(project.id)}
                 className="flex-1 min-w-0 text-neutral-700 hover:text-neutral-800 truncate cursor-pointer"
               >
                 {project.name}
               </Link>
-              <div className="flex items-center gap-1.5 flex-none ml-2">
+              <span className="text-[10px] text-neutral-600">
+                {project.start_date}
+              </span>
+              <div className="flex items-center gap-1.5 ml-2">
                 {project.areas.map((area, index) => (
                   <span
                     key={index}

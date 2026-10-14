@@ -202,7 +202,7 @@ export default function InvitationForm({
                 {index > 0 && (
                   <button
                     type="button"
-                    className="px-3 py-2 text-neutral-900 bg-neutral-100 border border-neutral-200 text-sm cursor-pointer shadow-none"
+                    className="px-3 py-2 text-neutral-900 bg-neutral-50 border border-neutral-200 text-sm cursor-pointer shadow-none"
                     aria-label={`Retirar área ${index + 1}`}
                     onClick={() =>
                       setSelections((current) =>
@@ -224,7 +224,7 @@ export default function InvitationForm({
           )}
           {canAdd && (
             <button
-              className="justify-self-start px-3 py-2 text-neutral-900 bg-neutral-100 border border-neutral-200 text-sm cursor-pointer shadow-none"
+              className="justify-self-start px-3 py-2 text-neutral-900 bg-neutral-50 border border-neutral-200 text-sm cursor-pointer shadow-none"
               type="button"
               onClick={addArea}
             >

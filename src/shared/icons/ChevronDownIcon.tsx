@@ -1,8 +1,6 @@
-interface ChevronDownIconProps {
-  className?: string;
-}
+import type { IconProps } from "./types";
 
-function ChevronDownIcon({ className }: ChevronDownIconProps) {
+function ChevronDownIcon({ className }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

@@ -40,7 +40,7 @@ function NavSection({
       <div className="flex items-center justify-between gap-2.5 mb-1.5">
         <p
           id={`${section.id}-heading`}
-          className="m-0 mx-2 text-neutral-600 text-xs font-semibold tracking-widest uppercase"
+          className="m-0 mx-2 text-neutral-600 text-xs tracking-widest uppercase"
         >
           {section.label}
         </p>

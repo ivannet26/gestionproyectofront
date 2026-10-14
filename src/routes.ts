@@ -5,6 +5,7 @@ import ProjectList from "./features/projects/ProjectList/ProjectList";
 import ProjectRoute from "./features/projects/ProjectRoute/ProjectRoute";
 import WorkersPage from "./features/workers/WorkersPage";
 import OrganizationPage from "./features/organization/OrganizationPage";
+import TeamDetailPage from "./features/teams/TeamDetailPage";
 import type { DashboardPageProps } from "./features/dashboard/DashboardPage/DashboardPage";
 import type { ProjectListProps } from "./features/projects/ProjectList/ProjectList";
 import type { ProjectRouteProps } from "./features/projects/ProjectRoute/ProjectRoute";
@@ -16,6 +17,7 @@ export type AppRoute = {
   | { kind: "dashboard"; Component: ComponentType<DashboardPageProps> }
   | { kind: "projectList"; Component: ComponentType<ProjectListProps> }
   | { kind: "project"; Component: ComponentType<ProjectRouteProps> }
+  | { kind: "team"; Component: ComponentType }
   | { kind: "accounts"; Component: ComponentType }
 );
 
@@ -56,6 +58,11 @@ export const appRoutes: AppRoute[] = [
     path: "/organizacion",
     kind: "dashboard",
     Component: OrganizationPage,
+  },
+  {
+    path: "/equipos/:teamId",
+    kind: "team",
+    Component: TeamDetailPage,
   },
 ];
 

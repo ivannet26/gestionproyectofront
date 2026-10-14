@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { getSessionProfile } from "../auth/api";
-import type { SessionProfile } from "../auth/api";
-import { listSpecialties } from "../../core/services/organizationService";
+import { getSessionProfile } from "../../auth/api";
+import type { SessionProfile } from "../../auth/api";
+import { listSpecialties } from "../../../core/services/organizationService";
 import {
   addMySpecialty,
   listMySpecialties,
   removeMySpecialty,
-} from "../../core/services/workerService";
-import type { MySpecialty } from "../../core/interfaces/worker.interface";
-import type { Specialty } from "../../core/interfaces/organization.interface";
+} from "../../../core/services/workerService";
+import type { MySpecialty } from "../../../core/interfaces/worker.interface";
+import type { Specialty } from "../../../core/interfaces/organization.interface";
 
 export const useProfile = () => {
   const [profile, setProfile] = useState<SessionProfile | null>(null);
@@ -52,7 +52,6 @@ export const useProfile = () => {
   };
 
   const dropSpecialty = async (specialty: MySpecialty) => {
-    if (!window.confirm(`¿Quitar la especialidad ${specialty.name}?`)) return;
     setSaving(true);
     try {
       await removeMySpecialty(specialty.id);
@@ -65,7 +64,9 @@ export const useProfile = () => {
   return {
     profile,
     specialties,
-    catalog: catalog.filter((item) => !specialties.some((mine) => mine.id === item.id)),
+    catalog: catalog.filter(
+      (item) => !specialties.some((mine) => mine.id === item.id),
+    ),
     loading,
     error,
     saving,

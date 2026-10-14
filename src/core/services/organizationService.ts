@@ -69,6 +69,11 @@ export async function listTeams(): Promise<Team[]> {
   return data;
 }
 
+export async function getTeamById(id: number): Promise<Team> {
+  const { data } = await httpClient.get<Team>(`teams/teams/${id}/`);
+  return data;
+}
+
 export async function createTeam(payload: TeamWriteData): Promise<Team> {
   const { data } = await httpClient.post<Team>("teams/teams/", payload);
   return data;

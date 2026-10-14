@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: "Inter";
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply text-neutral-800 font-medium;
+  }
+}
+
+@layer components {
+  .bg-modal {
+    @apply fixed inset-0 z-50 grid place-items-center bg-black/40;
+  }
+}

@@ -50,12 +50,12 @@ function WorkerForm({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white border border-neutral-200 rounded-xl">
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white border border-neutral-200 rounded-lg">
         <header className="flex items-center justify-between px-5 py-4 border-b border-neutral-200">
-          <h3 className="font-semibold text-neutral-700">Editar trabajador</h3>
+          <h3 className="text-neutral-700">Editar trabajador</h3>
           <button
             type="button"
-            className="p-2 flex items-center justify-center text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 rounded-md cursor-pointer text-base leading-none"
+            className="p-2 flex items-center justify-center text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg cursor-pointer text-base leading-none"
             onClick={onClose}
             aria-label="Cerrar"
           >
@@ -79,7 +79,7 @@ function WorkerForm({
                   type={field.type}
                   value={formData[field.name]}
                   onChange={(e) => updateField(field.name, e.target.value)}
-                  className="w-full h-9 px-4 text-sm text-neutral-900 bg-white border border-neutral-200 rounded-md focus:border-neutral-400 focus:ring-0 focus-visible:outline-none"
+                  className="w-full h-9 px-4 text-sm text-neutral-900 bg-white border border-neutral-200 rounded-lg focus:border-neutral-400 focus:ring-0 focus-visible:outline-none"
                   min={field.min}
                   max={field.max}
                   required
@@ -104,7 +104,7 @@ function WorkerForm({
         <footer className="flex items-center justify-end gap-2 p-4">
           <button
             type="button"
-            className="px-4 py-2 text-sm text-neutral-900 bg-white border border-neutral-200 rounded-md hover:bg-neutral-50 cursor-pointer"
+            className="px-4 py-2 text-sm text-neutral-900 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer"
             onClick={onClose}
           >
             Cancelar
@@ -112,7 +112,7 @@ function WorkerForm({
           <button
             type="submit"
             form="worker-form"
-            className="px-4 py-2 text-sm bg-neutral-800 text-white rounded-md hover:bg-neutral-800 cursor-pointer disabled:opacity-50"
+            className="px-4 py-2 text-sm bg-neutral-800 text-white rounded-lg hover:bg-neutral-800 cursor-pointer disabled:opacity-50"
             disabled={submitting}
           >
             {submitting ? "Guardando…" : "Guardar"}

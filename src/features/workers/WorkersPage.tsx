@@ -1,7 +1,13 @@
 import { useState } from "react";
-import StatusBadge from "../../shared/StatusBadge/StatusBadge";
+import ActivityIcon from "../../shared/icons/ActivityIcon";
+import AtIcon from "../../shared/icons/AtIcon";
+import ClockIcon from "../../shared/icons/ClockIcon";
+import DotsIcon from "../../shared/icons/DotsIcon";
 import EditIcon from "../../shared/icons/EditIcon";
+import FolderIcon from "../../shared/icons/FolderIcon";
+import HashIcon from "../../shared/icons/HashIcon";
 import SearchIcon from "../../shared/icons/SearchIcon";
+import UserIcon from "../../shared/icons/UserIcon";
 import ChevronDownIcon from "../../shared/icons/ChevronDownIcon";
 import { useWorkers } from "./useWorkers";
 import WorkerForm from "./WorkerForm/WorkerForm";
@@ -10,6 +16,7 @@ import type {
   Worker,
   WorkerUpdateData,
 } from "../../core/interfaces/worker.interface";
+import StackIcon from "../../shared/icons/StackIcon";
 
 function WorkersPage() {
   const [searchInput, setSearchInput] = useState("");
@@ -68,7 +75,7 @@ function WorkersPage() {
 
       <form
         onSubmit={applyFilters}
-        className="flex flex-wrap items-center gap-2 mb-4"
+        className="flex flex-wrap items-center gap-2 mb-6"
       >
         <h2 className="m-0 mr-auto text-sm font-medium text-neutral-800">
           Trabajadores{" "}
@@ -84,7 +91,7 @@ function WorkersPage() {
             placeholder="Buscar por nombre, apellido o código"
             aria-label="Buscar trabajadores"
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 pl-8 pr-3 py-1.5 text-xs rounded-md focus:border-neutral-400 focus:outline-none"
+            className="w-full bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 pl-8 pr-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none"
           />
         </div>
 
@@ -93,7 +100,7 @@ function WorkersPage() {
             value={disponibleInput}
             aria-label="Filtrar por disponibilidad"
             onChange={(e) => setDisponibleInput(e.target.value)}
-            className="bg-white border border-neutral-200 text-neutral-800 pl-3 pr-8 py-1.5 text-xs rounded-md appearance-none focus:border-neutral-400 focus:outline-none cursor-pointer"
+            className="bg-white border border-neutral-200 text-neutral-800 pl-3 pr-8 py-1.5 text-xs rounded-lg appearance-none focus:border-neutral-400 focus:outline-none cursor-pointer"
           >
             <option value="">Todos</option>
             <option value="true">Sin proyecto</option>
@@ -105,7 +112,7 @@ function WorkersPage() {
         <button
           type="submit"
           disabled={loading}
-          className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs font-medium rounded-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Buscar trabajador
         </button>
@@ -114,39 +121,59 @@ function WorkersPage() {
           <button
             type="button"
             onClick={clearFilters}
-            className="text-xs font-medium text-neutral-700 hover:text-neutral-800 px-2 py-1.5 rounded-md hover:bg-neutral-100 cursor-pointer"
+            className="text-xs font-medium text-neutral-700 hover:text-neutral-800 px-2 py-1.5 rounded-lg hover:bg-neutral-50 cursor-pointer"
           >
             Limpiar
           </button>
         )}
       </form>
 
-      <section className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
+      <section className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
         <div className="w-full overflow-x-auto">
           <table className="w-full border-collapse text-xs text-neutral-600 text-left">
-            <caption className="sr-only">Listado de trabajadores</caption>
             <thead className="border-b border-neutral-200 font-medium text-neutral-700">
               <tr>
-                <th scope="col" className="px-3 py-2">
-                  Código
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <HashIcon className="size-4" />
+                    Código
+                  </span>
                 </th>
-                <th scope="col" className="px-3 py-2">
-                  Trabajador
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <UserIcon className="size-4" />
+                    Trabajador
+                  </span>
                 </th>
-                <th scope="col" className="px-3 py-2">
-                  Correo
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <AtIcon className="size-4" />
+                    Correo
+                  </span>
                 </th>
-                <th scope="col" className="px-3 py-2">
-                  Área
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <StackIcon className="size-4" />
+                    Área
+                  </span>
                 </th>
-                <th scope="col" className="px-3 py-2">
-                  Horas/sem
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <ClockIcon className="size-4" />
+                    Horas/sem
+                  </span>
                 </th>
-                <th scope="col" className="px-3 py-2">
-                  Estado
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <ActivityIcon className="size-4" />
+                    Estado
+                  </span>
                 </th>
-                <th scope="col" className="px-3 py-2">
-                  Acciones
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <DotsIcon className="size-4" />
+                    Acciones
+                  </span>
                 </th>
               </tr>
             </thead>
@@ -154,31 +181,53 @@ function WorkersPage() {
               {data.map((worker) => (
                 <tr
                   key={worker.id}
-                  className="border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50"
+                  className="border-b border-neutral-200 last:border-b-0 hover:bg-neutral-50"
                 >
-                  <td className="px-3 py-2 font-medium text-neutral-700">
-                    {worker.code}
+                  <td className="px-3 py-2.5 items-center">
+                    <span className="flex items-center min-w-0 line-clamp-1">
+                      {worker.code}
+                    </span>
                   </td>
-                  <td className="px-3 py-2 font-medium text-neutral-800">
-                    {worker.first_names} {worker.last_names}
+                  <td className="px-3 py-2.5 items-center">
+                    <span className="flex items-center min-w-0 line-clamp-1">
+                      {worker.first_names} {worker.last_names}
+                    </span>
                   </td>
-                  <td className="px-3 py-2">{worker.email}</td>
-                  <td className="px-3 py-2">{worker.area ?? "—"}</td>
-                  <td className="px-3 py-2">{worker.weekly_hours} h</td>
-                  <td className="px-3 py-2">
-                    <StatusBadge tone={worker.active ? "green" : "neutral"}>
+                  <td className="px-3 py-2.5 items-center">
+                    <span className="flex items-center min-w-0 line-clamp-1">
+                      {worker.email}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 items-center">
+                    <span className="flex items-center min-w-0 line-clamp-1">
+                      {worker.area ?? "—"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 items-center">
+                    <span className="flex items-center min-w-0 line-clamp-1">
+                      {worker.weekly_hours} h
+                    </span>
+                  </td>
+                  <td
+                    className={`px-3 py-2.5 items-center font-medium ${
+                      worker.active ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
+                    <span className="flex items-center min-w-0 line-clamp-1">
                       {worker.active ? "Activo" : "Inactivo"}
-                    </StatusBadge>
+                    </span>
                   </td>
-                  <td className="px-3 py-2">
-                    <button
-                      type="button"
-                      className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-md cursor-pointer inline-flex items-center"
-                      onClick={() => setEditingWorker(worker)}
-                      aria-label={`Editar ${worker.first_names} ${worker.last_names}`}
-                    >
-                      <EditIcon className="size-4" />
-                    </button>
+                  <td className="px-3 py-2.5 items-center">
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-lg cursor-pointer inline-flex items-center justify-center transition-colors"
+                        onClick={() => setEditingWorker(worker)}
+                        aria-label={`Editar ${worker.first_names} ${worker.last_names}`}
+                      >
+                        <EditIcon className="size-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

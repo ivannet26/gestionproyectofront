@@ -41,9 +41,7 @@ function DashboardPage({
               <li aria-current="page">Inicio</li>
             </ol>
           </nav>
-          <h1 className="m-0 mt-1 text-xl font-semibold text-neutral-900">
-            Resumen general
-          </h1>
+          <h1 className="m-0 mt-1 text-xl text-neutral-900">Resumen general</h1>
           <p className="m-0 mt-1 text-sm text-neutral-600">
             Supervisa el avance de los proyectos y la disponibilidad de los
             equipos desde un solo lugar.
@@ -149,7 +147,7 @@ function DashboardPage({
                         {project.stage}
                       </span>
                     </div>
-                    <strong className="flex-none text-xs text-neutral-900">
+                    <strong className="text-xs text-neutral-900">
                       {project.progress}%
                     </strong>
                   </div>
@@ -181,7 +179,7 @@ function DashboardPage({
                     Vencidas o próximas a su fecha límite
                   </p>
                 </div>
-                <span className="flex-none px-2 py-1 text-neutral-600 bg-white text-xs font-semibold rounded-md border border-neutral-200">
+                <span className="px-2 py-1 text-neutral-600 bg-white text-xs rounded-lg border border-neutral-200">
                   {priorityActivities.length} actividades
                 </span>
               </div>
@@ -195,31 +193,31 @@ function DashboardPage({
                     <tr>
                       <th
                         scope="col"
-                        className="px-3 pb-2 text-neutral-600 text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+                        className="px-3 pb-2 text-neutral-600 text-xs uppercase tracking-wide whitespace-nowrap"
                       >
                         Actividad
                       </th>
                       <th
                         scope="col"
-                        className="px-3 pb-2 text-neutral-600 text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+                        className="px-3 pb-2 text-neutral-600 text-xs uppercase tracking-wide whitespace-nowrap"
                       >
                         Proyecto
                       </th>
                       <th
                         scope="col"
-                        className="px-3 pb-2 text-neutral-600 text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+                        className="px-3 pb-2 text-neutral-600 text-xs uppercase tracking-wide whitespace-nowrap"
                       >
                         Responsable
                       </th>
                       <th
                         scope="col"
-                        className="px-3 pb-2 text-neutral-600 text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+                        className="px-3 pb-2 text-neutral-600 text-xs uppercase tracking-wide whitespace-nowrap"
                       >
                         Fecha
                       </th>
                       <th
                         scope="col"
-                        className="px-3 pb-2 text-neutral-600 text-xs font-semibold uppercase tracking-wide whitespace-nowrap"
+                        className="px-3 pb-2 text-neutral-600 text-xs uppercase tracking-wide whitespace-nowrap"
                       >
                         Estado
                       </th>
@@ -280,7 +278,7 @@ function DashboardPage({
                           {team.label}
                         </span>
                       </div>
-                      <strong className="flex-none text-xs text-neutral-900">
+                      <strong className="text-xs text-neutral-900">
                         {team.value}%
                       </strong>
                     </div>

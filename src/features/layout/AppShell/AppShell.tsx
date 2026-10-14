@@ -149,6 +149,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
           />
         );
       case "accounts":
+      case "team":
         return <route.Component />;
     }
   }
@@ -162,7 +163,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         onLogout={onLogout}
         currentPath={pathname}
       />
-      <div className="w-full flex-1 p-10 bg-white">
+      <div className="w-full flex-1 p-6 bg-white">
         <Routes>
           {appRoutes.map((route) => (
             <Route

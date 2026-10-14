@@ -94,7 +94,7 @@ export default function AdminAccountsPage() {
               <li>Administración</li>
             </ol>
           </nav>
-          <h1 className="m-0 mt-1 text-xl font-semibold text-neutral-900">
+          <h1 className="m-0 mt-1 text-xl text-neutral-900">
             Cuentas y accesos
           </h1>
           <p className="m-0 mt-1 text-sm text-neutral-600">
@@ -133,7 +133,7 @@ export default function AdminAccountsPage() {
               <div>
                 <h2
                   id="invite-title"
-                  className="m-0 text-base font-semibold text-neutral-900"
+                  className="m-0 text-base text-neutral-900"
                 >
                   Registrar e invitar
                 </h2>
@@ -157,7 +157,7 @@ export default function AdminAccountsPage() {
               <div>
                 <h2
                   id="recovery-title"
-                  className="m-0 text-base font-semibold text-neutral-900"
+                  className="m-0 text-base text-neutral-900"
                 >
                   Solicitudes de recuperación
                 </h2>
@@ -193,7 +193,7 @@ export default function AdminAccountsPage() {
                     type="button"
                     disabled={busy}
                     onClick={() => issueReset(entry.id)}
-                    className="px-3 py-2 text-neutral-900 bg-neutral-100 border border-neutral-200 text-sm whitespace-nowrap cursor-pointer shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-neutral-900 bg-neutral-50 border border-neutral-200 text-sm whitespace-nowrap cursor-pointer shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     Verificar y enviar
                   </button>
@@ -209,7 +209,7 @@ export default function AdminAccountsPage() {
               <div>
                 <h2
                   id="accounts-title"
-                  className="m-0 text-base font-semibold text-neutral-900"
+                  className="m-0 text-base text-neutral-900"
                 >
                   Cuentas
                 </h2>
@@ -258,7 +258,7 @@ export default function AdminAccountsPage() {
                       type="button"
                       disabled={busy}
                       onClick={() => resend(account.id)}
-                      className="px-3 py-2 text-neutral-900 bg-neutral-100 border border-neutral-200 text-sm whitespace-nowrap cursor-pointer shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
+                      className="px-3 py-2 text-neutral-900 bg-neutral-50 border border-neutral-200 text-sm whitespace-nowrap cursor-pointer shadow-none disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       Reenviar invitación
                     </button>

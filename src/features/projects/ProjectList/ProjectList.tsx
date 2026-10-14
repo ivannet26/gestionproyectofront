@@ -30,9 +30,7 @@ export default function ProjectList({
               <li aria-current="page">G. Proyectos</li>
             </ol>
           </nav>
-          <h1 className="m-0 mt-1 text-xl font-semibold text-neutral-900">
-            Proyectos
-          </h1>
+          <h1 className="m-0 mt-1 text-xl text-neutral-900">Proyectos</h1>
           <p className="m-0 mt-1 text-sm text-neutral-600">
             Proyectos disponibles según tus áreas y participación.
           </p>
@@ -71,7 +69,7 @@ export default function ProjectList({
                 to={`/proyectos/${project.id}`}
                 className="grid gap-2.5 h-full p-5 text-neutral-900 no-underline shadow-none"
               >
-                <h2 className="m-0 text-base font-semibold text-neutral-900">
+                <h2 className="m-0 text-base text-neutral-900">
                   {project.name}
                 </h2>
                 <p className="m-0 text-sm text-neutral-600">

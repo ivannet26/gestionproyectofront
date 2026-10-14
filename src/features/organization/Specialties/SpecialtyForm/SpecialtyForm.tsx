@@ -27,8 +27,8 @@ function SpecialtyForm({
   };
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-      <div className="w-full max-w-md bg-white border border-neutral-200 rounded-xl shadow-lg">
+    <div className="bg-modal">
+      <div className="w-full max-w-md bg-white rounded-xl">
         <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
           <h3 className="m-0 text-sm text-neutral-800">{title}</h3>
           <button
@@ -41,7 +41,7 @@ function SpecialtyForm({
           </button>
         </header>
 
-        <form onSubmit={handleSubmit} className="grid gap-3 p-4">
+        <form onSubmit={handleSubmit} className="grid gap-4 p-4">
           <div className="grid gap-1.5">
             <label
               htmlFor="specialty-name"
@@ -55,7 +55,7 @@ function SpecialtyForm({
               type="text"
               value={formData.name}
               onChange={(e) => updateField("name", e.target.value)}
-              className="w-full bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 px-3 py-1.5 text-xs rounded-md focus:border-neutral-400 focus:outline-none"
+              className="w-full bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 px-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none"
               required
             />
           </div>
@@ -63,14 +63,14 @@ function SpecialtyForm({
           <footer className="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
-              className="bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-50 px-3 py-1.5 text-xs rounded-md cursor-pointer"
+              className="bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-50 px-3 py-1.5 text-xs rounded-lg cursor-pointer"
               onClick={onClose}
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs rounded-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={submitting}
             >
               {submitting ? "Guardando…" : submitLabel}

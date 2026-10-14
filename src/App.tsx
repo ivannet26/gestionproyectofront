@@ -13,6 +13,7 @@ import {
   refreshSession,
   sessionKey,
 } from "./features/auth/api";
+import AppShell from "./features/layout/AppShell/AppShell";
 
 function App() {
   const [user, setUser] = useState<SessionUser | null>(null);
