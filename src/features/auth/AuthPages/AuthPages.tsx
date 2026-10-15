@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import gmLogo from "../../../assets/gm-logo.png";
+import { useLoading } from "../../../hooks/useLoading";
 import type { ActivationDetails, SessionUser } from "../api";
 import { apiRequest, errorText, login } from "../api";
 import { roleLabel } from "../roles";
@@ -50,13 +51,16 @@ export function LoginPage({
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const { showLoading } = useLoading();
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setBusy(true);
     try {
-      onLogin(await login(email, password));
+      const sessionUser = await login(email, password);
+      showLoading();
+      onLogin(sessionUser);
     } catch (failure) {
       setError(errorText(failure));
     } finally {

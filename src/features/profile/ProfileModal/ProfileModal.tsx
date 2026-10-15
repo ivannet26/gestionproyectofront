@@ -45,7 +45,7 @@ function ProfileModal({ onClose }: ProfileModalProps) {
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg">
-        <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
+        <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
           <h3 className="m-0 text-sm text-neutral-800">Mis especialidades</h3>
           <button
             type="button"
@@ -72,7 +72,7 @@ function ProfileModal({ onClose }: ProfileModalProps) {
                 {specialties.map((item) => (
                   <li
                     key={item.id}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-white bg-sky-600 rounded-full"
+                    className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-white bg-sky-600 rounded-full"
                   >
                     {item.name}
                     <button
@@ -82,7 +82,7 @@ function ProfileModal({ onClose }: ProfileModalProps) {
                       aria-label={`Quitar ${item.name}`}
                       className="text-white hover:text-neutral-100 cursor-pointer disabled:opacity-50 leading-none inline-flex items-center"
                     >
-                      <XIcon className="size-4" />
+                      <XIcon className="size-3" />
                     </button>
                   </li>
                 ))}

@@ -13,11 +13,26 @@ import {
   refreshSession,
   sessionKey,
 } from "./features/auth/api";
+import { LoadingProvider } from "./context/LoadingContext";
+import { ToastProvider } from "./context/ToastContext";
+import { useLoading } from "./hooks/useLoading";
 import AppShell from "./features/layout/AppShell/AppShell";
+import { GlobalLoading } from "./shared/GlobalLoading/GlobalLoading";
+import { Toast } from "./shared/Toast/Toast";
 
 function App() {
+  return (
+    <LoadingProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </LoadingProvider>
+  );
+}
+
+function AppContent() {
+  const { hideLoading, isLoading } = useLoading();
   const [user, setUser] = useState<SessionUser | null>(null);
-  const [loading, setLoading] = useState(true);
   const [logoutError, setLogoutError] = useState("");
   const navigate = useNavigate();
 
@@ -31,12 +46,12 @@ function App() {
         if (mounted) clearAccess();
       })
       .finally(() => {
-        if (mounted) setLoading(false);
+        if (mounted) hideLoading();
       });
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [hideLoading]);
 
   useEffect(() => {
     const expire = () => setUser(null);
@@ -62,35 +77,35 @@ function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/activar" element={<PasswordPage mode="activar" />} />
-      <Route
-        path="/restablecer"
-        element={<PasswordPage mode="restablecer" />}
-      />
-      <Route path="/recuperar" element={<RecoveryPage />} />
-      <Route
-        path="/*"
-        element={
-          loading ? (
-            <main className="min-h-screen grid place-items-center  text-neutral-900 p-6">
-              <p role="status" className="text-sm text-neutral-600">
-                Comprobando sesión…
-              </p>
-            </main>
-          ) : !user ? (
-            <LoginPage onLogin={setUser} />
-          ) : (
-            <AppShell
-              key={sessionKey(user)}
-              user={user}
-              onLogout={signOut}
-              logoutError={logoutError}
-            />
-          )
-        }
-      />
-    </Routes>
+    <>
+      <GlobalLoading />
+      <Toast />
+      <Routes>
+        <Route path="/activar" element={<PasswordPage mode="activar" />} />
+        <Route
+          path="/restablecer"
+          element={<PasswordPage mode="restablecer" />}
+        />
+        <Route path="/recuperar" element={<RecoveryPage />} />
+        <Route
+          path="/*"
+          element={
+            !user ? (
+              isLoading ? null : (
+                <LoginPage onLogin={setUser} />
+              )
+            ) : (
+              <AppShell
+                key={sessionKey(user)}
+                user={user}
+                onLogout={signOut}
+                logoutError={logoutError}
+              />
+            )
+          }
+        />
+      </Routes>
+    </>
   );
 }
 

@@ -20,6 +20,8 @@ function Sidebar({
   onLogout,
   currentPath,
 }: SidebarProps) {
+  const isAdmin = user.permissions.manage_accounts;
+
   return (
     <aside
       className={`sticky top-0 z-10 flex h-screen shrink-0 flex-col bg-white p-2 pb-4 border-r border-neutral-200 ${
@@ -42,7 +44,9 @@ function Sidebar({
 
       <nav className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-1.5 mt-3">
-          {navigation.map((entry) => {
+          {navigation
+            .filter((entry) => !entry.requiresAdmin || isAdmin)
+            .map((entry) => {
             const Icon = entry.icon;
             const isActive = entry.path === currentPath;
 
@@ -71,7 +75,7 @@ function Sidebar({
         </div>
       </nav>
 
-      <div className="pt-3 border-t border-neutral-100">
+      <div className="pt-3 border-t border-neutral-200">
         <ProfileMenu
           user={user}
           onLogout={onLogout}

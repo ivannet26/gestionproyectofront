@@ -4,8 +4,12 @@ import type { AppRoute } from "../../../routes";
 import { appRoutes, projectPath } from "../../../routes";
 import type { SessionUser } from "../../auth/api";
 import { errorText } from "../../auth/api";
+import { useLoading } from "../../../hooks/useLoading";
 import CreateProjectModal from "../../projects/CreateProjectModal/CreateProjectModal";
+import DashboardPage from "../../dashboard/DashboardPage/DashboardPage";
 import Modal from "../../projects/Modal/Modal";
+import ProjectList from "../../projects/ProjectList/ProjectList";
+import ProjectRoute from "../../projects/ProjectRoute/ProjectRoute";
 import { getProjectCatalogs, getProjects } from "../../projects/services";
 import type {
   Project,
@@ -41,6 +45,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
     useState<TaskCreationRequest | null>(null);
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { hideLoading } = useLoading();
   const canViewAdmin = user.permissions.manage_accounts;
   const canCreateProject = user.role === "ADMINISTRADOR";
   const creationDisabled = projectsLoading || Boolean(projectError);
@@ -60,12 +65,15 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         if (current) setProjectError(errorText(failure));
       })
       .finally(() => {
-        if (current) setProjectsLoading(false);
+        if (current) {
+          setProjectsLoading(false);
+          hideLoading();
+        }
       });
     return () => {
       current = false;
     };
-  }, [projectReload]);
+  }, [projectReload, hideLoading]);
 
   useEffect(() => {
     if (!needsCatalogs || catalogsReady) return;
@@ -118,40 +126,39 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
 
   function routeRoute(route: AppRoute) {
     if (route.requiresAdmin && !canViewAdmin) return <NotAvailable />;
-    switch (route.kind) {
-      case "dashboard":
-        return (
-          <route.Component
-            onCreateProject={canCreateProject ? openProjectCreation : undefined}
-            creationDisabled={creationDisabled}
-          />
-        );
-      case "projectList":
-        return (
-          <route.Component
-            projects={projects}
-            loading={projectsLoading}
-            error={projectError}
-            canCreate={canCreateProject}
-            creationDisabled={creationDisabled}
-            onCreate={openProjectCreation}
-          />
-        );
-      case "project":
-        return (
-          <route.Component
-            catalogs={catalogs}
-            catalogLoading={catalogLoading}
-            catalogError={catalogError}
-            onRetryCatalogs={retryCatalogs}
-            taskCreationRequest={taskCreationRequest}
-            onTaskCreationHandled={taskCreationHandled}
-          />
-        );
-      case "accounts":
-      case "team":
-        return <route.Component />;
+    if (route.Component === DashboardPage) {
+      return (
+        <route.Component
+          onCreateProject={canCreateProject ? openProjectCreation : undefined}
+          creationDisabled={creationDisabled}
+        />
+      );
     }
+    if (route.Component === ProjectList) {
+      return (
+        <route.Component
+          projects={projects}
+          loading={projectsLoading}
+          error={projectError}
+          canCreate={canCreateProject}
+          creationDisabled={creationDisabled}
+          onCreate={openProjectCreation}
+        />
+      );
+    }
+    if (route.Component === ProjectRoute) {
+      return (
+        <route.Component
+          catalogs={catalogs}
+          catalogLoading={catalogLoading}
+          catalogError={catalogError}
+          onRetryCatalogs={retryCatalogs}
+          taskCreationRequest={taskCreationRequest}
+          onTaskCreationHandled={taskCreationHandled}
+        />
+      );
+    }
+    return <route.Component />;
   }
 
   return (
@@ -163,7 +170,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         onLogout={onLogout}
         currentPath={pathname}
       />
-      <div className="w-full flex-1 p-6 bg-white">
+      <div className="w-full flex-1 p-8 bg-white">
         <Routes>
           {appRoutes.map((route) => (
             <Route

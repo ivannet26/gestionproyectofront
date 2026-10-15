@@ -37,7 +37,7 @@
 
 - **Fondos:** `bg-white` (base, tarjetas, inputs). Hover de filas: `hover:bg-neutral-50`.
 - **Textos:** Primario `text-neutral-800` | Acciones `text-neutral-700` | Muted / Celdas `text-neutral-600`.
-- **Bordes:** `border border-neutral-200` (estructural), `border-neutral-100` (divisores y filas).
+- **Bordes:** `border border-neutral-200` (estructural).
 - **Radios:** `rounded-lg` (controles, tags, inputs), `rounded-xl` (paneles, tarjetas, modales), `rounded-full` (botón cerrar).
 - **Tipografía:** Inter únicamente 400, 500 y 600. **Prohibido `bold`**.
   - Escala: `text-[10px]` (tags), `text-xs` (UI base, tablas, inputs), `text-sm` (subtítulos, nav), `text-lg` (títulos).
@@ -56,4 +56,4 @@
   - Secundaria: `bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-50`
   - Iconos de acción: `p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800`
 - **Inputs:** `bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 px-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none`.
-- **Tablas:** `<thead>` sin fondo con `border-b border-neutral-200 font-medium text-neutral-700`; filas con `border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50`.
+- **Tablas:** `<thead>` sin fondo con `border-b border-neutral-200 font-medium text-neutral-700`; filas con `border-b border-neutral-200 last:border-b-0 hover:bg-neutral-50`.

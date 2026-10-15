@@ -4,6 +4,7 @@ import type {
   Worker,
   WorkerUpdateData,
 } from "../../../core/interfaces/worker.interface";
+import type { Area } from "../../../core/interfaces/organization.interface";
 import XIcon from "../../../shared/icons/XIcon";
 
 interface TextField {
@@ -18,7 +19,6 @@ const textFields: TextField[] = [
   { name: "first_names", label: "Nombres", type: "text" },
   { name: "last_names", label: "Apellidos", type: "text" },
   { name: "email", label: "Correo", type: "email" },
-  { name: "area", label: "Área", type: "text" },
   {
     name: "weekly_hours",
     label: "Horas/sem",
@@ -30,6 +30,7 @@ const textFields: TextField[] = [
 
 interface WorkerFormProps {
   worker: Worker;
+  areas: Area[];
   submitting: boolean;
   onClose: () => void;
   onSubmit: (data: WorkerUpdateData) => void;
@@ -37,6 +38,7 @@ interface WorkerFormProps {
 
 function WorkerForm({
   worker,
+  areas,
   submitting,
   onClose,
   onSubmit,
@@ -86,6 +88,26 @@ function WorkerForm({
                 />
               </div>
             ))}
+
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="area" className="text-xs text-neutral-600">
+                Área
+              </label>
+              <select
+                id="area"
+                name="area"
+                value={formData.area}
+                onChange={(e) => updateField("area", e.target.value)}
+                className="w-full h-9 px-4 text-sm text-neutral-900 bg-white border border-neutral-200 rounded-lg focus:border-neutral-400 focus:ring-0 focus-visible:outline-none cursor-pointer"
+              >
+                <option value="">Sin área</option>
+                {areas.map((area) => (
+                  <option key={area.id} value={area.id}>
+                    {area.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <div className="flex items-center sm:pt-6 pl-2">
               <label className="inline-flex items-center gap-2 text-sm text-neutral-600 cursor-pointer">

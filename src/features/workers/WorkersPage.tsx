@@ -4,12 +4,12 @@ import AtIcon from "../../shared/icons/AtIcon";
 import ClockIcon from "../../shared/icons/ClockIcon";
 import DotsIcon from "../../shared/icons/DotsIcon";
 import EditIcon from "../../shared/icons/EditIcon";
-import FolderIcon from "../../shared/icons/FolderIcon";
 import HashIcon from "../../shared/icons/HashIcon";
 import SearchIcon from "../../shared/icons/SearchIcon";
 import UserIcon from "../../shared/icons/UserIcon";
 import ChevronDownIcon from "../../shared/icons/ChevronDownIcon";
 import { useWorkers } from "./useWorkers";
+import { useAreas } from "../organization/Area/useAreas";
 import WorkerForm from "./WorkerForm/WorkerForm";
 import { updateWorker } from "../../core/services/workerService";
 import type {
@@ -27,6 +27,8 @@ function WorkersPage() {
     search: appliedSearch || undefined,
     disponible,
   });
+  const { data: areas } = useAreas();
+  const areaNameById = new Map(areas.map((area) => [area.id, area.name]));
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const hasFilters = appliedSearch !== "" || disponible !== undefined;
@@ -53,8 +55,6 @@ function WorkersPage() {
       await updateWorker(editingWorker.id, formData);
       refetch();
       setEditingWorker(null);
-    } catch (e) {
-      console.error("Error updating worker:", e);
     } finally {
       setSubmitting(false);
     }
@@ -200,7 +200,9 @@ function WorkersPage() {
                   </td>
                   <td className="px-3 py-2.5 items-center">
                     <span className="flex items-center min-w-0 line-clamp-1">
-                      {worker.area ?? "—"}
+                      {worker.area != null
+                        ? (areaNameById.get(worker.area) ?? "—")
+                        : "—"}
                     </span>
                   </td>
                   <td className="px-3 py-2.5 items-center">
@@ -240,6 +242,7 @@ function WorkersPage() {
         <WorkerForm
           key={editingWorker.id}
           worker={editingWorker}
+          areas={areas}
           submitting={submitting}
           onClose={() => setEditingWorker(null)}
           onSubmit={handleSubmit}

@@ -6,63 +6,54 @@ import ProjectRoute from "./features/projects/ProjectRoute/ProjectRoute";
 import WorkersPage from "./features/workers/WorkersPage";
 import OrganizationPage from "./features/organization/OrganizationPage";
 import TeamDetailPage from "./features/teams/TeamDetailPage";
-import type { DashboardPageProps } from "./features/dashboard/DashboardPage/DashboardPage";
-import type { ProjectListProps } from "./features/projects/ProjectList/ProjectList";
-import type { ProjectRouteProps } from "./features/projects/ProjectRoute/ProjectRoute";
 
-export type AppRoute = {
+export interface AppRoute {
   path: string;
-  requiresAdmin?: boolean;
-} & (
-  | { kind: "dashboard"; Component: ComponentType<DashboardPageProps> }
-  | { kind: "projectList"; Component: ComponentType<ProjectListProps> }
-  | { kind: "project"; Component: ComponentType<ProjectRouteProps> }
-  | { kind: "team"; Component: ComponentType }
-  | { kind: "accounts"; Component: ComponentType }
-);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Component: ComponentType<any>;
+  requiresAdmin: boolean;
+}
 
 export const appRoutes: AppRoute[] = [
   {
     path: "/",
-    kind: "dashboard",
     Component: DashboardPage,
+    requiresAdmin: false,
   },
   {
     path: "/proyectos",
-    kind: "projectList",
     Component: ProjectList,
+    requiresAdmin: false,
   },
   {
     path: "/proyectos/resumen",
-    kind: "projectList",
     Component: ProjectList,
+    requiresAdmin: false,
   },
   {
     path: "/proyectos/:projectId",
-    kind: "project",
     Component: ProjectRoute,
+    requiresAdmin: false,
   },
   {
     path: "/administracion/cuentas",
-    kind: "accounts",
     Component: AdminAccountsPage,
     requiresAdmin: true,
   },
   {
     path: "/trabajadores",
-    kind: "dashboard",
     Component: WorkersPage,
     requiresAdmin: true,
   },
   {
     path: "/organizacion",
-    kind: "dashboard",
     Component: OrganizationPage,
+    requiresAdmin: false,
   },
   {
     path: "/equipos/:teamId",
-    kind: "team",
     Component: TeamDetailPage,
+    requiresAdmin: false,
   },
 ];
 

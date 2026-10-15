@@ -33,7 +33,7 @@ function TeamForm({
   return (
     <div className="bg-modal">
       <div className="w-full max-w-md bg-white rounded-xl ">
-        <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
+        <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
           <h3 className="m-0 text-sm text-neutral-800">{title}</h3>
           <button
             type="button"

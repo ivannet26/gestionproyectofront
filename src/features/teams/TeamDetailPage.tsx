@@ -140,7 +140,7 @@ export default function TeamDetailPage() {
                   return (
                     <tr
                       key={member.id}
-                      className="border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50"
+                      className="border-b border-neutral-200 last:border-b-0 hover:bg-neutral-50"
                     >
                       <td className="px-3 py-2">
                         <span className="flex items-center gap-2 min-w-0">
