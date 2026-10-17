@@ -1,22 +1,25 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import type { ReactNode } from "react";
-import type { Project, ProjectCatalogs, Task, TaskActionKind } from "../types";
+import type { Project, ProjectCatalogs, Task, TaskActionKind, TaskListGroup } from "../types";
 import TaskProperty from "../TaskForm/TaskProperty";
 import TaskIcon from "../TaskForm/TaskIcon";
-import TaskCell, { StateLabel } from "./TaskCell";
+import TaskCell from "./TaskCell";
 import type { TaskChanges } from "./TaskCell";
-import { taskHierarchy } from "./taskHierarchy";
+import { useTaskGrouping } from "./useTaskGrouping";
+import TaskGroupingControl from "./TaskGroupingControl";
+import TaskGroupExpansionControl from "./TaskGroupExpansionControl";
+import TaskGroupLabel from "./TaskGroupLabel";
 
 const styles = {
   list: "min-w-0 [&_:where(button,input):focus-visible]:[outline:2px_solid_var(--color-focus)] [&_:where(button,input):focus-visible]:outline-offset-2",
   toolbar:
-    "flex items-center justify-between gap-4 px-6 py-3 [@media(max-width:600px)]:flex-wrap [@media(max-width:600px)]:px-3 [@media(max-width:600px)]:gap-2.5",
+    "flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-neutral-100 px-3 py-2 sm:px-5",
   tools:
-    "flex min-w-0 items-center gap-2.5 [&_input]:w-[230px] [&_input]:max-w-full [&_input]:min-h-[34px] [&_input]:px-2.5 [&_input]:py-1.5 [&_input]:[border:1px_solid_var(--color-border)] [&_input]:[border-radius:var(--radius-small)] [&_input]:[background:var(--color-surface)] [&_input]:text-[0.8125rem] [&>button]:whitespace-nowrap [&>button]:min-h-[34px] [&>button]:px-3 [&>button]:py-1.5 [@media(max-width:600px)]:flex-[1_1_100%] [@media(max-width:600px)]:[&_input]:flex-1 [@media(max-width:600px)]:[&_input]:min-w-0 [@media(max-width:600px)]:[&_input]:w-auto",
+    "min-w-0 basis-44 sm:basis-56 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-neutral-200 [&_input]:bg-white [&_input]:px-3 [&_input]:py-1.5 [&_input]:text-xs [&_input]:text-neutral-800 [&_input]:placeholder:text-neutral-600 [&_input:focus-visible]:outline-2 [&_input:focus-visible]:outline-offset-2 [&_input:focus-visible]:outline-neutral-700",
   legend:
-    "mx-6 mt-0 mb-2.5 [color:var(--color-text-muted)] text-[0.6875rem] [@media(max-width:600px)]:mx-3",
+    "mx-3 mt-2 mb-2.5 text-xs text-neutral-600 sm:mx-5",
   scroller:
-    "overflow-x-auto overscroll-x-contain px-6 pt-0 pb-6 focus-visible:[outline:2px_solid_var(--color-focus)] focus-visible:outline-offset-2 [@media(max-width:600px)]:px-3",
+    "overflow-x-auto overscroll-x-contain px-3 pt-0 pb-6 focus-visible:[outline:2px_solid_var(--color-focus)] focus-visible:outline-offset-2 sm:px-5",
   group: "min-w-[1120px] mb-6",
   // Preserve literal underscores in Tailwind attribute selectors.
   groupHeading: String.raw`mt-0 mx-0 mb-[5px] text-[0.8125rem] [&_[data-state=EN\_CURSO]]:bg-[#1678bd] [&_[data-state=EN\_CURSO]]:text-white [&_[data-state=COMPLETADA]]:bg-[#248054] [&_[data-state=COMPLETADA]]:text-white`,
@@ -78,26 +81,15 @@ export default function TaskList({
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const hierarchy = useMemo(
-    () => taskHierarchy(tasks, search),
-    [tasks, search],
-  );
+  const [collapsedContext, setCollapsedContext] = useState<Set<string>>(new Set());
+  const listId = useId();
+  const { hierarchy, groups, preferences, setPreferences } = useTaskGrouping(tasks, search, project.task_states.states, catalogs.priorities);
   const byId = useMemo(
     () => new Map(tasks.map((task) => [task.id, task])),
     [tasks],
   );
   const states = project.task_states.states;
-  const groups = [
-    ...states,
-    ...tasks
-      .filter((task) => !states.some((state) => state.code === task.state_code))
-      .filter(
-        (task, index, all) =>
-          all.findIndex((other) => other.state_code === task.state_code) ===
-          index,
-      )
-      .map((task) => ({ code: task.state_code, name: task.state_name })),
-  ];
+  const allGroupsExpanded = groups.length > 0 && groups.every((group) => !collapsed.has(group.key));
   const canCreateIn = (code: string) =>
     project.permissions.create_tasks &&
     states.some((state) => state.code === code) &&
@@ -105,16 +97,19 @@ export default function TaskList({
 
   function rows(
     items: Task[],
+    group: TaskListGroup,
     depth = 0,
     ancestors = new Set<number>(),
   ): ReactNode {
     return items
       .filter(
-        (task) => hierarchy.visible.has(task.id) && !ancestors.has(task.id),
+        (task) => group.visible.has(task.id) && !ancestors.has(task.id),
       )
       .flatMap((task) => {
-        const children = hierarchy.children.get(task.id) ?? [];
-        const open = expanded.has(task.id) || Boolean(search.trim());
+        const children = (hierarchy.children.get(task.id) ?? []).filter((child) => group.visible.has(child.id));
+        const context = !group.members.has(task.id);
+        const contextKey = `${group.key}:${task.id}`;
+        const open = Boolean(search.trim()) || (context ? !collapsedContext.has(contextKey) : expanded.has(task.id));
         const next = new Set([...ancestors, task.id]);
         const actions =
           task.permissions.edit ||
@@ -124,6 +119,8 @@ export default function TaskList({
           <tr
             key={task.id}
             data-task-id={task.id}
+            data-context={context || undefined}
+            className={context ? "bg-neutral-50" : undefined}
             onClick={(event) => {
               if (
                 event.target instanceof Element &&
@@ -144,14 +141,19 @@ export default function TaskList({
                     aria-label={`${open ? "Contraer" : "Expandir"} subtareas de ${task.name}`}
                     aria-expanded={open}
                     disabled={Boolean(search.trim())}
-                    onClick={() =>
-                      setExpanded((current) => {
+                    onClick={() => {
+                      if (context) setCollapsedContext((current) => {
+                        const result = new Set(current);
+                        if (result.has(contextKey)) result.delete(contextKey); else result.add(contextKey);
+                        return result;
+                      });
+                      else setExpanded((current) => {
                         const result = new Set(current);
                         if (result.has(task.id)) result.delete(task.id);
                         else result.add(task.id);
                         return result;
-                      })
-                    }
+                      });
+                    }}
                   >
                     <span className={open ? styles.rotated : undefined}>
                       <TaskIcon name="next" />
@@ -172,13 +174,11 @@ export default function TaskList({
                 <div
                   className={`${styles.nameCopy}${depth ? " pl-[7px] [border-left:2px_solid_var(--color-border)]" : ""}`}
                 >
-                  <span className={styles.context}>
-                    {depth
-                      ? "Subtarea"
-                      : task.parent_id !== null
-                        ? "Subtarea asignada"
-                        : project.name}
-                  </span>
+                  {(context || depth > 0 || task.parent_id !== null) && (
+                    <span className={styles.context}>
+                      {context ? "Padre de contexto · no suma al grupo" : depth ? "Subtarea" : "Subtarea asignada"}
+                    </span>
+                  )}
                   <div className={styles.nameLine}>
                     <button
                       type="button"
@@ -189,7 +189,7 @@ export default function TaskList({
                     </button>
                     {children.length > 0 && (
                       <span className={styles.count} title="Subtareas visibles">
-                        {hierarchy.descendants(task.id)}
+                        {hierarchy.descendants(task.id, new Set(), group.visible)}
                       </span>
                     )}
                     {task.labels.slice(0, 2).map((label) => (
@@ -212,7 +212,7 @@ export default function TaskList({
                   <div className={styles.rowActions}>
                     <TaskProperty
                       cell
-                      id={`task-${task.id}-actions`}
+                      id={`${listId}-${encodeURIComponent(group.key)}-task-${task.id}-actions`}
                       label={`Opciones de ${task.name}`}
                       value="Opciones"
                       icon="settings"
@@ -289,7 +289,7 @@ export default function TaskList({
               </td>
             ))}
           </tr>,
-          ...(open ? [rows(children, depth + 1, next)] : []),
+          ...(open ? [rows(children, group, depth + 1, next)] : []),
         ];
       });
   }
@@ -297,65 +297,34 @@ export default function TaskList({
   return (
     <section aria-label="Lista de tareas" className={styles.list}>
       <div className={styles.toolbar}>
-        <TaskProperty
-          id="task-list-grouping"
-          label="Agrupación"
-          value="Estado"
-          icon="state"
-        >
-          {(close) => (
-            <>
-              <p>
-                Las tareas principales se agrupan por estado. Sus subtareas
-                permanecen debajo del padre.
-              </p>
-              <button
-                className={styles.option}
-                type="button"
-                onClick={() => {
-                  setCollapsed(new Set());
-                  close();
-                }}
-              >
-                Expandir todos los grupos
-              </button>
-              <button
-                className={styles.option}
-                type="button"
-                onClick={() => {
-                  setCollapsed(new Set(groups.map((state) => state.code)));
-                  close();
-                }}
-              >
-                Contraer todos los grupos
-              </button>
-            </>
-          )}
-        </TaskProperty>
-        <div className={styles.tools}>
-          <input
-            aria-label="Buscar tareas por nombre, responsable o etiqueta"
-            type="search"
-            name="task_search"
-            placeholder="Buscar tareas…"
-            autoComplete="off"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          {project.permissions.create_tasks && (
-            <button
-              className="primary-button"
-              type="button"
-              onClick={() => onCreate()}
-            >
-              + Tarea
-            </button>
-          )}
+        <TaskGroupingControl preferences={preferences} onChange={setPreferences} />
+        <div className="ml-auto flex min-w-0 items-center justify-end gap-2 max-sm:flex-1">
+          <TaskGroupExpansionControl expanded={allGroupsExpanded} disabled={!groups.length}
+            controls={groups.map((_, index) => `${listId}-group-${index}`).join(" ")}
+            onToggle={() => setCollapsed((current) => {
+              const next = new Set(current);
+              for (const group of groups) {
+                if (allGroupsExpanded) next.add(group.key); else next.delete(group.key);
+              }
+              return next;
+            })} />
+          <div className={styles.tools}>
+            <input
+              aria-label="Buscar tareas por nombre, responsable o etiqueta"
+              type="search"
+              name="task_search"
+              placeholder="Buscar tareas…"
+              autoComplete="off"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
         </div>
       </div>
       <p className={styles.legend}>
-        Los contadores incluyen tareas principales visibles y sus subtareas,
-        también las contraídas.
+        {hierarchy.visible.size} tareas únicas visibles. Los contadores incluyen subtareas contraídas, no padres de contexto.
+        {preferences.mode === "assignees" && preferences.separatePeople || preferences.mode === "labels" && preferences.separateLabels
+          ? " Una tarea puede aparecer en varios grupos sin duplicarse en el total." : ""}
       </p>
       {hierarchy.roots.length === 0 && (
         <p className={styles.empty} role="status">
@@ -370,33 +339,28 @@ export default function TaskList({
         role="region"
         aria-label="Tabla de tareas con desplazamiento horizontal"
       >
-        {groups.map((state) => {
-          const roots = hierarchy.roots.filter(
-            (task) => task.state_code === state.code,
-          );
-          const childrenCount = roots.reduce(
-            (count, task) => count + hierarchy.descendants(task.id),
-            0,
-          );
-          const open = !collapsed.has(state.code);
-          if (search && !roots.length) return null;
+        {groups.map((group, index) => {
+          const open = !collapsed.has(group.key);
+          const groupId = `${listId}-group-${index}`;
+          const canCreate = group.stateCode ? canCreateIn(group.stateCode) : project.permissions.create_tasks;
           return (
             <section
               className={styles.group}
-              key={state.code}
-              aria-label={state.name}
+              key={group.key}
+              aria-label={group.name}
+              data-group-key={group.key}
             >
               <h2 className={styles.groupHeading}>
                 <button
                   type="button"
                   className={styles.groupToggle}
                   aria-expanded={open}
-                  aria-controls={`group-${state.code}`}
+                  aria-controls={groupId}
                   onClick={() =>
                     setCollapsed((current) => {
                       const next = new Set(current);
-                      if (next.has(state.code)) next.delete(state.code);
-                      else next.add(state.code);
+                      if (next.has(group.key)) next.delete(group.key);
+                      else next.add(group.key);
                       return next;
                     })
                   }
@@ -404,17 +368,16 @@ export default function TaskList({
                   <span className={open ? styles.rotated : undefined}>
                     <TaskIcon name="next" />
                   </span>
-                  <StateLabel code={state.code} name={state.name} />
+                  <TaskGroupLabel group={group} mode={preferences.mode} />
                   <span className={styles.groupCount}>
-                    {roots.length} tareas
-                    {childrenCount > 0 && ` · ${childrenCount} subtareas`}
+                    {group.members.size} {group.members.size === 1 ? "tarea" : "tareas"}
                   </span>
                 </button>
               </h2>
-              <div id={`group-${state.code}`} hidden={!open}>
+              <div id={groupId} hidden={!open}>
                 <table
                   className={styles.table}
-                  aria-label={`Tareas de ${state.name}`}
+                  aria-label={`Tareas de ${group.name}`}
                 >
                   <colgroup>
                     <col className={styles.nameColumn} />
@@ -440,22 +403,17 @@ export default function TaskList({
                       ))}
                     </tr>
                   </thead>
-                  <tbody>{rows(roots)}</tbody>
+                  <tbody>{rows(group.roots, group)}</tbody>
                 </table>
-                {canCreateIn(state.code) && (
+                {canCreate && (
                   <button
                     className={styles.addTask}
                     type="button"
-                    onClick={() => onCreate(state.code)}
+                    onClick={() => onCreate(group.stateCode)}
                   >
                     <span aria-hidden="true">+</span> Añadir tarea
-                    <span className={styles.srOnly}> en {state.name}</span>
+                    <span className={styles.srOnly}> · {group.name}</span>
                   </button>
-                )}
-                {!roots.length && !canCreateIn(state.code) && (
-                  <p className={styles.emptyGroup}>
-                    Sin tareas principales en este estado.
-                  </p>
                 )}
               </div>
             </section>

@@ -27,13 +27,14 @@ import TaskForm from "../TaskForm/TaskForm";
 import TaskList from "../TaskList/TaskList";
 import { formatTaskDate } from "../TaskList/taskHierarchy";
 import TaskStateForm from "../TaskStateForm/TaskStateForm";
+import ProjectHeader from "./ProjectHeader";
+import { taskAssignees } from "../taskAssignees";
 
 const styles = {
   detail:
     "grid gap-4 [&_h2]:m-0 [&_h2]:text-[1.125rem] [&_h2]:[overflow-wrap:anywhere] [&_p]:m-0 [&_p]:whitespace-pre-wrap [&_p]:[overflow-wrap:anywhere] [&_dl]:grid [&_dl]:grid-cols-[120px_1fr] [&_dl]:gap-3 [&_dl]:text-[0.875rem] [&_dt]:[color:var(--color-text-muted)] [&_dd]:m-0 [&_dd]:[overflow-wrap:anywhere]",
   detailActions:
     "flex flex-wrap gap-2 [&_button]:px-3 [&_button]:py-2 [&_button]:[border:1px_solid_var(--color-border)] [&_button]:[border-radius:var(--radius-small)] [&_button]:[background:var(--color-surface-soft)] [&_button]:[color:var(--color-text)] [&_button]:cursor-pointer",
-  tabs: "flex gap-6 [&_a]:px-0.5 [&_a]:py-2.5 [&_a]:border-b-2 [&_a]:border-transparent [&_a]:no-underline [&_a]:[color:var(--color-text-muted)] [&_a]:text-[0.8125rem] [&_a[aria-current=page]]:[border-color:var(--color-heading)] [&_a[aria-current=page]]:[color:var(--color-heading)] [&_a[aria-current=page]]:[&_a:hover]:[color:var(--color-heading)] [&_a:hover]:[background:var(--color-surface-soft)] [&_a:focus-visible]:[outline:2px_solid_var(--color-focus)] [&_a:focus-visible]:outline-offset-[-2px]",
   pending:
     "px-6 py-10 [&_h2]:text-[1.125rem] [&_p]:text-[0.875rem] [&_p]:[color:var(--color-text-muted)]",
 };
@@ -301,7 +302,7 @@ export default function ProjectWorkspace({
               <dd>{activeTask.state_name}</dd>
 
               <dt>Responsable</dt>
-              <dd>{activeTask.responsible_name ?? "Sin responsable"}</dd>
+              <dd>{taskAssignees(activeTask).map((person) => person.name).join(", ") || "Sin persona asignada"}</dd>
 
               <dt>Inicio</dt>
               <dd>{formatTaskDate(activeTask.start_date)}</dd>
@@ -432,77 +433,20 @@ export default function ProjectWorkspace({
 
   return (
     <main
-      className="min-h-screen bg-neutral-50 p-6 text-neutral-900"
+      className="min-h-screen min-w-0 bg-neutral-50 p-3 text-neutral-900 sm:p-6 sm:pt-3"
       id="main-content"
     >
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0 max-w-3xl">
-          <nav
-            className="text-xs text-neutral-600"
-            aria-label="Ruta de navegación"
-          >
-            <ol className="m-0 flex list-none flex-wrap gap-2 p-0">
-              <li>
-                <Link to="/proyectos" className="text-neutral-600">
-                  G. Proyectos
-                </Link>
-              </li>
-              <li aria-current="page" className="text-neutral-900">
-                {project.name}
-              </li>
-            </ol>
-          </nav>
-
-          <h1 className="m-0 mt-1 text-xl text-neutral-900">{project.name}</h1>
-          <p className="m-0 mt-1 text-sm text-neutral-600">
-            {project.description}
-          </p>
-          <p className="m-0 mt-1 text-xs text-neutral-600">
-            {project.areas.map((area) => area.name).join(" · ")} ·{" "}
-            {project.available
-              ? "Disponible dentro del sistema"
-              : "Con participantes asignados"}
-          </p>
-          <p className="m-0 mt-1 text-xs text-neutral-600">
-            {project.start_date ?? "Sin fecha inicial"} —{" "}
-            {project.end_date ?? "Sin fecha final"}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-4">
-          {project.permissions.create_tasks && (
-            <button
-              className="bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setMessage("");
-                setAction({ kind: "create" });
-              }}
-            >
-              + Nueva tarea
-            </button>
-          )}
-
-          <nav className={styles.tabs} aria-label="Vistas del proyecto">
-            {(
-              [
-                ["lista", "Lista"],
-                ["tablero", "Tablero"],
-                ["gantt", "Gantt"],
-              ] as const
-            ).map(([key, label]) => (
-              <Link
-                key={key}
-                to={`?vista=${key}`}
-                aria-current={view === key ? "page" : undefined}
-              >
-                {label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      </header>
+      <ProjectHeader
+        key={project.id}
+        project={project}
+        view={view}
+        busy={busy}
+        taskCount={tasks.length}
+        onCreateTask={() => {
+          setMessage("");
+          setAction({ kind: "create" });
+        }}
+      />
 
       {message && (
         <p
@@ -543,18 +487,13 @@ export default function ProjectWorkspace({
       )}
 
       <section
-        className="mt-6 border border-neutral-200 bg-white"
+        className="mt-3 border border-neutral-200 bg-white"
         aria-label="Lista de trabajo"
       >
-        <header className="border-b border-neutral-200 px-5 py-4">
-          <h2 className="m-0 text-base text-neutral-900">Lista de trabajo</h2>
-          <p className="m-0 mt-1 text-sm text-neutral-600">
-            {tasks.length} tareas y subtareas visibles
-          </p>
-        </header>
+        <h2 className="sr-only">Lista de trabajo</h2>
 
-        <div className="min-w-0 p-5 max-sm:p-3">
-          {tasks.length > 0 ? (
+        <div className="min-w-0">
+          {tasks.length > 0 || view === "lista" ? (
             <TaskList
               project={project}
               tasks={tasks}
@@ -575,7 +514,7 @@ export default function ProjectWorkspace({
               }}
             />
           ) : (
-            <p className="m-0 text-sm text-neutral-600">
+            <p className="m-0 p-3 text-sm text-neutral-600 sm:p-5">
               No hay tareas disponibles para tu asignación.{" "}
               {project.permissions.create_tasks &&
                 "Crea la primera tarea para comenzar."}

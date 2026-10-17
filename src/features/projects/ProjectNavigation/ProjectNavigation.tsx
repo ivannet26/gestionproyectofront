@@ -1,37 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { projectPath } from "../../../routes";
-import type { ProjectSummary } from "../types";
+import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
+import PlusIcon from "../../../shared/icons/PlusIcon";
+import ProjectsIcon from "../../../shared/icons/ProjectsIcon";
+import type { ProjectNavigationProps } from "../types";
+import { projectCreateActionClassName } from "./navigationClasses";
 const styles = {
-  navigation: "mt-3 border-t border-neutral-200 pt-3",
-  projects:
-    "m-0 grid list-none gap-1 p-0 max-md:max-h-[40dvh] max-md:overflow-y-auto",
+  projects: "m-0 p-0 list-none flex flex-col gap-2",
   children:
-    "mb-2 ml-5 mt-1 grid list-none gap-1 border-l border-neutral-200 pl-2 hidden:hidden [&_a]:block [&_a]:min-h-9 [&_a]:rounded-lg [&_a]:px-2 [&_a]:py-2 [&_a]:text-[13px] [&_a]:text-neutral-600 [&_a]:no-underline hover:[&_a]:bg-neutral-50 [&_a[aria-current=page]]:bg-neutral-50 [&_a[aria-current=page]]:[&_a[aria-current=page]]:text-neutral-900 [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-neutral-700",
-  heading: "flex items-center gap-1 rounded-lg",
-  active: "bg-neutral-50",
+    "m-0 ml-7 mt-1 list-none p-0 hidden:hidden [&_a]:block [&_a]:rounded-lg [&_a]:px-3 [&_a]:py-1.5 [&_a]:text-xs [&_a]:text-neutral-600 [&_a]:no-underline [&_a]:cursor-pointer [&_a:hover]:bg-neutral-50 [&_a[aria-current=page]]:bg-neutral-100 [&_a[aria-current=page]]:text-neutral-800 [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-offset-[-2px] [&_a:focus-visible]:outline-neutral-700",
+  heading: "group/project relative flex min-w-0 items-center rounded-lg hover:bg-neutral-50",
   project:
-    "flex min-h-[38px] min-w-0 flex-1 items-center gap-2 rounded-lg border-0 bg-transparent p-2 text-left text-[13px] text-neutral-900 hover:bg-neutral-50 cursor-pointer [&_span:last-child]:min-w-0 [&_span:last-child]:break-words focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
-  chevron:
-    "mx-0.5 h-2 w-2 shrink-0 -rotate-45 border-b border-r border-current",
-  expanded: "rotate-45",
-  create:
-    "mr-1 min-h-8 w-8 shrink-0 rounded-lg border border-neutral-200 bg-white text-lg text-neutral-900 hover:bg-neutral-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
+    "flex min-w-0 flex-1 items-center gap-2 rounded-lg border-0 bg-transparent px-3 py-1.5 text-left text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700",
   message:
     "mx-2 mb-2 mt-1 text-xs leading-relaxed text-neutral-600 [overflow-wrap:anywhere]",
   retry:
-    "min-h-10 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 mx-2 mb-3 text-xs",
+    "rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 mx-2 mb-3",
 };
-
-interface ProjectNavigationProps {
-  projects: ProjectSummary[];
-  currentPath: string;
-  loading: boolean;
-  error: string;
-  canCreateTasks: boolean;
-  onCreateTask: (projectId: number) => void;
-  onRetry?: () => void;
-}
 
 export default function ProjectNavigation({
   projects,
@@ -45,8 +31,20 @@ export default function ProjectNavigation({
   const [expandedProjects, setExpandedProjects] = useState<
     Record<number, boolean>
   >({});
+  const activeProjectId = projects.find((project) => {
+    const path = projectPath(project.id);
+    return currentPath === path || currentPath.startsWith(`${path}/`);
+  })?.id;
+  useEffect(() => {
+    if (activeProjectId === undefined) return;
+    let current = true;
+    void Promise.resolve().then(() => {
+      if (current) setExpandedProjects((expanded) => ({ ...expanded, [activeProjectId]: true }));
+    });
+    return () => { current = false; };
+  }, [activeProjectId, currentPath]);
   return (
-    <div className={styles.navigation} aria-busy={loading}>
+    <div aria-busy={loading}>
       {loading && (
         <p className={styles.message} role="status">
           Cargando proyectos…
@@ -86,10 +84,10 @@ export default function ProjectNavigation({
           return (
             <li key={project.id}>
               <div
-                className={`${styles.heading}${active ? ` ${styles.active}` : ""}`}
+                className={styles.heading}
               >
                 <button
-                  className={styles.project}
+                  className={`${styles.project} ${active ? "text-neutral-800" : "text-neutral-600"}`}
                   type="button"
                   aria-expanded={expanded}
                   aria-controls={childrenId}
@@ -114,22 +112,24 @@ export default function ProjectNavigation({
                     }))
                   }
                 >
-                  <span
-                    className={`${styles.chevron}${expanded ? ` ${styles.expanded}` : ""}`}
-                    aria-hidden="true"
-                  />
-                  <span>{project.name}</span>
+                  <span aria-hidden="true" className="shrink-0">
+                    <ProjectsIcon className="size-4" fill={false} />
+                  </span>
+                  <span className="min-w-0 flex-1 truncate pr-9">{project.name}</span>
+                  <span aria-hidden="true" className="shrink-0">
+                    <ChevronDownIcon className={`size-4 ${expanded ? "" : "-rotate-90"}`} />
+                  </span>
                 </button>
                 {canCreateTasks && project.permissions.create_tasks && (
                   <button
-                    className={styles.create}
+                    className={`${projectCreateActionClassName} absolute right-9`}
                     type="button"
                     disabled={loading}
                     aria-label={`Crear tarea en ${project.name}`}
                     title="Crear tarea"
                     onClick={() => onCreateTask(project.id)}
                   >
-                    +
+                    <PlusIcon className="size-4" />
                   </button>
                 )}
               </div>

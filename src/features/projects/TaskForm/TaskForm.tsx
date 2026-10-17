@@ -15,6 +15,7 @@ import type {
 import LabelList from "../LabelList/LabelList";
 import TaskProperties from "./TaskProperties";
 import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
+import { taskAssignees } from "../taskAssignees";
 const styles = {
   form: "flex min-h-0 flex-col text-neutral-900 [&_[aria-invalid=true]]:border-red-700 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700",
   body: "min-h-0 overflow-y-auto overscroll-contain px-7 pb-7 pt-[22px] max-sm:p-4",
@@ -61,6 +62,7 @@ const taskFields: Record<string, string> = {
   due_date: "task-due",
   priority: "task-priority",
   responsible_id: "task-responsible",
+  responsible_ids: "task-responsible",
   reason: "task-reason",
   labels: "task-labels",
   requirement_ids: "task-labels",
@@ -83,8 +85,8 @@ export default function TaskForm({
   const [dueDate, setDueDate] = useState(
     task?.due_date ?? parent?.due_date ?? project.end_date ?? "",
   );
-  const [responsible, setResponsible] = useState(
-    task?.responsible_id?.toString() ?? "",
+  const [responsible, setResponsible] = useState<number[]>(
+    task ? taskAssignees(task).map((person) => person.id) : [],
   );
   const requirementIds =
     task?.labels.flatMap((label) =>
@@ -176,7 +178,7 @@ export default function TaskForm({
     if (!task || project.permissions.manage)
       data.description = description.trim();
     if (canAssign)
-      data.responsible_id = responsible ? Number(responsible) : null;
+      data.responsible_ids = responsible;
     try {
       await onSubmit(
         task

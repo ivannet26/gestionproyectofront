@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 import type { AppRoute } from "../../../routes";
 import { appRoutes, projectPath } from "../../../routes";
@@ -43,11 +43,14 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const [catalogReload, setCatalogReload] = useState(0);
   const [taskCreationRequest, setTaskCreationRequest] =
     useState<TaskCreationRequest | null>(null);
+  const taskCreationSequence = useRef(0);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { hideLoading } = useLoading();
   const canViewAdmin = user.permissions.manage_accounts;
   const canCreateProject = user.role === "ADMINISTRADOR";
+  const canCreateTasks =
+    user.role === "ADMINISTRADOR" || user.role === "TRABAJADOR";
   const creationDisabled = projectsLoading || Boolean(projectError);
   const needsCatalogs = creating || /^\/proyectos\/\d+$/.test(pathname);
   const catalogLoading = !catalogsReady && !catalogError;
@@ -124,6 +127,18 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
     );
   }
 
+  function openTaskCreation(projectId: number) {
+    const project = projects.find((item) => item.id === projectId);
+    if (!canCreateTasks || projectsLoading || !project?.permissions.create_tasks)
+      return;
+    taskCreationSequence.current += 1;
+    setTaskCreationRequest({
+      projectId,
+      sequence: taskCreationSequence.current,
+    });
+    void navigate(projectPath(projectId));
+  }
+
   function routeRoute(route: AppRoute) {
     if (route.requiresAdmin && !canViewAdmin) return <NotAvailable />;
     if (route.Component === DashboardPage) {
@@ -162,15 +177,29 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen bg-white text-neutral-900">
+    <div className="flex min-h-screen flex-col bg-white text-neutral-900 md:flex-row">
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
         user={user}
         onLogout={onLogout}
         currentPath={pathname}
+        projects={projects}
+        projectsLoading={projectsLoading}
+        projectError={projectError}
+        onRetryProjects={retryProjects}
+        canCreateProject={canCreateProject}
+        projectCreationDisabled={creationDisabled}
+        onCreateProject={openProjectCreation}
+        canCreateTasks={canCreateTasks}
+        onCreateTask={openTaskCreation}
       />
-      <div className="w-full flex-1 p-8 bg-white">
+      <div className="min-w-0 w-full flex-1 bg-white p-3 md:p-6">
+        {logoutError && (
+          <p role="alert" className="mb-4 text-sm text-neutral-800">
+            {logoutError}
+          </p>
+        )}
         <Routes>
           {appRoutes.map((route) => (
             <Route

@@ -13,6 +13,7 @@ import type { TaskIconName } from "../TaskForm/TaskIcon";
 import { Calendar } from "../CreateProjectModal/ProjectEndDateSelector";
 import { groupTaskStates } from "../stateGroups";
 import { formatTaskDate, initials } from "./taskHierarchy";
+import { taskAssignees } from "../taskAssignees";
 
 const styles = {
   // Keep the module's full-width badge override above TaskProperty's span limit.
@@ -74,6 +75,12 @@ export function StateLabel({ code, name }: { code: string; name: string }) {
   );
 }
 
+export function PriorityLabel({ priority, name }: { priority?: number; name: string }) {
+  return <span className={styles.priority} data-priority={priority}>
+    <TaskIcon name="priority" />{name}
+  </span>;
+}
+
 function Editor({
   field,
   task,
@@ -85,6 +92,7 @@ function Editor({
   close,
 }: TaskCellProps & { close: () => void }) {
   const [value, setValue] = useState(String(task[field] ?? ""));
+  const [responsibles, setResponsibles] = useState(() => field === "responsible_id" ? taskAssignees(task).map((person) => person.id) : []);
   const [search, setSearch] = useState("");
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -124,16 +132,14 @@ function Editor({
     try {
       if (field === "state_code")
         await onState(task, { state_code: value, reason: reason.trim() });
+      else if (field === "responsible_id")
+        await onPatch(task, { responsible_ids: responsibles });
       else
         await onPatch(task, {
           [field]:
             field === "priority"
               ? Number(value)
-              : field === "responsible_id"
-                ? value
-                  ? Number(value)
-                  : null
-                : value,
+              : value,
         });
       close();
     } catch (failure) {
@@ -144,20 +150,22 @@ function Editor({
     }
   }
   function option(key: string, name: string, content = <>{name}</>) {
+    const selected = field === "responsible_id" ? (key === "" ? responsibles.length === 0 : responsibles.includes(Number(key))) : value === key;
     return (
       <button
         type="button"
         key={key}
         className={styles.option}
-        aria-pressed={value === key}
+        aria-pressed={selected}
         onClick={() => {
-          setValue(key);
+          if (field === "responsible_id") setResponsibles((current) => key === "" ? [] : current.includes(Number(key)) ? current.filter((id) => id !== Number(key)) : [...current, Number(key)]);
+          else setValue(key);
           setError("");
         }}
       >
         {content}
         <span className={styles.check}>
-          {value === key && <TaskIcon name="check" />}
+          {selected && <TaskIcon name="check" />}
         </span>
       </button>
     );
@@ -203,10 +211,7 @@ function Editor({
               option(
                 String(priority.code),
                 priority.name,
-                <span className={styles.priority} data-priority={priority.code}>
-                  <TaskIcon name="priority" />
-                  {priority.name}
-                </span>,
+                <PriorityLabel priority={priority.code} name={priority.name} />,
               ),
             )}
           {field === "responsible_id" && (
@@ -295,7 +300,7 @@ function Editor({
         <button
           type="button"
           className="primary-button"
-          disabled={busy || value === String(task[field] ?? "")}
+          disabled={busy || (field === "responsible_id" ? JSON.stringify([...responsibles].sort((a, b) => a - b)) === JSON.stringify(taskAssignees(task).map((person) => person.id)) : value === String(task[field] ?? ""))}
           onClick={() => {
             void save();
           }}
@@ -309,6 +314,8 @@ function Editor({
 
 export default function TaskCell(props: TaskCellProps) {
   const { field, task, catalogs } = props;
+  const instanceId = useId();
+  const people = field === "responsible_id" ? taskAssignees(task) : [];
   const permitted =
     field === "state_code"
       ? task.permissions.state && task.transitions.length > 0
@@ -319,26 +326,24 @@ export default function TaskCell(props: TaskCellProps) {
     field === "state_code"
       ? task.state_name
       : field === "responsible_id"
-        ? (task.responsible_name ?? "Sin responsable")
+        ? (people.map((person) => person.name).join(", ") || "Sin persona asignada")
         : field === "priority"
-          ? (catalogs.priorities.find((item) => item.code === task.priority)
+          ? (task.priority == null ? "Sin prioridad" : catalogs.priorities.find((item) => item.code === task.priority)
               ?.name ?? String(task.priority))
           : formatTaskDate(task[field]);
   const content =
     field === "state_code" ? (
       <StateLabel code={task.state_code} name={value} />
-    ) : field === "responsible_id" && task.responsible_name ? (
+    ) : field === "responsible_id" && people.length > 0 ? (
       <>
         <span className={styles.avatar} aria-hidden="true">
-          {initials(task.responsible_name)}
+          {initials(people[0].name)}
         </span>
+        {people.length > 1 && <span aria-hidden="true" className="text-[10px] text-neutral-600">+{people.length - 1}</span>}
         <span>{value}</span>
       </>
     ) : field === "priority" ? (
-      <span className={styles.priority} data-priority={task.priority}>
-        <TaskIcon name="priority" />
-        {value}
-      </span>
+      <PriorityLabel priority={task.priority} name={value} />
     ) : (
       <>
         <TaskIcon name={icons[field]} />
@@ -348,7 +353,7 @@ export default function TaskCell(props: TaskCellProps) {
   return (
     <TaskProperty
       cell
-      id={`task-${task.id}-${field}`}
+      id={`${instanceId}-task-${task.id}-${field}`}
       label={`${labels[field]} · ${task.name}`}
       value={value}
       icon={icons[field]}

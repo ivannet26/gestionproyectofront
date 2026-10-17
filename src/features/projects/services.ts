@@ -4,6 +4,7 @@ import type {
   CreateTaskPayload,
   EditTaskPayload,
   Project,
+  ProjectFavoriteState,
   ProjectCatalogs,
   ProjectSummary,
   ProjectTaskConfiguration,
@@ -27,6 +28,15 @@ export function getProjectCatalogs(): Promise<ProjectCatalogs> {
 
 export function getProject(projectId: number): Promise<Project> {
   return projectRequest(`${projectId}/`);
+}
+
+export function setProjectFavorite(
+  projectId: number,
+  favorite: boolean,
+): Promise<ProjectFavoriteState> {
+  return projectRequest(`${projectId}/favorite/`, {
+    method: favorite ? "PUT" : "DELETE",
+  });
 }
 
 export function getTasks(projectId: number): Promise<Task[]> {

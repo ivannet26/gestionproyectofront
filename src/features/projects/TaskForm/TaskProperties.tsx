@@ -7,6 +7,7 @@ import ResponsiblePicker from "../ResponsiblePicker/ResponsiblePicker";
 import TaskProperty from "./TaskProperty";
 import TaskIcon from "./TaskIcon";
 import { propertyClasses as styles } from "../ProjectForm/formClasses";
+import { taskAssignees } from "../taskAssignees";
 
 interface TaskPropertiesProps {
   project: Project;
@@ -14,13 +15,13 @@ interface TaskPropertiesProps {
   task?: Task;
   parent?: Task;
   stateCode: string;
-  responsible: string;
+  responsible: number[];
   dueDate: string;
   priority: number;
   labels: Label[];
   errors: FieldErrors;
   onState: (value: string) => void;
-  onResponsible: (value: string) => void;
+  onResponsible: (value: number[]) => void;
   onDate: (value: string) => void;
   onPriority: (value: number) => void;
   onLabels: (value: Label[]) => void;
@@ -69,7 +70,7 @@ export default function TaskProperties({
     {canAssign ? <ResponsiblePicker participants={project.participants} value={responsible}
       error={errors["task-responsible"]} onChange={onResponsible} />
       : <TaskProperty id="task-responsible" label="Responsable · Asignación administrada"
-        value={task?.responsible_name ?? "Tú"} icon="person" disabled error={errors["task-responsible"]}>
+        value={task ? taskAssignees(task).map((person) => person.name).join(", ") || "Sin persona asignada" : "Tú"} icon="person" disabled error={errors["task-responsible"]}>
         {() => null}
       </TaskProperty>}
     <TaskProperty id="task-due" label="Fecha límite obligatoria" value={dateValue} icon="date" error={errors["task-due"]}>

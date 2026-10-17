@@ -34,6 +34,7 @@ export interface ProjectSummary {
   end_date: string | null;
   state_code: string;
   available: boolean;
+  has_associated_workers: boolean;
   areas: ProjectArea[];
   worker_edit: boolean;
   worker_state: boolean;
@@ -41,10 +42,48 @@ export interface ProjectSummary {
   permissions: { manage: boolean; create_tasks: boolean };
 }
 
+export interface ProjectNavigationProps {
+  projects: ProjectSummary[];
+  currentPath: string;
+  loading: boolean;
+  error: string;
+  canCreateTasks: boolean;
+  onCreateTask: (projectId: number) => void;
+  onRetry?: () => void;
+}
+
+export interface ProjectAreaGroup extends ProjectArea {
+  projects: ProjectSummary[];
+}
+
+export interface ProjectsMenuProps
+  extends Omit<ProjectNavigationProps, "loading" | "error" | "onRetry"> {
+  isCollapsed: boolean;
+  projectsLoading: boolean;
+  projectError: string;
+  onRetryProjects: () => void;
+  canCreateProject: boolean;
+  projectCreationDisabled: boolean;
+  onCreateProject: () => void;
+}
+
 export interface Project extends ProjectSummary {
+  is_favorite: boolean;
   participants: { id: number; name: string }[];
   requirements: ProjectRequirement[];
   task_states: ProjectTaskConfiguration;
+}
+
+export interface ProjectHeaderProps {
+  project: Project;
+  view: string;
+  busy: boolean;
+  taskCount: number;
+  onCreateTask: () => void;
+}
+
+export interface ProjectFavoriteState {
+  is_favorite: boolean;
 }
 
 export interface ProjectTaskState {
@@ -107,6 +146,7 @@ export interface Task {
   due_date: string;
   responsible_id: number | null;
   responsible_name: string | null;
+  assignees?: TaskAssignee[];
   labels: TaskLabel[];
   dependencies: number[];
   transitions: { target: string; reason_required: boolean }[];
@@ -128,6 +168,40 @@ export interface EditTaskPayload {
   requirement_ids: number[];
   labels: Label[];
   responsible_id?: number | null;
+  responsible_ids?: number[];
+}
+
+export interface TaskAssignee {
+  id: number;
+  name: string;
+}
+
+export type TaskGroupingMode = "state" | "assignees" | "priority" | "labels" | "due_date";
+export type TaskGroupOrder = "asc" | "desc";
+
+export interface TaskGroupingPreferences {
+  mode: TaskGroupingMode;
+  order: TaskGroupOrder;
+  separatePeople: boolean;
+  separateLabels: boolean;
+}
+
+export interface TaskGroupToken {
+  id: string;
+  name: string;
+  kind?: LabelKind;
+}
+
+export interface TaskListGroup {
+  key: string;
+  name: string;
+  stateCode?: string;
+  priority?: number;
+  tokens: TaskGroupToken[];
+  rank: number;
+  members: Set<number>;
+  visible: Set<number>;
+  roots: Task[];
 }
 
 export interface CreateTaskPayload extends EditTaskPayload {
