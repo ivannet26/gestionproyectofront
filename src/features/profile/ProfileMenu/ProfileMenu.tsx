@@ -1,10 +1,12 @@
 import { useState } from "react";
+import ClockIcon from "../../../shared/icons/ClockIcon";
 import LogoutIcon from "../../../shared/icons/LogoutIcon";
 import SparkleIcon from "../../../shared/icons/SparkleIcon";
 import { avatarFor } from "../../../shared/avatar";
 import type { SessionUser } from "../../auth/api";
 import { roleLabel } from "../../auth/roles";
 import ProfileModal from "../ProfileModal/ProfileModal";
+import AbsenceRequestModal from "../AbsenceRequestModal/AbsenceRequestModal";
 
 interface ProfileMenuProps {
   user: SessionUser;
@@ -15,6 +17,7 @@ interface ProfileMenuProps {
 function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const [modal, setModal] = useState(false);
+  const [absenceModal, setAbsenceModal] = useState(false);
   const item =
     "w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-800 hover:bg-neutral-50 rounded-lg cursor-pointer text-left";
 
@@ -79,6 +82,18 @@ function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
               role="menuitem"
               onClick={() => {
                 setOpen(false);
+                setAbsenceModal(true);
+              }}
+              className={item}
+            >
+              <ClockIcon className="size-4 flex-none" aria-hidden="true" />
+              Solicitar ausencia
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
                 onLogout();
               }}
               className={item}
@@ -91,6 +106,9 @@ function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
       )}
 
       {modal && <ProfileModal onClose={() => setModal(false)} />}
+      {absenceModal && (
+        <AbsenceRequestModal user={user} onClose={() => setAbsenceModal(false)} />
+      )}
     </div>
   );
 }

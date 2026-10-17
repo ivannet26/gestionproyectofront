@@ -84,10 +84,10 @@ function SpecialtiesSection() {
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
-                  className="inline-flex items-center text-sky-600"
+                  className="inline-flex items-center text-sky-500"
                   aria-hidden="true"
                 >
-                  <FileIcon className="size-4" />
+                  <FileIcon className="size-4" fill={true} />
                 </span>
                 <span className="text-neutral-800 truncate">
                   {specialty.name}

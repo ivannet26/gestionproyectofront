@@ -212,7 +212,7 @@ function WorkersPage() {
                   </td>
                   <td
                     className={`px-3 py-2.5 items-center font-medium ${
-                      worker.active ? "text-green-600" : "text-red-600"
+                      worker.active ? "text-green-500" : "text-red-600"
                     }`}
                   >
                     <span className="flex items-center min-w-0 line-clamp-1">

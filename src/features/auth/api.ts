@@ -37,6 +37,10 @@ export interface RecoveryRequest {
   requested_at: string;
 }
 
+export interface DetailResult {
+  detail: string;
+}
+
 export interface ActivationDetails {
   first_names: string;
   last_names: string;

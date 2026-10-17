@@ -47,30 +47,30 @@ function Sidebar({
           {navigation
             .filter((entry) => !entry.requiresAdmin || isAdmin)
             .map((entry) => {
-            const Icon = entry.icon;
-            const isActive = entry.path === currentPath;
+              const Icon = entry.icon;
+              const isActive = entry.path === currentPath;
 
-            return (
-              <Link
-                key={entry.path}
-                to={entry.path}
-                aria-current={isActive ? "page" : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 text-sm rounded-md ${
-                  isActive
-                    ? "bg-neutral-50 text-neutral-800"
-                    : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800"
-                } ${isCollapsed ? "justify-center px-0" : ""}`}
-              >
-                <span
-                  className="size-5 flex items-center justify-center"
-                  aria-hidden="true"
+              return (
+                <Link
+                  key={entry.path}
+                  to={entry.path}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 text-sm rounded-xl ${
+                    isActive
+                      ? "bg-neutral-50 text-neutral-800"
+                      : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800"
+                  } ${isCollapsed ? "justify-center px-0" : ""}`}
                 >
-                  <Icon className="size-5" fill={false} />
-                </span>
-                {!isCollapsed && <span>{entry.label}</span>}
-              </Link>
-            );
-          })}
+                  <span
+                    className="size-5 flex items-center justify-center"
+                    aria-hidden="true"
+                  >
+                    <Icon className="size-5" fill={false} />
+                  </span>
+                  {!isCollapsed && <span>{entry.label}</span>}
+                </Link>
+              );
+            })}
           <TeamsMenu isCollapsed={isCollapsed} currentPath={currentPath} />
         </div>
       </nav>
