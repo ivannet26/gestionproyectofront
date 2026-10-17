@@ -6,6 +6,7 @@ import type {
   ProjectCatalogs,
   Task,
   TaskStatePayload,
+  ProjectTaskState,
 } from "../types";
 import TaskProperty from "../TaskForm/TaskProperty";
 import TaskIcon from "../TaskForm/TaskIcon";
@@ -66,10 +67,10 @@ const icons: Record<Field, TaskIconName> = {
   due_date: "date",
 };
 
-export function StateLabel({ code, name }: { code: string; name: string }) {
+export function StateLabel({ code, name, category, color }: ProjectTaskState) {
   return (
-    <span className={styles.state} data-state={code}>
-      <TaskIcon name={code === "COMPLETADA" ? "check" : "state"} />
+    <span className={styles.state} data-state={code} style={color ? { backgroundColor: `${color}18`, color: "#262626" } : undefined}>
+      <span className="inline-flex shrink-0" style={color ? { color } : undefined}><TaskIcon name={code !== "CANCELADA" && (category === "closed" || category === "done" || !category && code === "COMPLETADA") ? "check" : "state"} /></span>
       {name}
     </span>
   );
@@ -198,7 +199,7 @@ function Editor({
                   option(
                     state.code,
                     state.name,
-                    <StateLabel code={state.code} name={state.name} />,
+                    <StateLabel {...state} />,
                   ),
                 )}
               </section>
@@ -333,7 +334,7 @@ export default function TaskCell(props: TaskCellProps) {
           : formatTaskDate(task[field]);
   const content =
     field === "state_code" ? (
-      <StateLabel code={task.state_code} name={value} />
+      <StateLabel code={task.state_code} name={value} category={task.state_category} color={task.state_color} />
     ) : field === "responsible_id" && people.length > 0 ? (
       <>
         <span className={styles.avatar} aria-hidden="true">

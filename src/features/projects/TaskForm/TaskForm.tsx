@@ -80,7 +80,7 @@ export default function TaskForm({
 }: TaskFormProps) {
   const [name, setName] = useState(task?.name ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
-  const [stateCode, setStateCode] = useState(initialState ?? "PENDIENTE");
+  const [stateCode, setStateCode] = useState(initialState ?? project.task_states.states.find((state) => state.category === "not_started" || !state.category && state.code === "PENDIENTE")?.code ?? "PENDIENTE");
   const [priority, setPriority] = useState(task?.priority ?? 3);
   const [dueDate, setDueDate] = useState(
     task?.due_date ?? parent?.due_date ?? project.end_date ?? "",
@@ -201,7 +201,7 @@ export default function TaskForm({
 
   function configured(configuration: ProjectTaskConfiguration) {
     if (!configuration.states.some((state) => state.code === stateCode))
-      setStateCode("PENDIENTE");
+      setStateCode(configuration.states.find((state) => state.category === "not_started" || !state.category && state.code === "PENDIENTE")?.code ?? "");
     onConfigured(configuration);
   }
 

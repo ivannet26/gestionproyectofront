@@ -9,6 +9,7 @@ import { useTaskGrouping } from "./useTaskGrouping";
 import TaskGroupingControl from "./TaskGroupingControl";
 import TaskGroupExpansionControl from "./TaskGroupExpansionControl";
 import TaskGroupLabel from "./TaskGroupLabel";
+import TaskStatusSettingsControl from "./TaskStatusSettingsControl";
 
 const styles = {
   list: "min-w-0 [&_:where(button,input):focus-visible]:[outline:2px_solid_var(--color-focus)] [&_:where(button,input):focus-visible]:outline-offset-2",
@@ -67,6 +68,7 @@ interface TaskListProps extends TaskChanges {
   catalogs: ProjectCatalogs;
   onAction: (kind: TaskActionKind, id: number) => void;
   onCreate: (state?: string) => void;
+  onConfigure?: () => void;
 }
 
 export default function TaskList({
@@ -77,6 +79,7 @@ export default function TaskList({
   onCreate,
   onPatch,
   onState,
+  onConfigure,
 }: TaskListProps) {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
@@ -93,7 +96,7 @@ export default function TaskList({
   const canCreateIn = (code: string) =>
     project.permissions.create_tasks &&
     states.some((state) => state.code === code) &&
-    (project.permissions.manage || code === "PENDIENTE");
+    (project.permissions.manage || states.some((state) => state.code === code && (state.category === "not_started" || !state.category && code === "PENDIENTE")));
 
   function rows(
     items: Task[],
@@ -166,9 +169,10 @@ export default function TaskList({
                   className={styles.indicator}
                   data-state={task.state_code}
                   title={task.state_name}
+                  style={task.state_color ? { color: task.state_color } : undefined}
                 >
                   <TaskIcon
-                    name={task.state_code === "COMPLETADA" ? "check" : "state"}
+                    name={task.state_code !== "CANCELADA" && (task.state_category === "closed" || task.state_category === "done" || !task.state_category && task.state_code === "COMPLETADA") ? "check" : "state"}
                   />
                 </span>
                 <div
@@ -299,6 +303,7 @@ export default function TaskList({
       <div className={styles.toolbar}>
         <TaskGroupingControl preferences={preferences} onChange={setPreferences} />
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2 max-sm:flex-1">
+          {project.permissions.manage && project.task_states.can_configure && onConfigure && <TaskStatusSettingsControl onClick={onConfigure} />}
           <TaskGroupExpansionControl expanded={allGroupsExpanded} disabled={!groups.length}
             controls={groups.map((_, index) => `${listId}-group-${index}`).join(" ")}
             onToggle={() => setCollapsed((current) => {

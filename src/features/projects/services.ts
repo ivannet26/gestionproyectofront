@@ -12,6 +12,7 @@ import type {
   Task,
   TaskStatePayload,
   WorkerCandidate,
+  TaskStatusTemplate,
 } from "./types";
 
 function projectRequest<T>(path = "", options: RequestInit = {}): Promise<T> {
@@ -56,6 +57,16 @@ export function configureProjectTaskStates(
   return projectRequest(`${projectId}/task-states/`, {
     method: "PATCH",
     body: JSON.stringify(payload),
+  });
+}
+
+export function getTaskStatusTemplates(projectId: number): Promise<TaskStatusTemplate[]> {
+  return projectRequest(`${projectId}/state-templates/`);
+}
+
+export function saveTaskStatusTemplate(projectId: number, payload: Pick<TaskStatusTemplate, "name" | "states"> & { revision?: number }, templateId?: number): Promise<TaskStatusTemplate> {
+  return projectRequest(`${projectId}/state-templates/${templateId === undefined ? "" : `${templateId}/`}`, {
+    method: templateId === undefined ? "POST" : "PUT", body: JSON.stringify(payload),
   });
 }
 

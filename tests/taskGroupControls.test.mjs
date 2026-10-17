@@ -67,6 +67,7 @@ test("global action handles open, closed and mixed groups without changing subtr
     "./TaskCell": { default: Marker },
     "./TaskGroupingControl": { default: Marker },
     "./TaskGroupExpansionControl": { default: Expansion },
+    "./TaskStatusSettingsControl": { default: Marker },
     "./TaskGroupLabel": { default: Marker },
     "./useTaskGrouping": { useTaskGrouping: () => ({
       hierarchy: { roots: [], visible: new Set() }, groups: groups(), preferences: { mode }, setPreferences() {},

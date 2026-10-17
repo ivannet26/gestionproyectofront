@@ -49,6 +49,7 @@ const { default: TaskList } = await load("../src/features/projects/TaskList/Task
   "./useTaskGrouping": groupingHook,
   "./TaskGroupingControl": { default: () => React.createElement("button", null, "Agrupar por: Estado") },
   "./TaskGroupExpansionControl": expansion,
+  "./TaskStatusSettingsControl": { default: () => null },
   "./TaskGroupLabel": { default: ({ group }) => React.createElement("span", null, group.name) },
 });
 const project = (changes = {}) => ({
@@ -148,6 +149,7 @@ test("empty List renders configured states through Workspace without extra state
     "../LabelList/LabelList": { default: Empty },
     "../Modal/Modal": { default: Empty },
     "../TaskForm/TaskForm": { default: Empty },
+    "../TaskStatusConfiguration/TaskStatusConfiguration": { default: Empty },
     "../TaskList/TaskList": { default: TaskList },
     "../TaskList/taskHierarchy": hierarchy,
     "../TaskStateForm/TaskStateForm": { default: Empty },

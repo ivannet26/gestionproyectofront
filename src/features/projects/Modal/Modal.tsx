@@ -8,6 +8,8 @@ const styles = {
     "w-[min(800px,calc(100vw-32px))] max-h-[calc(100dvh-48px)] overflow-hidden open:flex open:flex-col max-sm:w-[calc(100vw-16px)] max-sm:max-h-[calc(100dvh-16px)]",
   projectComposer:
     "w-[min(800px,calc(100vw-32px))] max-h-[calc(100dvh-48px)] overflow-hidden open:flex open:flex-col max-sm:w-[calc(100vw-16px)] max-sm:max-h-[calc(100dvh-16px)]",
+  statusComposer:
+    "w-[min(800px,calc(100vw-32px))]! h-[min(760px,calc(100dvh-48px))] max-h-none! overflow-x-hidden! overflow-y-hidden! rounded-xl open:flex open:flex-col max-sm:w-[calc(100vw-16px)]! max-sm:h-[calc(100dvh-16px)]",
   header:
     "sticky top-0 z-2 flex shrink-0 items-center justify-between gap-4 border-b border-neutral-200 bg-white px-6 py-3 max-sm:px-4 [&_h2]:m-0 [&_h2]:text-[15px] [&_h2]:[&_h2]:break-words",
   close:
@@ -21,6 +23,7 @@ interface ModalProps {
   wide?: boolean;
   taskComposer?: boolean;
   projectComposer?: boolean;
+  statusComposer?: boolean;
   children: ReactNode;
 }
 
@@ -31,6 +34,7 @@ export default function Modal({
   wide = false,
   taskComposer = false,
   projectComposer = false,
+  statusComposer = false,
   children,
 }: ModalProps) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -51,11 +55,11 @@ export default function Modal({
   return (
     <dialog
       ref={dialog}
-      className={`${styles.modal}${wide ? ` ${styles.wide}` : ""}${taskComposer ? ` ${styles.taskComposer}` : ""}${projectComposer ? ` ${styles.projectComposer}` : ""}`}
+      className={`${styles.modal}${wide ? ` ${styles.wide}` : ""}${taskComposer ? ` ${styles.taskComposer}` : ""}${projectComposer ? ` ${styles.projectComposer}` : ""}${statusComposer ? ` ${styles.statusComposer}` : ""}`}
       aria-labelledby={titleId}
       onKeyDown={(event) => {
         if (
-          (taskComposer || projectComposer) &&
+          (taskComposer || projectComposer || statusComposer) &&
           event.key === "Tab" &&
           event.target instanceof HTMLElement &&
           event.target.closest("dialog") === event.currentTarget

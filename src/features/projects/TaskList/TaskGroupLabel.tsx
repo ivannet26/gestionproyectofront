@@ -3,7 +3,7 @@ import TaskIcon from "../TaskForm/TaskIcon";
 import { PriorityLabel, StateLabel } from "./TaskCell";
 
 export default function TaskGroupLabel({ group, mode }: { group: TaskListGroup; mode: TaskGroupingMode }) {
-  if (group.stateCode) return <StateLabel code={group.stateCode} name={group.name} />;
+  if (group.stateCode) return <StateLabel code={group.stateCode} name={group.name} category={group.stateCategory} color={group.stateColor} />;
   if (mode === "priority") return <PriorityLabel priority={group.priority} name={group.name} />;
   if (group.tokens.length) return <span className="inline-flex flex-wrap items-center gap-1.5" title={group.name}>
     {mode === "assignees" && <TaskIcon name="person" />}

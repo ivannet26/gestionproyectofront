@@ -36,7 +36,7 @@ export default function TaskProperties({
   const canAssign = project.permissions.manage && (!task || task.permissions.assign);
   const canConfigure = project.permissions.manage && project.task_states.can_configure;
   const selectedState = task?.state_code ?? stateCode;
-  const states = project.task_states.states.filter((state) => task || canAssign || state.code === "PENDIENTE");
+  const states = project.task_states.states.filter((state) => task || canAssign || state.category === "not_started" || !state.category && state.code === "PENDIENTE");
   const groups = groupTaskStates(states.filter((state) => state.name.toLocaleLowerCase("es").includes(stateSearch.trim().toLocaleLowerCase("es"))));
   const stateName = states.find((state) => state.code === selectedState)?.name ?? task?.state_name ?? selectedState;
   const dateValue = dueDate ? new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "short", year: "numeric" })
@@ -55,7 +55,7 @@ export default function TaskProperties({
             {group.states.map((state) => <button key={state.code} type="button" className={styles.option}
               aria-pressed={selectedState === state.code} disabled={Boolean(task) || !canAssign}
               onClick={() => { onState(state.code); close(); }}>
-              <TaskIcon name="state" /><span>{state.name}</span>{selectedState === state.code && <TaskIcon name="check" />}
+              <span className="inline-flex" style={state.color ? { color: state.color } : undefined}><TaskIcon name={state.code !== "CANCELADA" && (state.category === "closed" || state.category === "done") ? "check" : "state"} /></span><span>{state.name}</span>{selectedState === state.code && <TaskIcon name="check" />}
             </button>)}
           </section>)}
           {groups.length === 0 && <p className={styles.hint} role="status">No hay estados que coincidan.</p>}

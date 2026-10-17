@@ -86,9 +86,27 @@ export interface ProjectFavoriteState {
   is_favorite: boolean;
 }
 
+export type StateCategory = "not_started" | "active" | "done" | "closed";
+
 export interface ProjectTaskState {
   code: string;
   name: string;
+  category?: StateCategory;
+  color?: string;
+}
+
+export interface TaskStatusTemplate {
+  id: number | string;
+  name: string;
+  preset: boolean;
+  revision: number;
+  states: { name: string; category: StateCategory; color: string }[];
+}
+
+export interface StateReassignment {
+  source: string;
+  target: string;
+  reason: string;
 }
 
 export interface ProjectTaskConfiguration {
@@ -97,12 +115,14 @@ export interface ProjectTaskConfiguration {
   available_states: ProjectTaskState[];
   revision: string;
   can_configure: boolean;
+  usage?: Record<string, number>;
 }
 
 export interface ProjectTaskConfigurationPayload {
   template: "standard" | "custom";
   revision: string;
   states: ProjectTaskState[];
+  reassignments?: StateReassignment[];
 }
 
 export interface WorkerCandidate {
@@ -140,6 +160,8 @@ export interface Task {
   description: string;
   state_code: string;
   state_name: string;
+  state_category?: StateCategory;
+  state_color?: string;
   priority: number;
   created_at: string;
   start_date: string;
@@ -196,6 +218,8 @@ export interface TaskListGroup {
   key: string;
   name: string;
   stateCode?: string;
+  stateCategory?: StateCategory;
+  stateColor?: string;
   priority?: number;
   tokens: TaskGroupToken[];
   rank: number;

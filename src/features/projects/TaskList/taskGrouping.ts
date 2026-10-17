@@ -11,7 +11,7 @@ export function projectToday(now = new Date()): string {
 }
 
 export function taskDueGroup(task: Task, today: string) {
-  if (task.state_code === "COMPLETADA") return { key: "completed", name: "Completadas", rank: 3 };
+  if (task.state_code !== "CANCELADA" && (task.state_category === "done" || task.state_category === "closed" || !task.state_category && task.state_code === "COMPLETADA")) return { key: "completed", name: "Completadas", rank: 3 };
   if (!task.due_date) return { key: "undated", name: "Sin fecha límite", rank: 2 };
   return task.due_date < today
     ? { key: "overdue", name: "Con atraso", rank: 0 }
@@ -32,7 +32,7 @@ export function groupTasks(
   if (preferences.mode === "state") {
     for (const state of stateByCode.values()) {
       const key = `state:${state.code}`;
-      groups.set(key, { key, name: state.name, stateCode: state.code, rank: state.rank,
+      groups.set(key, { key, name: state.name, stateCode: state.code, stateCategory: state.category, stateColor: state.color, rank: state.rank,
         tokens: [], members: new Set(), visible: new Set(), roots: [] });
     }
   }

@@ -29,6 +29,7 @@ import { formatTaskDate } from "../TaskList/taskHierarchy";
 import TaskStateForm from "../TaskStateForm/TaskStateForm";
 import ProjectHeader from "./ProjectHeader";
 import { taskAssignees } from "../taskAssignees";
+import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
 
 const styles = {
   detail:
@@ -67,6 +68,7 @@ export default function ProjectWorkspace({
   const [creationError, setCreationError] = useState("");
   const [action, setAction] = useState<TaskAction | null>(null);
   const [busy, setBusy] = useState(false);
+  const [configuringStates, setConfiguringStates] = useState(false);
   const [searchParams] = useSearchParams();
 
   const view = searchParams.get("vista") ?? "lista";
@@ -498,6 +500,7 @@ export default function ProjectWorkspace({
               project={project}
               tasks={tasks}
               catalogs={catalogs}
+              onConfigure={() => setConfiguringStates(true)}
               onAction={(kind, taskId) => {
                 setMessage("");
                 setAction({ kind, taskId });
@@ -553,6 +556,7 @@ export default function ProjectWorkspace({
         </p>
       )}
 
+      {configuringStates && <TaskStatusConfiguration project={project} onConfigured={configured} onClose={() => setConfiguringStates(false)} />}
       {activeAction && (
         <Modal
           busy={busy}
