@@ -54,7 +54,7 @@ export function groupTasks(
         return [{ key: task.state_code, name: state?.name ?? task.state_name, rank: state?.rank ?? states.length, stateCode: task.state_code, tokens: [] }];
       }
       case "priority": {
-        const priority = priorityByCode.get(task.priority);
+        const priority = task.priority === null ? undefined : priorityByCode.get(task.priority);
         return [{ key: task.priority == null ? "none" : String(task.priority), name: task.priority == null ? "Sin prioridad" : priority?.name ?? `Prioridad ${task.priority}`, rank: priority?.rank ?? priorities.length, priority: task.priority ?? undefined, tokens: [] }];
       }
       case "assignees":

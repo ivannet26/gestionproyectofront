@@ -13,25 +13,30 @@ import TaskIcon from "../TaskForm/TaskIcon";
 import type { TaskIconName } from "../TaskForm/TaskIcon";
 import { Calendar } from "../CreateProjectModal/ProjectEndDateSelector";
 import { groupTaskStates } from "../stateGroups";
-import { formatTaskDate, initials } from "./taskHierarchy";
+import { formatTaskDate } from "./taskHierarchy";
+import { avatarFor } from "../../../shared/avatar";
+import { stateInk } from "./stateInk";
+import PriorityOptions from "../TaskForm/PriorityOptions";
+import LabelEditor from "../LabelEditor/LabelEditor";
+import type { Label } from "../types";
 import { taskAssignees } from "../taskAssignees";
 
 const styles = {
   // Keep the module's full-width badge override above TaskProperty's span limit.
   state: String.raw`inline-flex items-center gap-1 max-w-full! py-[3px] px-1.5 rounded-[5px] bg-[#edf0f1] text-[#46545a] text-[0.6875rem] truncate data-[state=EN\_CURSO]:bg-[#e3f1ff] data-[state=EN\_CURSO]:text-[#0861a9] data-[state=COMPLETADA]:bg-[#e4f3eb] data-[state=COMPLETADA]:text-[#17663e] data-[state=CANCELADA]:bg-[#fce9e8] data-[state=CANCELADA]:text-[#a42a28] data-[state=BLOQUEADA]:bg-[#fce9e8] data-[state=BLOQUEADA]:text-[#a42a28] data-[state=EN\_REVISION]:bg-[#f4edff] data-[state=EN\_REVISION]:text-[#6b3899] data-[state=OBSERVADA]:bg-[#f4edff] data-[state=OBSERVADA]:text-[#6b3899]`,
   editor:
-    "grid gap-2.5 [&_fieldset]:min-w-0 [&_fieldset]:m-0 [&_fieldset]:p-0 [&_fieldset]:[border:0] [&_textarea]:w-full [&_textarea]:p-2 [&_textarea]:[border:1px_solid_var(--color-border)] [&_textarea]:[border-radius:var(--radius-small)] [&_textarea]:resize-y",
+    "grid gap-2.5 [&_fieldset]:min-w-0 [&_fieldset]:m-0 [&_fieldset]:p-0 [&_fieldset]:[border:0] [&_textarea]:w-full [&_textarea]:p-2 [&_textarea]:border [&_textarea]:border-neutral-200 [&_textarea]:rounded-lg [&_textarea]:resize-y",
   options:
-    "max-h-60 overflow-y-auto [&_h3]:mt-3 [&_h3]:mx-1.5 [&_h3]:mb-[5px] [&_h3]:[color:var(--color-text-muted)] [&_h3]:text-[0.75rem] [&_h3]:font-normal",
+    "max-h-60 overflow-y-auto [&_h3]:mt-3 [&_h3]:mx-1.5 [&_h3]:mb-[5px] [&_h3]:text-neutral-600 [&_h3]:text-[0.75rem] [&_h3]:font-normal",
   option:
-    "flex items-center gap-2 w-full min-h-9 my-0.5 mx-0 py-[7px] px-2 [border:0] [border-radius:var(--radius-small)] [background:var(--color-surface)] [color:var(--color-text)] text-left text-[0.8125rem] cursor-pointer hover:[background:var(--color-hover)] aria-pressed:[background:var(--color-brand-soft)] aria-pressed:[@media(pointer:coarse)]:min-h-11",
+    "flex items-center gap-2 w-full min-h-9 my-0.5 mx-0 py-[7px] px-2 [border:0] rounded-lg bg-white text-neutral-800 text-left text-[0.8125rem] cursor-pointer hover:bg-neutral-50 aria-pressed:bg-neutral-100 aria-pressed:[@media(pointer:coarse)]:min-h-11",
   check: "ml-auto",
   avatar:
-    "inline-grid place-items-center flex-[0_0_26px] size-[26px] [border-radius:50%] [background:var(--color-heading)] text-white text-[0.625rem] font-semibold",
+    "inline-grid place-items-center flex-[0_0_26px] size-[26px] rounded-full bg-sky-700 text-white text-[0.625rem] font-semibold",
   priority:
     "inline-flex items-center gap-1.5 [&[data-priority='1']_svg]:text-[#be2937] [&[data-priority='1']_svg]:fill-[#be2937] [&[data-priority='2']_svg]:text-[#a66a08] [&[data-priority='2']_svg]:fill-[#e8b44a] [&[data-priority='3']_svg]:text-[#4267c5] [&[data-priority='3']_svg]:fill-[#4267c5] [&[data-priority='4']_svg]:text-[#707b80] [&[data-priority='4']_svg]:fill-[#c3c9cc]",
   editorActions:
-    "flex justify-end gap-2 pt-2.5 [border-top:1px_solid_var(--color-border-light)] [&_button]:min-h-[34px] [&_button]:py-1.5 [&_button]:px-3 [&_button]:text-[0.8125rem] [&_button]:[border-radius:var(--radius-small)] [&_button]:cursor-pointer [&_button:not(.primary-button)]:[background:var(--color-surface)] [&_button:not(.primary-button)]:[color:var(--color-text)] [&_button:not(.primary-button)]:[border:1px_solid_var(--color-border)]",
+    "flex justify-end gap-2 pt-2.5 border-t border-neutral-200 [&_button]:min-h-[34px] [&_button]:py-1.5 [&_button]:px-3 [&_button]:text-[0.8125rem] [&_button]:rounded-lg [&_button]:cursor-pointer [&_button:not(.primary-button)]:bg-white [&_button:not(.primary-button)]:text-neutral-800 [&_button:not(.primary-button)]:border [&_button:not(.primary-button)]:border-neutral-200",
   error: "m-0 text-red-700 text-[0.75rem] [overflow-wrap:anywhere]",
 };
 
@@ -40,7 +45,8 @@ type Field =
   | "priority"
   | "responsible_id"
   | "start_date"
-  | "due_date";
+  | "due_date"
+  | "labels";
 export interface TaskChanges {
   onPatch: (task: Task, data: Partial<EditTaskPayload>) => Promise<void>;
   onState: (task: Task, data: TaskStatePayload) => Promise<void>;
@@ -58,6 +64,7 @@ const labels: Record<Field, string> = {
   responsible_id: "Persona asignada",
   start_date: "Fecha de inicio",
   due_date: "Fecha límite",
+  labels: "Etiquetas",
 };
 const icons: Record<Field, TaskIconName> = {
   state_code: "state",
@@ -65,18 +72,20 @@ const icons: Record<Field, TaskIconName> = {
   responsible_id: "person",
   start_date: "date",
   due_date: "date",
+  labels: "labels",
 };
 
 export function StateLabel({ code, name, category, color }: ProjectTaskState) {
   return (
-    <span className={styles.state} data-state={code} style={color ? { backgroundColor: `${color}18`, color: "#262626" } : undefined}>
-      <span className="inline-flex shrink-0" style={color ? { color } : undefined}><TaskIcon name={code !== "CANCELADA" && (category === "closed" || category === "done" || !category && code === "COMPLETADA") ? "check" : "state"} /></span>
+    <span className={`${styles.state} border border-neutral-200 font-medium`} data-state={code}
+      style={color ? { backgroundColor: color, color: stateInk(color), borderColor: "#737373" } : undefined}>
+      <span className="inline-flex shrink-0"><TaskIcon name={code !== "CANCELADA" && (category === "closed" || category === "done" || !category && code === "COMPLETADA") ? "check" : "state"} /></span>
       {name}
     </span>
   );
 }
 
-export function PriorityLabel({ priority, name }: { priority?: number; name: string }) {
+export function PriorityLabel({ priority, name }: { priority?: number | null; name: string }) {
   return <span className={styles.priority} data-priority={priority}>
     <TaskIcon name="priority" />{name}
   </span>;
@@ -95,6 +104,7 @@ function Editor({
   const [value, setValue] = useState(String(task[field] ?? ""));
   const [responsibles, setResponsibles] = useState(() => field === "responsible_id" ? taskAssignees(task).map((person) => person.id) : []);
   const [search, setSearch] = useState("");
+  const [taskLabels, setTaskLabels] = useState<Label[]>(task.labels.map(({ name, kind }) => ({ name, kind })));
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -135,12 +145,20 @@ function Editor({
         await onState(task, { state_code: value, reason: reason.trim() });
       else if (field === "responsible_id")
         await onPatch(task, { responsible_ids: responsibles });
+      else if (field === "labels") {
+        const requirements = task.labels.filter((label) => label.requirement_id !== null);
+        const linked = (label: Label) => requirements.find((item) => item.name === label.name && item.kind === label.kind);
+        await onPatch(task, {
+          labels: taskLabels.filter((label) => !linked(label)),
+          requirement_ids: taskLabels.flatMap((label) => linked(label)?.requirement_id ?? []),
+        });
+      }
       else
         await onPatch(task, {
           [field]:
             field === "priority"
-              ? Number(value)
-              : value,
+              ? (value ? Number(value) : null)
+              : value || null,
         });
       close();
     } catch (failure) {
@@ -191,6 +209,7 @@ function Editor({
           </>
         )}
         <div className={styles.options}>
+          {field === "labels" && <LabelEditor title="Etiquetas de la tarea" compact labels={taskLabels} onChange={setTaskLabels} />}
           {field === "state_code" &&
             groupTaskStates(states).map((group) => (
               <section key={group.label}>
@@ -207,14 +226,8 @@ function Editor({
           {field === "state_code" && states.length === 0 && (
             <p role="status">No hay estados que coincidan.</p>
           )}
-          {field === "priority" &&
-            catalogs.priorities.map((priority) =>
-              option(
-                String(priority.code),
-                priority.name,
-                <PriorityLabel priority={priority.code} name={priority.name} />,
-              ),
-            )}
+          {field === "priority" && <PriorityOptions priorities={catalogs.priorities} value={value ? Number(value) : null}
+            onChange={(next) => setValue(next === null ? "" : String(next))} />}
           {field === "responsible_id" && (
             <>
               {option("", "Sin responsable")}
@@ -224,7 +237,7 @@ function Editor({
                   person.name,
                   <>
                     <span className={styles.avatar} aria-hidden="true">
-                      {initials(person.name)}
+                      {avatarFor(person.name)}
                     </span>
                     <span>{person.name}</span>
                   </>,
@@ -242,7 +255,7 @@ function Editor({
           <Calendar
             value={value}
             label={labels[field]}
-            optional={false}
+            optional={field === "due_date"}
             min={
               field === "due_date"
                 ? task.start_date
@@ -250,7 +263,7 @@ function Editor({
             }
             max={
               field === "start_date"
-                ? task.due_date
+                ? task.due_date ?? undefined
                 : (parent?.due_date ?? project.end_date ?? undefined)
             }
             onChange={(next) => {
@@ -300,8 +313,8 @@ function Editor({
         </button>
         <button
           type="button"
-          className="primary-button"
-          disabled={busy || (field === "responsible_id" ? JSON.stringify([...responsibles].sort((a, b) => a - b)) === JSON.stringify(taskAssignees(task).map((person) => person.id)) : value === String(task[field] ?? ""))}
+          className="primary-button bg-neutral-800 font-medium text-white hover:bg-neutral-700"
+          disabled={busy || (field === "labels" ? JSON.stringify(taskLabels) === JSON.stringify(task.labels.map(({ name, kind }) => ({ name, kind }))) : field === "responsible_id" ? JSON.stringify([...responsibles].sort((a, b) => a - b)) === JSON.stringify(taskAssignees(task).map((person) => person.id)) : value === String(task[field] ?? ""))}
           onClick={() => {
             void save();
           }}
@@ -331,19 +344,15 @@ export default function TaskCell(props: TaskCellProps) {
         : field === "priority"
           ? (task.priority == null ? "Sin prioridad" : catalogs.priorities.find((item) => item.code === task.priority)
               ?.name ?? String(task.priority))
-          : formatTaskDate(task[field]);
+          : field === "labels" ? `${task.labels.length} etiquetas` : formatTaskDate(task[field]);
   const content =
     field === "state_code" ? (
       <StateLabel code={task.state_code} name={value} category={task.state_category} color={task.state_color} />
     ) : field === "responsible_id" && people.length > 0 ? (
       <>
-        <span className={styles.avatar} aria-hidden="true">
-          {initials(people[0].name)}
-        </span>
-        {people.length > 1 && <span aria-hidden="true" className="text-[10px] text-neutral-600">+{people.length - 1}</span>}
-        <span>{value}</span>
+        <span aria-hidden="true">{people.length} responsables</span>
       </>
-    ) : field === "priority" ? (
+    ) : field === "labels" ? <TaskIcon name="labels" /> : field === "priority" ? (
       <PriorityLabel priority={task.priority} name={value} />
     ) : (
       <>
@@ -360,6 +369,10 @@ export default function TaskCell(props: TaskCellProps) {
       icon={icons[field]}
       disabled={!permitted}
       content={content}
+      triggers={field === "responsible_id" ? (people.length ? people.map((person) => ({
+        label: person.name,
+        content: <span className="inline-grid size-7 shrink-0 place-items-center rounded-full bg-sky-700 text-xs font-medium text-white" aria-hidden="true">{avatarFor(person.name)}</span>,
+      })) : [{ label: "Asignar responsable", content: <TaskIcon name="person" /> }]) : undefined}
     >
       {(close) => <Editor {...props} close={close} />}
     </TaskProperty>

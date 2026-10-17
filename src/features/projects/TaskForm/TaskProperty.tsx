@@ -2,15 +2,16 @@ import type { ReactNode } from "react";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { TaskIconName } from "./TaskIcon";
 import TaskIcon from "./TaskIcon";
+import Tooltip from "../../../shared/Tooltip";
 const styles = {
   property: "min-w-0 max-w-full",
   cell: "w-full min-h-10 border-transparent !px-1.5 !py-1.5 text-left disabled:bg-transparent disabled:text-neutral-700 disabled:opacity-100",
   trigger:
-    "inline-flex min-h-9 max-w-full items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-[13px] leading-snug text-neutral-700 cursor-pointer hover:enabled:bg-neutral-50 aria-expanded:bg-neutral-50 aria-expanded:border-neutral-600 aria-invalid:border-red-700 disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-default [&>svg]:shrink-0 [&>span]:max-w-[150px] [&>span]:truncate focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 [@media(pointer:coarse)]:min-h-10",
+    "inline-flex min-h-9 w-full max-w-full items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-[13px] leading-snug text-neutral-700 cursor-pointer hover:enabled:bg-neutral-50 aria-expanded:bg-neutral-50 aria-expanded:border-neutral-600 aria-invalid:border-red-700 disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-default [&>svg]:shrink-0 [&>span]:max-w-[150px] [&>span]:truncate focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 [@media(pointer:coarse)]:min-h-10",
   error:
     "mb-0 mt-1 max-w-[230px] text-xs leading-relaxed text-red-700 [overflow-wrap:anywhere]",
   panel:
-    "fixed inset-auto m-0 w-72 max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-lg border border-neutral-200 bg-white p-3 text-[13px] text-neutral-900 shadow-[0_6px_24px_rgba(24,36,40,0.15)] backdrop:bg-transparent [&_label]:mb-1.5 [&_label]:block [&_label]:text-xs [&_label]:font-medium [&_label]:text-neutral-600 [&_input:not([type=radio])]:w-full [&_input:not([type=radio])]:min-h-9 [&_input:not([type=radio])]:rounded-lg [&_input:not([type=radio])]:border [&_input:not([type=radio])]:border-neutral-200 [&_input:not([type=radio])]:bg-white [&_input:not([type=radio])]:px-2 [&_input:not([type=radio])]:py-1.5 [&_select]:w-full [&_select]:min-h-9 [&_select]:rounded-lg [&_select]:border [&_select]:border-neutral-200 [&_select]:bg-white [&_select]:px-2 [&_select]:py-1.5 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700 [&_button:disabled]:opacity-60",
+    "fixed inset-auto m-0 w-72 max-w-[calc(100vw-24px)] overflow-y-auto overscroll-contain rounded-lg border border-neutral-200 bg-white p-3 text-[13px] text-neutral-900 backdrop:bg-transparent [&_label]:mb-1.5 [&_label]:block [&_label]:text-xs [&_label]:font-medium [&_label]:text-neutral-600 [&_input:not([type=radio])]:w-full [&_input:not([type=radio])]:min-h-9 [&_input:not([type=radio])]:rounded-lg [&_input:not([type=radio])]:border [&_input:not([type=radio])]:border-neutral-200 [&_input:not([type=radio])]:bg-white [&_input:not([type=radio])]:px-2 [&_input:not([type=radio])]:py-1.5 [&_select]:w-full [&_select]:min-h-9 [&_select]:rounded-lg [&_select]:border [&_select]:border-neutral-200 [&_select]:bg-white [&_select]:px-2 [&_select]:py-1.5 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700 [&_button:disabled]:opacity-60",
 };
 
 interface TaskPropertyProps {
@@ -21,6 +22,9 @@ interface TaskPropertyProps {
   error?: string;
   disabled?: boolean;
   cell?: boolean;
+  compact?: boolean;
+  selected?: boolean;
+  triggers?: { label: string; content: ReactNode }[];
   content?: ReactNode;
   children: (close: () => void) => ReactNode;
 }
@@ -33,6 +37,9 @@ export default function TaskProperty({
   error,
   disabled,
   cell,
+  compact,
+  selected,
+  triggers,
   content,
   children,
 }: TaskPropertyProps) {
@@ -83,33 +90,37 @@ export default function TaskProperty({
 
   function close() {
     document.getElementById(panelId)?.hidePopover();
-    document.getElementById(id)?.focus();
+    document.getElementById(document.getElementById(panelId)?.dataset.returnFocus ?? id)?.focus();
   }
 
   return (
     <div className={styles.property}>
-      <button
-        ref={trigger}
-        id={id}
+      <div className={triggers ? "flex flex-wrap items-center gap-0.5 px-1.5" : "contents"}>
+      {(triggers ?? [{ label: `${label}: ${value}`, content: content ?? <><TaskIcon name={icon} /><span>{value}</span></> }]).map((item, index) => <Tooltip key={index} label={item.label} stretch={!compact && !triggers}>
+      {(description) => <button
+        ref={index === 0 ? trigger : undefined}
+        id={index === 0 ? id : `${id}-${index}`}
         type="button"
-        className={`${styles.trigger}${cell ? ` ${styles.cell}` : ""}`}
-        popoverTarget={panelId}
-        disabled={disabled}
-        aria-label={`${label}: ${value}`}
-        title={`${label}: ${value}`}
+        className={triggers ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-full p-0.5 text-neutral-700 hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 aria-disabled:cursor-default [@media(pointer:coarse)]:p-2" : compact ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-lg border border-neutral-200 bg-white p-1.5 text-neutral-700 hover:bg-neutral-50 aria-pressed:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 aria-disabled:cursor-default [@media(pointer:coarse)]:p-3.5" : `${styles.trigger}${cell ? ` ${styles.cell}` : ""}`}
+        popoverTarget={disabled ? undefined : panelId}
+        disabled={disabled && !triggers && !compact}
+        aria-disabled={disabled || undefined}
+        aria-label={item.label}
+        aria-pressed={compact ? selected : undefined}
+        onClick={(event) => {
+          trigger.current = event.currentTarget;
+          if (panel.current) panel.current.dataset.returnFocus = event.currentTarget.id;
+        }}
         aria-expanded={open}
         aria-controls={panelId}
         aria-haspopup="dialog"
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${id}-error` : undefined}
+        aria-describedby={`${description}${error ? ` ${id}-error` : ""}`}
       >
-        {content ?? (
-          <>
-            <TaskIcon name={icon} />
-            <span>{value}</span>
-          </>
-        )}
-      </button>
+        {item.content}
+      </button>}
+      </Tooltip>)}
+      </div>
       {error && (
         <p id={`${id}-error`} className={styles.error} role="alert">
           {error}

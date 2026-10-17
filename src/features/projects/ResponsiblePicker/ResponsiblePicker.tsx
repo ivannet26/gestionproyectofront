@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { Project } from "../types";
 import TaskProperty from "../TaskForm/TaskProperty";
 import TaskIcon from "../TaskForm/TaskIcon";
@@ -9,18 +9,22 @@ interface ResponsiblePickerProps {
   value: number[];
   onChange: (value: number[]) => void;
   error?: string;
+  compact?: boolean;
 }
 
-export default function ResponsiblePicker({ participants, value, onChange, error }: ResponsiblePickerProps) {
+export default function ResponsiblePicker({ participants, value, onChange, error, compact }: ResponsiblePickerProps) {
+  const instance = useId();
+  const id = compact ? `${instance}-responsible` : "task-responsible";
   const [search, setSearch] = useState("");
   const selected = participants.filter((worker) => value.includes(worker.id));
   const results = participants.filter((worker) => worker.name.toLocaleLowerCase("es").includes(search.trim().toLocaleLowerCase("es")));
 
-  return <TaskProperty id="task-responsible" label="Responsables" icon="person" error={error}
+  return <TaskProperty id={id} label="Responsables" icon="person" error={error}
+    compact={compact} selected={value.length > 0} content={compact ? <TaskIcon name="person" /> : undefined}
     value={value.length ? (selected.map((person) => person.name).join(", ") || "Responsables no disponibles") : "Sin persona asignada"}>
     {(close) => <>
-        <label htmlFor="task-responsible-search">Buscar integrante del proyecto</label>
-        <input id="task-responsible-search" name="responsible_search" type="search"
+        <label htmlFor={`${id}-search`}>Buscar integrante del proyecto</label>
+        <input id={`${id}-search`} name="responsible_search" type="search"
           autoComplete="off" maxLength={100} placeholder="Buscar por nombre…" value={search}
           onKeyDown={(event) => { if (event.key === "Enter") event.preventDefault(); }}
           onChange={(event) => setSearch(event.target.value)} />

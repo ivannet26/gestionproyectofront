@@ -31,7 +31,7 @@ export function taskHierarchy(tasks: Task[], search = "") {
   return { roots: roots.filter((task) => visible.has(task.id)), children, visible, descendants };
 }
 
-export function formatTaskDate(value: string): string {
+export function formatTaskDate(value: string | null | undefined): string {
   return value ? new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "short", year: "2-digit" })
     .format(new Date(`${value}T12:00:00`)) : "Sin fecha";
 }

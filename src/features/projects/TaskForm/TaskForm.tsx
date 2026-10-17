@@ -81,9 +81,9 @@ export default function TaskForm({
   const [name, setName] = useState(task?.name ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [stateCode, setStateCode] = useState(initialState ?? project.task_states.states.find((state) => state.category === "not_started" || !state.category && state.code === "PENDIENTE")?.code ?? "PENDIENTE");
-  const [priority, setPriority] = useState(task?.priority ?? 3);
+  const [priority, setPriority] = useState<number | null>(task ? task.priority : 3);
   const [dueDate, setDueDate] = useState(
-    task?.due_date ?? parent?.due_date ?? project.end_date ?? "",
+    task ? task.due_date ?? "" : parent?.due_date ?? project.end_date ?? "",
   );
   const [responsible, setResponsible] = useState<number[]>(
     task ? taskAssignees(task).map((person) => person.id) : [],
@@ -146,14 +146,13 @@ export default function TaskForm({
     setError("");
     const invalid: FieldErrors = {};
     if (!name.trim()) invalid["task-name"] = "Indica el nombre de la tarea.";
-    if (!dueDate) invalid["task-due"] = "Indica la fecha límite.";
-    else if (
+    if (dueDate && (
       (project.start_date && dueDate < project.start_date) ||
       (lastDate && dueDate > lastDate)
-    )
+    ))
       invalid["task-due"] =
         "La fecha límite debe quedar dentro del periodo permitido.";
-    if (!catalogs.priorities.some((item) => item.code === priority))
+    if (priority !== null && !catalogs.priorities.some((item) => item.code === priority))
       invalid["task-priority"] = "Selecciona una prioridad del catálogo.";
     if (
       !task &&
@@ -171,7 +170,7 @@ export default function TaskForm({
     const data: EditTaskPayload = {
       name: name.trim(),
       priority,
-      due_date: dueDate,
+      due_date: dueDate || null,
       requirement_ids: requirementIds,
       labels,
     };

@@ -162,10 +162,10 @@ export interface Task {
   state_name: string;
   state_category?: StateCategory;
   state_color?: string;
-  priority: number;
+  priority: number | null;
   created_at: string;
   start_date: string;
-  due_date: string;
+  due_date: string | null;
   responsible_id: number | null;
   responsible_name: string | null;
   assignees?: TaskAssignee[];
@@ -185,8 +185,8 @@ export interface EditTaskPayload {
   start_date?: string;
   name: string;
   description?: string;
-  priority: number;
-  due_date: string;
+  priority?: number | null;
+  due_date?: string | null;
   requirement_ids: number[];
   labels: Label[];
   responsible_id?: number | null;
@@ -228,7 +228,8 @@ export interface TaskListGroup {
   roots: Task[];
 }
 
-export interface CreateTaskPayload extends EditTaskPayload {
+export interface CreateTaskPayload extends Partial<Omit<EditTaskPayload, "name">> {
+  name: string;
   state_code: string;
   parent_id: number | null;
   reason: string;

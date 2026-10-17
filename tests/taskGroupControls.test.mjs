@@ -49,6 +49,8 @@ test("global action handles open, closed and mixed groups without changing subtr
   const hooks = {
     useId: () => "list",
     useMemo: (calculate) => calculate(),
+    useRef: (initial) => ({ current: initial }),
+    useEffect() {},
     useState(initial) {
       const slot = index++;
       if (!(slot in state)) state[slot] = initial;
@@ -65,6 +67,8 @@ test("global action handles open, closed and mixed groups without changing subtr
     "../TaskForm/TaskProperty": { default: Marker },
     "../TaskForm/TaskIcon": { default: Icon },
     "./TaskCell": { default: Marker },
+    "./QuickTaskRow": { default: Marker },
+    "./stateInk": { stateInk: () => "#000000" },
     "./TaskGroupingControl": { default: Marker },
     "./TaskGroupExpansionControl": { default: Expansion },
     "./TaskStatusSettingsControl": { default: Marker },

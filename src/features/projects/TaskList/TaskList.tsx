@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import type { Project, ProjectCatalogs, Task, TaskActionKind, TaskListGroup } from "../types";
 import TaskProperty from "../TaskForm/TaskProperty";
@@ -10,9 +10,11 @@ import TaskGroupingControl from "./TaskGroupingControl";
 import TaskGroupExpansionControl from "./TaskGroupExpansionControl";
 import TaskGroupLabel from "./TaskGroupLabel";
 import TaskStatusSettingsControl from "./TaskStatusSettingsControl";
+import QuickTaskRow from "./QuickTaskRow";
+import { stateInk } from "./stateInk";
 
 const styles = {
-  list: "min-w-0 [&_:where(button,input):focus-visible]:[outline:2px_solid_var(--color-focus)] [&_:where(button,input):focus-visible]:outline-offset-2",
+  list: "min-w-0 [&_:where(button,input):focus-visible]:outline-2 outline-neutral-700 [&_:where(button,input):focus-visible]:outline-offset-2",
   toolbar:
     "flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-neutral-100 px-3 py-2 sm:px-5",
   tools:
@@ -20,16 +22,16 @@ const styles = {
   legend:
     "mx-3 mt-2 mb-2.5 text-xs text-neutral-600 sm:mx-5",
   scroller:
-    "overflow-x-auto overscroll-x-contain px-3 pt-0 pb-6 focus-visible:[outline:2px_solid_var(--color-focus)] focus-visible:outline-offset-2 sm:px-5",
+    "overflow-x-auto overscroll-x-contain px-3 pt-0 pb-6 focus-visible:outline-2 outline-neutral-700 focus-visible:outline-offset-2 sm:px-5 [container-type:inline-size]",
   group: "min-w-[1120px] mb-6",
   // Preserve literal underscores in Tailwind attribute selectors.
   groupHeading: String.raw`mt-0 mx-0 mb-[5px] text-[0.8125rem] [&_[data-state=EN\_CURSO]]:bg-[#1678bd] [&_[data-state=EN\_CURSO]]:text-white [&_[data-state=COMPLETADA]]:bg-[#248054] [&_[data-state=COMPLETADA]]:text-white`,
   groupToggle:
-    "inline-flex items-center gap-2.5 py-[7px] px-0 [border:0] bg-transparent [color:var(--color-text)] cursor-pointer [&>span:first-child]:inline-flex",
+    "inline-flex items-center gap-2.5 py-[7px] px-0 [border:0] bg-transparent text-neutral-800 cursor-pointer [&>span:first-child]:inline-flex",
   rotated: "[transform:rotate(90deg)]",
-  groupCount: "[color:var(--color-text-muted)] text-[0.75rem] font-normal",
+  groupCount: "text-neutral-600 text-[0.75rem] font-normal",
   table:
-    "w-full table-fixed border-collapse text-[0.8125rem] [&_th]:text-left [&_th]:[color:var(--color-text-muted)] [&_th]:font-normal [&_th]:py-2 [&_th]:px-1.5 [&_th]:[border-bottom:1px_solid_var(--color-border-light)] [&_th]:text-[0.75rem] [&_th:first-child]:pl-[34px] [&_td]:py-[3px] [&_td]:px-0 [&_td]:[border-bottom:1px_solid_var(--color-border-light)] [&_td]:h-14 [&_tr:hover_td]:[background:var(--color-surface-soft)] [&_tr:focus-within_td]:[background:var(--color-surface-soft)]",
+    "w-full table-fixed border-collapse text-[0.8125rem] text-neutral-800 [&_th]:text-left [&_th]:text-neutral-700 [&_th]:font-medium [&_th]:py-2 [&_th]:px-1.5 [&_th]:border-b [&_th]:border-neutral-200 [&_th]:text-xs [&_th:first-child]:pl-[34px] [&_td]:py-[3px] [&_td]:px-0 [&_td]:border-b [&_td]:border-neutral-200 [&_td]:h-14 [&_tr:hover_td]:bg-neutral-50 [&_tr:focus-within_td]:bg-neutral-50",
   nameColumn: "w-auto",
   personColumn: "w-[170px]",
   dateColumn: "w-[140px]",
@@ -37,27 +39,27 @@ const styles = {
   stateColumn: "w-[155px]",
   taskName: "flex items-center gap-[7px] min-w-0",
   chevron:
-    "flex-[0_0_26px] grid place-items-center w-[26px] min-h-8 [border:0] bg-transparent [color:var(--color-text-muted)] cursor-pointer [&>span]:inline-flex [@media(pointer:coarse)]:min-h-11",
+    "flex-[0_0_26px] grid place-items-center w-[26px] min-h-8 [border:0] bg-transparent text-neutral-600 cursor-pointer [&>span]:inline-flex [@media(pointer:coarse)]:min-h-11",
   indent: "flex-[0_0_26px]",
-  indicator: String.raw`inline-flex flex-[0_0_16px] [color:var(--color-text-muted)] data-[state=EN\_CURSO]:text-[#1678bd] data-[state=COMPLETADA]:text-[#248054]`,
+  indicator: String.raw`inline-flex flex-[0_0_16px] text-neutral-600 data-[state=EN\_CURSO]:text-[#1678bd] data-[state=COMPLETADA]:text-[#248054]`,
   nameCopy: "flex-1 min-w-0",
   context:
-    "block [color:var(--color-text-muted)] text-[0.6875rem] truncate my-0.5 mx-0",
+    "block text-neutral-600 text-[0.6875rem] truncate my-0.5 mx-0",
   nameLine: "flex items-center gap-1.5 min-w-0",
   nameButton:
-    "min-w-0 py-0.5 px-0 bg-transparent [border:0] text-left [color:var(--color-heading)] text-[0.8125rem] leading-normal truncate cursor-pointer hover:underline",
-  count: "[color:var(--color-text-muted)] text-[0.6875rem] whitespace-nowrap",
+    "min-w-0 py-0.5 px-0 bg-transparent [border:0] text-left text-neutral-800 text-[0.8125rem] leading-normal truncate cursor-pointer hover:underline",
+  count: "text-neutral-600 text-[0.6875rem] whitespace-nowrap",
   label:
-    "max-w-[70px] truncate rounded-[8px] py-0.5 px-[5px] [background:var(--color-brand-soft)] [color:var(--color-heading)] text-[0.625rem]",
-  rowActions: "w-7 flex-[0_0_28px] mr-1 [&_button]:p-1",
+    "max-w-[70px] truncate rounded-[8px] py-0.5 px-[5px] bg-neutral-100 text-neutral-800 text-[0.625rem]",
+  rowActions: "flex shrink-0 items-center gap-1 mr-1 [&_button]:p-1",
   options:
-    "max-h-60 overflow-y-auto [&_h3]:mt-3 [&_h3]:mx-1.5 [&_h3]:mb-[5px] [&_h3]:[color:var(--color-text-muted)] [&_h3]:text-[0.75rem] [&_h3]:font-normal",
+    "max-h-60 overflow-y-auto [&_h3]:mt-3 [&_h3]:mx-1.5 [&_h3]:mb-[5px] [&_h3]:text-neutral-600 [&_h3]:text-[0.75rem] [&_h3]:font-normal",
   option:
-    "flex items-center gap-2 w-full min-h-9 my-0.5 mx-0 py-[7px] px-2 [border:0] [border-radius:var(--radius-small)] [background:var(--color-surface)] [color:var(--color-text)] text-left text-[0.8125rem] cursor-pointer hover:[background:var(--color-hover)] aria-pressed:[background:var(--color-brand-soft)] aria-pressed:[@media(pointer:coarse)]:min-h-11",
+    "flex items-center gap-2 w-full min-h-9 my-0.5 mx-0 py-[7px] px-2 [border:0] rounded-lg bg-white text-neutral-800 text-left text-[0.8125rem] cursor-pointer hover:bg-neutral-50 aria-pressed:bg-neutral-100 aria-pressed:[@media(pointer:coarse)]:min-h-11",
   addTask:
-    "flex items-center gap-3.5 py-2.5 px-8 min-h-10 w-full text-left [color:var(--color-text-muted)] [border:0] bg-transparent text-[0.8125rem] cursor-pointer [&>span:first-child]:text-[1.125rem] hover:[background:var(--color-surface-soft)] hover:[color:var(--color-heading)] [@media(pointer:coarse)]:min-h-11",
-  empty: "my-4 mx-6 text-[0.8125rem] [color:var(--color-text-muted)]",
-  emptyGroup: "my-2.5 mx-[34px] [color:var(--color-text-muted)] text-[0.75rem]",
+    "flex items-center gap-3.5 py-2.5 px-8 min-h-10 w-full text-left text-neutral-600 [border:0] bg-transparent text-[0.8125rem] cursor-pointer [&>span:first-child]:text-[1.125rem] hover:bg-neutral-50 hover:text-neutral-800 [@media(pointer:coarse)]:min-h-11",
+  empty: "my-4 mx-6 text-[0.8125rem] text-neutral-600",
+  emptyGroup: "my-2.5 mx-[34px] text-neutral-600 text-[0.75rem]",
   srOnly:
     "absolute w-px h-px overflow-hidden [clip-path:inset(50%)] whitespace-nowrap",
 };
@@ -67,7 +69,7 @@ interface TaskListProps extends TaskChanges {
   tasks: Task[];
   catalogs: ProjectCatalogs;
   onAction: (kind: TaskActionKind, id: number) => void;
-  onCreate: (state?: string) => void;
+  onCreated: (task: Task) => void;
   onConfigure?: () => void;
 }
 
@@ -76,7 +78,7 @@ export default function TaskList({
   tasks,
   catalogs,
   onAction,
-  onCreate,
+  onCreated,
   onPatch,
   onState,
   onConfigure,
@@ -85,6 +87,13 @@ export default function TaskList({
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [collapsedContext, setCollapsedContext] = useState<Set<string>>(new Set());
+  const [draftGroup, setDraftGroup] = useState<string | null>(null);
+  const pendingQuickTask = useRef(false);
+  const listActive = useRef(false);
+  useEffect(() => {
+    listActive.current = true;
+    return () => { listActive.current = false; };
+  }, []);
   const listId = useId();
   const { hierarchy, groups, preferences, setPreferences } = useTaskGrouping(tasks, search, project.task_states.states, catalogs.priorities);
   const byId = useMemo(
@@ -169,7 +178,7 @@ export default function TaskList({
                   className={styles.indicator}
                   data-state={task.state_code}
                   title={task.state_name}
-                  style={task.state_color ? { color: task.state_color } : undefined}
+                  style={task.state_color ? { backgroundColor: task.state_color, color: stateInk(task.state_color), borderRadius: "50%", outline: "1px solid #737373" } : undefined}
                 >
                   <TaskIcon
                     name={task.state_code !== "CANCELADA" && (task.state_category === "closed" || task.state_category === "done" || !task.state_category && task.state_code === "COMPLETADA") ? "check" : "state"}
@@ -214,6 +223,7 @@ export default function TaskList({
                 </div>
                 {actions && (
                   <div className={styles.rowActions}>
+                    {task.permissions.edit && <TaskCell field="labels" task={task} project={project} catalogs={catalogs} onPatch={onPatch} onState={onState} />}
                     <TaskProperty
                       cell
                       id={`${listId}-${encodeURIComponent(group.key)}-task-${task.id}-actions`}
@@ -301,7 +311,9 @@ export default function TaskList({
   return (
     <section aria-label="Lista de tareas" className={styles.list}>
       <div className={styles.toolbar}>
-        <TaskGroupingControl preferences={preferences} onChange={setPreferences} />
+        <fieldset className="m-0 min-w-0 border-0 p-0">
+          <TaskGroupingControl preferences={preferences} onChange={setPreferences} />
+        </fieldset>
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2 max-sm:flex-1">
           {project.permissions.manage && project.task_states.can_configure && onConfigure && <TaskStatusSettingsControl onClick={onConfigure} />}
           <TaskGroupExpansionControl expanded={allGroupsExpanded} disabled={!groups.length}
@@ -410,11 +422,18 @@ export default function TaskList({
                   </thead>
                   <tbody>{rows(group.roots, group)}</tbody>
                 </table>
-                {canCreate && (
+                {canCreate && draftGroup === group.key ? <QuickTaskRow key={`${project.id}:${group.key}`} project={project} catalogs={catalogs}
+                  groupCode={group.stateCode} onCreated={onCreated} savingRef={pendingQuickTask} onClose={(returnFocus = true) => {
+                    setDraftGroup(null);
+                    if (returnFocus) requestAnimationFrame(() => document.getElementById(`${listId}-${encodeURIComponent(group.key)}-create`)?.focus({ preventScroll: true }));
+                  }} onDetachedCreated={(task) => {
+                    if (listActive.current) { setDraftGroup(null); onCreated(task); }
+                  }} /> : canCreate && (
                   <button
+                    id={`${listId}-${encodeURIComponent(group.key)}-create`}
                     className={styles.addTask}
                     type="button"
-                    onClick={() => onCreate(group.stateCode)}
+                    onClick={() => { if (!pendingQuickTask.current) setDraftGroup(group.key); }}
                   >
                     <span aria-hidden="true">+</span> Añadir tarea
                     <span className={styles.srOnly}> · {group.name}</span>

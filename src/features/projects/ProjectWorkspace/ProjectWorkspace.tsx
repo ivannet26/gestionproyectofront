@@ -65,6 +65,7 @@ export default function ProjectWorkspace({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [refreshError, setRefreshError] = useState("");
   const [creationError, setCreationError] = useState("");
   const [action, setAction] = useState<TaskAction | null>(null);
   const [busy, setBusy] = useState(false);
@@ -241,9 +242,10 @@ export default function ProjectWorkspace({
       current ? { ...current, task_states: configuration } : current,
     );
     setMessage("Estados del proyecto actualizados");
+    setRefreshError("");
 
     void loadTasks().catch((failure: unknown) => {
-      setMessage(
+      setRefreshError(
         `Estados guardados. No se pudo actualizar la lista: ${errorText(failure)}`,
       );
     });
@@ -450,12 +452,14 @@ export default function ProjectWorkspace({
         }}
       />
 
-      {message && (
+      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{message}</p>
+
+      {refreshError && (
         <p
-          className="border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm"
-          role="status"
+          className="border border-red-200 bg-white px-3 py-2 text-sm"
+          role="alert"
         >
-          {message}
+          {refreshError}
         </p>
       )}
 
@@ -497,6 +501,7 @@ export default function ProjectWorkspace({
         <div className="min-w-0">
           {tasks.length > 0 || view === "lista" ? (
             <TaskList
+              key={project.id}
               project={project}
               tasks={tasks}
               catalogs={catalogs}
@@ -505,10 +510,7 @@ export default function ProjectWorkspace({
                 setMessage("");
                 setAction({ kind, taskId });
               }}
-              onCreate={(stateCode) => {
-                setMessage("");
-                setAction({ kind: "create", stateCode });
-              }}
+              onCreated={acceptTask}
               onPatch={async (task, data) => {
                 acceptTask(await updateTask(projectId, task.id, data));
               }}

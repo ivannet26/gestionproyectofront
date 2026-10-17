@@ -2,8 +2,7 @@ import { useState } from "react";
 import type { FieldErrors } from "../formErrors";
 import { groupTaskStates } from "../stateGroups";
 import type { Label, Project, ProjectCatalogs, Task } from "../types";
-import LabelEditor from "../LabelEditor/LabelEditor";
-import ResponsiblePicker from "../ResponsiblePicker/ResponsiblePicker";
+import TaskOptionalProperties from "./TaskOptionalProperties";
 import TaskProperty from "./TaskProperty";
 import TaskIcon from "./TaskIcon";
 import { propertyClasses as styles } from "../ProjectForm/formClasses";
@@ -17,13 +16,13 @@ interface TaskPropertiesProps {
   stateCode: string;
   responsible: number[];
   dueDate: string;
-  priority: number;
+  priority: number | null;
   labels: Label[];
   errors: FieldErrors;
   onState: (value: string) => void;
   onResponsible: (value: number[]) => void;
   onDate: (value: string) => void;
-  onPriority: (value: number) => void;
+  onPriority: (value: number | null) => void;
   onLabels: (value: Label[]) => void;
   onConfigure: () => void;
 }
@@ -39,8 +38,6 @@ export default function TaskProperties({
   const states = project.task_states.states.filter((state) => task || canAssign || state.category === "not_started" || !state.category && state.code === "PENDIENTE");
   const groups = groupTaskStates(states.filter((state) => state.name.toLocaleLowerCase("es").includes(stateSearch.trim().toLocaleLowerCase("es"))));
   const stateName = states.find((state) => state.code === selectedState)?.name ?? task?.state_name ?? selectedState;
-  const dateValue = dueDate ? new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "short", year: "numeric" })
-    .format(new Date(`${dueDate}T12:00:00`)) : "Fecha límite";
 
   return <div className={styles.properties} aria-label="Propiedades de la tarea">
     <TaskProperty id="task-initial-state" label={task ? "Estado actual" : "Estado inicial"} value={stateName}
@@ -67,36 +64,10 @@ export default function TaskProperties({
           onClick={() => { close(); onConfigure(); }}><TaskIcon name="settings" />Configurar estados</button>}
       </>}
     </TaskProperty>
-    {canAssign ? <ResponsiblePicker participants={project.participants} value={responsible}
-      error={errors["task-responsible"]} onChange={onResponsible} />
-      : <TaskProperty id="task-responsible" label="Responsable · Asignación administrada"
-        value={task ? taskAssignees(task).map((person) => person.name).join(", ") || "Sin persona asignada" : "Tú"} icon="person" disabled error={errors["task-responsible"]}>
-        {() => null}
-      </TaskProperty>}
-    <TaskProperty id="task-due" label="Fecha límite obligatoria" value={dateValue} icon="date" error={errors["task-due"]}>
-      {(close) => <>
-        <label htmlFor="task-due-input">Fecha límite *</label>
-        <input id="task-due-input" name="due_date" required type="date" min={project.start_date ?? undefined}
-          max={parent?.due_date ?? project.end_date ?? undefined} value={dueDate}
-          aria-invalid={Boolean(errors["task-due"])} aria-describedby={errors["task-due"] ? "task-due-error" : undefined}
-          onChange={(event) => onDate(event.target.value)} />
-        <p className={styles.hint}>Dentro del periodo del proyecto{parent ? " y de la tarea padre" : ""}.</p>
-        <button type="button" className={styles.done} onClick={close}>Listo</button>
-      </>}
-    </TaskProperty>
-    <TaskProperty id="task-priority" label="Prioridad" icon="priority" error={errors["task-priority"]}
-      value={catalogs.priorities.find((item) => item.code === priority)?.name ?? "Prioridad"}>
-      {(close) => <div role="group" aria-label="Prioridad">
-        <h3 className={styles.groupTitle}>Prioridad</h3>
-        {catalogs.priorities.map((item) => <button key={item.code} type="button" className={styles.option}
-          aria-pressed={priority === item.code} onClick={() => { onPriority(item.code); close(); }}>
-          <TaskIcon name="priority" /><span>{item.name}</span>{priority === item.code && <TaskIcon name="check" />}
-        </button>)}
-      </div>}
-    </TaskProperty>
-    <TaskProperty id="task-labels" label="Etiquetas" value={labels.length ? `Etiquetas · ${labels.length}` : "Etiquetas"}
-      icon="labels" error={errors["task-labels"]}>
-      {() => <LabelEditor title="Etiquetas de la tarea" compact labels={labels} onChange={onLabels} />}
-    </TaskProperty>
+    <TaskOptionalProperties project={project} catalogs={catalogs} responsible={responsible} dueDate={dueDate}
+      priority={priority} labels={labels} errors={errors} canAssign={canAssign}
+      readOnlyResponsible={task ? taskAssignees(task).map((person) => person.name).join(", ") || "Sin persona asignada" : "Tú"}
+      min={parent?.start_date ?? project.start_date ?? undefined} max={parent?.due_date ?? project.end_date ?? undefined}
+      onResponsible={onResponsible} onDate={onDate} onPriority={onPriority} onLabels={onLabels} />
   </div>;
 }

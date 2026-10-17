@@ -42,6 +42,8 @@ const { default: ProjectHeader } = await load("../src/features/projects/ProjectW
   "../useProjectFavorite": { useProjectFavorite: (_id, initial) => ({ favorite: initial, pending: false, error: "", toggle() {}, ...favoriteState }) },
 });
 const { default: TaskList } = await load("../src/features/projects/TaskList/TaskList.tsx", {
+  "./QuickTaskRow": { default: () => null },
+  "./stateInk": { stateInk: () => "#000000" },
   "../TaskForm/TaskProperty": { default: ({ id, value }) => React.createElement("button", { id }, value) },
   "../TaskForm/TaskIcon": { default: Icon },
   "./TaskCell": { default: () => null, StateLabel: ({ name }) => React.createElement("span", null, name) },

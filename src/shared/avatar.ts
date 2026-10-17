@@ -1,4 +1,4 @@
 export function avatarFor(name: string): string {
-  const [first, last] = name.split(" ");
-  return `${first[0]}${last[0]}`.toUpperCase();
+  return name.trim().split(/\s+/u).filter(Boolean).slice(0, 2)
+    .map((part) => Array.from(part)[0]).join("").toLocaleUpperCase("es");
 }
