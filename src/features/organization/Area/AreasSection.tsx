@@ -67,7 +67,7 @@ function AreasSection() {
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
-                  className="inline-flex items-center text-yellow-500"
+                  className="inline-flex items-center text-yellow-400"
                   aria-hidden="true"
                 >
                   <FolderIcon className="size-4" />

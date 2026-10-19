@@ -1,15 +1,17 @@
 import type { ComponentType } from "react";
-import AdminAccountsPage from "./features/auth/AdminAccountsPage/AdminAccountsPage";
+
 import DashboardPage from "./features/dashboard/DashboardPage/DashboardPage";
 import ProjectList from "./features/projects/ProjectList/ProjectList";
 import ProjectRoute from "./features/projects/ProjectRoute/ProjectRoute";
 import WorkersPage from "./features/workers/WorkersPage";
+import AbsencesPage from "./features/absences/AbsencesPage";
 import OrganizationPage from "./features/organization/OrganizationPage";
 import TeamDetailPage from "./features/teams/TeamDetailPage";
+import AccountsPage from "./features/accounts/AccountsPage";
+import RecoveryRequestsPage from "./features/recovery-requests/RecoveryRequestsPage";
 
 export interface AppRoute {
   path: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Component: ComponentType<any>;
   requiresAdmin: boolean;
 }
@@ -36,13 +38,23 @@ export const appRoutes: AppRoute[] = [
     requiresAdmin: false,
   },
   {
-    path: "/administracion/cuentas",
-    Component: AdminAccountsPage,
+    path: "/cuentas",
+    Component: AccountsPage,
+    requiresAdmin: true,
+  },
+  {
+    path: "/recuperaciones",
+    Component: RecoveryRequestsPage,
     requiresAdmin: true,
   },
   {
     path: "/trabajadores",
     Component: WorkersPage,
+    requiresAdmin: true,
+  },
+  {
+    path: "/ausencias",
+    Component: AbsencesPage,
     requiresAdmin: true,
   },
   {

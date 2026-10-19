@@ -6,15 +6,15 @@ interface StatusBadgeProps {
 }
 
 const toneStyles: Record<string, string> = {
-  green: "border-green-400 bg-green-100 text-green-600",
+  green: "border-green-400 bg-green-100 text-green-500",
   blue: "border-blue-200 bg-blue-100 text-blue-600",
-  yellow: "border-yellow-200 bg-yellow-100 text-yellow-600",
+  yellow: "border-yellow-200 bg-yellow-100 text-yellow-400",
   red: "border-red-200 bg-red-100 text-red-600",
   neutral: "border-neutral-200 bg-neutral-50 text-neutral-600",
 };
 
 const dotStyles: Record<string, string> = {
-  green: "bg-green-600",
+  green: "bg-green-500",
   blue: "bg-blue-600",
   yellow: "bg-yellow-500",
   red: "bg-red-600",

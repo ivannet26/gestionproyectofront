@@ -43,7 +43,7 @@ export default function TeamDetailPage() {
         <div className="flex items-center gap-2.5">
           <h1 className="text-lg font-medium text-neutral-800">{team.name}</h1>
           <span
-            className={`text-xs font-medium ${team.active ? "text-green-600" : "text-red-600"}`}
+            className={`text-xs font-medium ${team.active ? "text-green-500" : "text-red-600"}`}
           >
             {team.active ? "Activo" : "Inactivo"}
           </span>
@@ -157,7 +157,7 @@ export default function TeamDetailPage() {
                       </td>
                       <td className="px-3 py-2">{member.joined_date}</td>
                       <td
-                        className={`px-3 py-2 text-center font-medium ${isActive ? "text-green-600" : "text-red-600"}`}
+                        className={`px-3 py-2 text-center font-medium ${isActive ? "text-green-500" : "text-red-600"}`}
                       >
                         {isActive ? "Activo" : "Inactivo"}
                       </td>

@@ -1,11 +1,11 @@
 import { Link } from "react-router";
 import gmLogo from "../../../assets/gm-logo.png";
 import type { SessionUser } from "../../auth/api";
+import ProfileMenu from "../../profile/ProfileMenu/ProfileMenu";
+import type { ProjectsMenuProps } from "../../projects/types";
+import ProjectsMenu from "./ProjectsMenu";
 import { navigation } from "./sidebar-routes";
 import TeamsMenu from "./TeamsMenu";
-import ProfileMenu from "../../profile/ProfileMenu/ProfileMenu";
-import ProjectsMenu from "./ProjectsMenu";
-import type { ProjectsMenuProps } from "../../projects/types";
 
 interface SidebarProps extends ProjectsMenuProps {
   onToggleCollapse: () => void;
@@ -35,9 +35,8 @@ function Sidebar({
   );
   return (
     <aside
-      className={`sticky top-0 z-10 flex h-screen min-w-0 shrink-0 flex-col bg-white p-2 pb-4 border-r border-neutral-200 max-md:static max-md:h-auto max-md:max-h-[45dvh] max-md:w-full max-md:border-r-0 max-md:border-b ${
-        isCollapsed ? "w-20 items-center px-2" : "w-64"
-      }`}
+      className={`sticky top-0 z-10 flex h-screen min-w-0 shrink-0 flex-col bg-white p-2 pb-4 border-r border-neutral-200 max-md:static max-md:h-auto max-md:max-h-[45dvh] max-md:w-full max-md:border-r-0 max-md:border-b ${isCollapsed ? "w-20 items-center px-2" : "w-64"
+        }`}
     >
       <div className="flex items-center justify-center py-2">
         <button
@@ -75,11 +74,10 @@ function Sidebar({
                 aria-label={entry.label}
                 title={entry.label}
                 aria-current={entry.path === currentPath ? "page" : undefined}
-                className={`flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-sm rounded-md cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700 ${
-                  isActive
-                    ? "bg-neutral-50 text-neutral-800"
-                    : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800"
-                } ${isCollapsed ? "justify-center px-0" : ""}`}
+                className={`flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-sm rounded-md cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700 ${isActive
+                  ? "bg-neutral-50 text-neutral-800"
+                  : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-800"
+                  } ${isCollapsed ? "justify-center px-0" : ""}`}
               >
                 <span
                   className="size-5 shrink-0 flex items-center justify-center"

@@ -1,6 +1,6 @@
 import type { IconProps } from "./types";
 
-function SearchIcon({ className }: IconProps) {
+function SearchIcon({ className, fill = false }: IconProps) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
