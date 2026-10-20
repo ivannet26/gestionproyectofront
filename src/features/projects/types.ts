@@ -166,6 +166,7 @@ export interface Task {
   created_at: string;
   start_date: string;
   due_date: string | null;
+  estimated_minutes?: number | null;
   responsible_id: number | null;
   responsible_name: string | null;
   assignees?: TaskAssignee[];
@@ -178,10 +179,12 @@ export interface Task {
     assign: boolean;
     create_child: boolean;
     dependencies: boolean;
+    relations?: boolean;
   };
 }
 
 export interface EditTaskPayload {
+  estimated_minutes?: number | null;
   start_date?: string;
   name: string;
   description?: string;
@@ -192,6 +195,21 @@ export interface EditTaskPayload {
   responsible_id?: number | null;
   responsible_ids?: number[];
 }
+
+export interface TaskIdentity { projectId: number; taskId: number }
+export interface TaskDetailData { task: Task; parent: Task | null }
+export interface TaskPage<T> { items: T[]; next_cursor: number | null }
+export interface SubtaskPage extends TaskPage<Task> { total: number; completed: number }
+export type RelationKind = "blocks" | "blocked_by" | "custom";
+export interface TaskRelation {
+  id: string; kind: RelationKind; name: string; target_id: number; target_name: string;
+  relation_id?: number; predecessor_id?: number; successor_id?: number;
+}
+export interface TaskActivityEvent {
+  id: number; operation_id: string; actor_id: number; actor_name: string; action: string; field: string;
+  old_value: unknown; new_value: unknown; related_task_id: number | null; created_at: string;
+}
+export interface TaskActivityGroup { id: string; events: TaskActivityEvent[] }
 
 export interface TaskAssignee {
   id: number;

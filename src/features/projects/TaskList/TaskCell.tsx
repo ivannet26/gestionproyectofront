@@ -52,6 +52,7 @@ export interface TaskChanges {
   onState: (task: Task, data: TaskStatePayload) => Promise<void>;
 }
 interface TaskCellProps extends TaskChanges {
+  appearance?: "detail";
   field: Field;
   task: Task;
   project: Project;
@@ -352,19 +353,20 @@ export default function TaskCell(props: TaskCellProps) {
       <>
         <span aria-hidden="true">{people.length} responsables</span>
       </>
-    ) : field === "labels" ? <TaskIcon name="labels" /> : field === "priority" ? (
+    ) : field === "labels" ? (props.appearance === "detail" ? <span>{task.labels.length ? "Editar etiquetas" : permitted ? "Añadir etiquetas" : "Sin etiquetas"}</span> : <TaskIcon name="labels" />) : field === "priority" ? (
       <PriorityLabel priority={task.priority} name={value} />
     ) : (
       <>
-        <TaskIcon name={icons[field]} />
+        {props.appearance !== "detail" && <TaskIcon name={icons[field]} />}
         <span>{value}</span>
       </>
     );
   return (
     <TaskProperty
+      appearance={props.appearance}
       cell
       id={`${instanceId}-task-${task.id}-${field}`}
-      label={`${labels[field]} · ${task.name}`}
+      label={props.appearance === "detail" ? labels[field] : `${labels[field]} · ${task.name}`}
       value={value}
       icon={icons[field]}
       disabled={!permitted}
@@ -372,9 +374,9 @@ export default function TaskCell(props: TaskCellProps) {
       triggers={field === "responsible_id" ? (people.length ? people.map((person) => ({
         label: person.name,
         content: <span className="inline-grid size-7 shrink-0 place-items-center rounded-full bg-sky-700 text-xs font-medium text-white" aria-hidden="true">{avatarFor(person.name)}</span>,
-      })) : [{ label: "Asignar responsable", content: <TaskIcon name="person" /> }]) : undefined}
+      })) : [{ label: "Asignar responsable", content: props.appearance === "detail" ? <span className="px-1 text-sm">{permitted ? "Asignar responsable" : "Sin persona asignada"}</span> : <TaskIcon name="person" /> }]) : undefined}
     >
-      {(close) => <Editor {...props} close={close} />}
+      {(close) => <>{props.appearance === "detail" && !["start_date", "due_date", "labels"].includes(field) && <h3 className="m-0 mb-3 text-sm font-semibold">{labels[field]}</h3>}<Editor {...props} close={close} /></>}
     </TaskProperty>
   );
 }

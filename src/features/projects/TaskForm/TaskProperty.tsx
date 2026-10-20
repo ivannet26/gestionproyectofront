@@ -23,6 +23,7 @@ interface TaskPropertyProps {
   disabled?: boolean;
   cell?: boolean;
   compact?: boolean;
+  appearance?: "detail";
   selected?: boolean;
   triggers?: { label: string; content: ReactNode }[];
   content?: ReactNode;
@@ -38,6 +39,7 @@ export default function TaskProperty({
   disabled,
   cell,
   compact,
+  appearance,
   selected,
   triggers,
   content,
@@ -94,9 +96,9 @@ export default function TaskProperty({
   }
 
   return (
-    <div className={styles.property}>
+    <div className={styles.property} data-property-appearance={appearance}>
       <div className={triggers ? "flex flex-wrap items-center gap-0.5 px-1.5" : "contents"}>
-      {(triggers ?? [{ label: `${label}: ${value}`, content: content ?? <><TaskIcon name={icon} /><span>{value}</span></> }]).map((item, index) => <Tooltip key={index} label={item.label} stretch={!compact && !triggers}>
+      {(triggers ?? [{ label: `${label}: ${value}`, content: content ?? <><TaskIcon name={icon} /><span>{value}</span></> }]).map((item, index) => <Tooltip key={index} label={item.label} stretch={!compact && !triggers} portalTarget={appearance === "detail" ? "dialog" : undefined} disabled={appearance === "detail" && open}>
       {(description) => <button
         ref={index === 0 ? trigger : undefined}
         id={index === 0 ? id : `${id}-${index}`}

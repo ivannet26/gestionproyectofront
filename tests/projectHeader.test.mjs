@@ -152,6 +152,8 @@ test("empty List renders configured states through Workspace without extra state
     "../Modal/Modal": { default: Empty },
     "../TaskForm/TaskForm": { default: Empty },
     "../TaskStatusConfiguration/TaskStatusConfiguration": { default: Empty },
+    "../TaskDetail/TaskDetailDialog": { default: Empty },
+    "../TaskDetail/useTaskDetail": { useTaskDetailNavigation: () => ({ target: null, openTaskDetail() {}, closeTaskDetail() {} }) },
     "../TaskList/TaskList": { default: TaskList },
     "../TaskList/taskHierarchy": hierarchy,
     "../TaskStateForm/TaskStateForm": { default: Empty },

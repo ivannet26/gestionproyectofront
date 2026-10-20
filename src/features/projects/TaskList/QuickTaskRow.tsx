@@ -7,12 +7,13 @@ import { StateLabel } from "./TaskCell";
 import TaskIcon from "../TaskForm/TaskIcon";
 import Tooltip from "../../../shared/Tooltip";
 
-export default function QuickTaskRow({ project, catalogs, groupCode, onCreated, onClose, savingRef, onDetachedCreated }: {
+export default function QuickTaskRow({ project, catalogs, groupCode, onCreated, onClose, savingRef, onDetachedCreated, parent, onBusyChange }: {
   project: Project; catalogs: ProjectCatalogs; groupCode?: string; onCreated: (task: Task) => void;
   onClose: (returnFocus?: boolean) => void; savingRef?: { current: boolean };
   onDetachedCreated?: (task: Task) => void;
+  parent?: Task; onBusyChange?: (value: boolean) => void;
 }) {
-  const draft = useQuickTask(project, groupCode, onCreated, onDetachedCreated);
+  const draft = useQuickTask(project, groupCode, onCreated, onDetachedCreated, parent);
   const form = useRef<HTMLFormElement>(null);
   const name = useRef<HTMLInputElement>(null);
   const probe = useRef<HTMLSpanElement>(null);
@@ -67,14 +68,16 @@ export default function QuickTaskRow({ project, catalogs, groupCode, onCreated, 
         document.getElementById(panel.dataset.returnFocus ?? "")?.focus();
       } else cancel();
     }}
-    className="sticky left-0 grid w-[100cqw] max-w-full grid-cols-[minmax(0,1fr)_var(--quick-task-end-space,0.75rem)] border-b border-neutral-200 bg-neutral-50 py-2 pl-3 text-xs text-neutral-800"
+    className={parent ? "grid w-full min-w-0 grid-cols-1 border-b border-neutral-200 bg-neutral-50 p-2 text-xs text-neutral-800" : "sticky left-0 grid w-[100cqw] max-w-full grid-cols-[minmax(0,1fr)_var(--quick-task-end-space,0.75rem)] border-b border-neutral-200 bg-neutral-50 py-2 pl-3 text-xs text-neutral-800"}
     onSubmit={(event) => {
       event.preventDefault();
       if (pending.current || composing.current || form.current?.querySelector(':popover-open')) return;
       pending.current = true;
+      onBusyChange?.(true);
       if (savingRef) savingRef.current = true;
       void draft.save().then((saved) => { if (saved) onClose(true); }).finally(() => {
         pending.current = false;
+        onBusyChange?.(false);
         if (savingRef) savingRef.current = false;
       });
     }}>
@@ -94,6 +97,7 @@ export default function QuickTaskRow({ project, catalogs, groupCode, onCreated, 
         {draft.errors["task-name"] && <p id={`${id}-error`} className="mt-1 text-red-700" role="alert">{draft.errors["task-name"]}</p>}
       </div>
       <TaskOptionalProperties compact project={project} catalogs={catalogs} responsible={draft.responsible} dueDate={draft.dueDate}
+        min={parent?.start_date} max={parent?.due_date ?? project.end_date ?? undefined}
         priority={draft.priority} labels={draft.labels} errors={draft.errors} onResponsible={draft.setResponsible}
         onDate={draft.setDueDate} onPriority={draft.setPriority} onLabels={draft.setLabels} />
       <button type="button" onClick={cancel} className="cursor-pointer rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-neutral-700 hover:bg-neutral-100">Cancelar</button>

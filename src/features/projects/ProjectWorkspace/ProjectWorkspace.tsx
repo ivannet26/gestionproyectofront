@@ -25,17 +25,13 @@ import LabelList from "../LabelList/LabelList";
 import Modal from "../Modal/Modal";
 import TaskForm from "../TaskForm/TaskForm";
 import TaskList from "../TaskList/TaskList";
-import { formatTaskDate } from "../TaskList/taskHierarchy";
 import TaskStateForm from "../TaskStateForm/TaskStateForm";
 import ProjectHeader from "./ProjectHeader";
-import { taskAssignees } from "../taskAssignees";
 import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
+import TaskDetailDialog from "../TaskDetail/TaskDetailDialog";
+import { useTaskDetailNavigation } from "../TaskDetail/useTaskDetail";
 
 const styles = {
-  detail:
-    "grid gap-4 [&_h2]:m-0 [&_h2]:text-[1.125rem] [&_h2]:[overflow-wrap:anywhere] [&_p]:m-0 [&_p]:whitespace-pre-wrap [&_p]:[overflow-wrap:anywhere] [&_dl]:grid [&_dl]:grid-cols-[120px_1fr] [&_dl]:gap-3 [&_dl]:text-[0.875rem] [&_dt]:[color:var(--color-text-muted)] [&_dd]:m-0 [&_dd]:[overflow-wrap:anywhere]",
-  detailActions:
-    "flex flex-wrap gap-2 [&_button]:px-3 [&_button]:py-2 [&_button]:[border:1px_solid_var(--color-border)] [&_button]:[border-radius:var(--radius-small)] [&_button]:[background:var(--color-surface-soft)] [&_button]:[color:var(--color-text)] [&_button]:cursor-pointer",
   pending:
     "px-6 py-10 [&_h2]:text-[1.125rem] [&_p]:text-[0.875rem] [&_p]:[color:var(--color-text-muted)]",
 };
@@ -70,6 +66,7 @@ export default function ProjectWorkspace({
   const [action, setAction] = useState<TaskAction | null>(null);
   const [busy, setBusy] = useState(false);
   const [configuringStates, setConfiguringStates] = useState(false);
+  const taskDetail = useTaskDetailNavigation();
   const [searchParams] = useSearchParams();
 
   const view = searchParams.get("vista") ?? "lista";
@@ -295,72 +292,6 @@ export default function ProjectWorkspace({
     }
 
     switch (action.kind) {
-      case "detail":
-        return (
-          <div className={styles.detail}>
-            <h2>{activeTask.name}</h2>
-            <p>{activeTask.description || "Sin descripción"}</p>
-
-            <dl>
-              <dt>Estado</dt>
-              <dd>{activeTask.state_name}</dd>
-
-              <dt>Responsable</dt>
-              <dd>{taskAssignees(activeTask).map((person) => person.name).join(", ") || "Sin persona asignada"}</dd>
-
-              <dt>Inicio</dt>
-              <dd>{formatTaskDate(activeTask.start_date)}</dd>
-
-              <dt>Fecha límite</dt>
-              <dd>{formatTaskDate(activeTask.due_date)}</dd>
-
-              <dt>Prioridad</dt>
-              <dd>
-                {catalogs.priorities.find(
-                  (item) => item.code === activeTask.priority,
-                )?.name ?? activeTask.priority}
-              </dd>
-            </dl>
-
-            <LabelList labels={activeTask.labels} />
-
-            <div className={styles.detailActions}>
-              {activeTask.permissions.edit && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setAction({ kind: "edit", taskId: activeTask.id })
-                  }
-                >
-                  Editar datos
-                </button>
-              )}
-
-              {activeTask.permissions.state && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setAction({ kind: "state", taskId: activeTask.id })
-                  }
-                >
-                  Cambiar estado
-                </button>
-              )}
-
-              {activeTask.permissions.create_child && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setAction({ kind: "child", taskId: activeTask.id })
-                  }
-                >
-                  Nueva subtarea
-                </button>
-              )}
-            </div>
-          </div>
-        );
-
       case "edit":
         return (
           <TaskForm
@@ -508,7 +439,8 @@ export default function ProjectWorkspace({
               onConfigure={() => setConfiguringStates(true)}
               onAction={(kind, taskId) => {
                 setMessage("");
-                setAction({ kind, taskId });
+                if (kind === "detail") taskDetail.openTaskDetail({ projectId, taskId });
+                else setAction({ kind, taskId });
               }}
               onCreated={acceptTask}
               onPatch={async (task, data) => {
@@ -559,6 +491,8 @@ export default function ProjectWorkspace({
       )}
 
       {configuringStates && <TaskStatusConfiguration project={project} onConfigured={configured} onClose={() => setConfiguringStates(false)} />}
+      {taskDetail.target && <TaskDetailDialog project={project} catalogs={catalogs} target={taskDetail.target}
+        onUpdated={acceptTask} onNavigate={taskDetail.openTaskDetail} onClose={taskDetail.closeTaskDetail} />}
       {activeAction && (
         <Modal
           busy={busy}
