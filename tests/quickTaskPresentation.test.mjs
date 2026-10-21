@@ -34,6 +34,7 @@ const { default: QuickRow } = await load("../src/features/projects/TaskList/Quic
   "../TaskForm/TaskIcon": { default: () => React.createElement("svg", { "aria-hidden": true }) },
   "../../../shared/Tooltip": { default: ({ label, children }) => React.createElement("span", { title: label }, children("hint")) },
   "../TaskForm/TaskOptionalProperties": { default: () => React.createElement("span", null, "Propiedades opcionales") },
+  "../TaskForm/taskDates": { taskCreationStart: () => "2026-10-21" },
 });
 const renderQuick = (groupCode = "PENDIENTE") => renderToStaticMarkup(React.createElement(QuickRow, {
   project, catalogs: { priorities: [] }, groupCode, onClose() {}, onCreated() {},

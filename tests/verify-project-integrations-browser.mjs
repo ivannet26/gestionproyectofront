@@ -152,15 +152,11 @@ try {
     if (keyboard) { await evaluate('Array.from(document.querySelector(":popover-open").querySelectorAll("button")).find(e=>e.textContent.trim()==="Confirmar movimiento").focus()'); await key('Enter'); }
     else await button('Confirmar movimiento', ':popover-open');
   };
-  const beforeReason = writes(), originalReason = await detail(context.project, context.reason_task);
-  await move(context.reason_task, 'BLOQUEADA', '', true); await wait('document.querySelector("dialog[open] textarea")');
-  await key('Escape'); await wait('!document.querySelector("dialog[open]")'); assert.equal(writes(), beforeReason);
-  assert.match(await evaluate('document.activeElement.getAttribute("aria-label")'), /Reubicar/);
-  assert.equal((await detail(context.project, context.reason_task)).state_code, originalReason.state_code);
-  await move(context.reason_task, 'BLOQUEADA'); await input('dialog textarea', 'Espera de insumo QA'); await button('Cambiar estado', 'dialog');
+  await move(context.reason_task, 'BLOQUEADA', '', true);
   await wait('document.querySelector(\'section[aria-label="BLOQUEADA"] '+row(context.reason_task)+'\')');
   assert.equal((await detail(context.project, context.reason_task)).state_code, 'BLOQUEADA');
-  checks.push('Alternativa teclado/clic al arrastre, motivo mediante formulario existente; cancelar sin escritura; estado y posición confirmados por una solicitud');
+  assert.equal(await evaluate('Boolean(document.querySelector("dialog[open]"))'), false);
+  checks.push('Alternativa teclado/clic al arrastre; estado y posición aplicados directamente sin motivo');
   await move(context.task, 'EN_CURSO'); await wait('document.querySelector(\'section[aria-label="EN CURSO"] '+taskRow+'\')');
   assert.equal((await detail()).state_code, 'EN_CURSO');
   await list(); await wait('document.querySelector(\'section[aria-label="EN CURSO"] '+taskRow+'\')');

@@ -6,6 +6,7 @@ import { useQuickTaskAlignment } from "./useQuickTaskAlignment";
 import { StateLabel } from "./TaskCell";
 import TaskIcon from "../TaskForm/TaskIcon";
 import Tooltip from "../../../shared/Tooltip";
+import { taskCreationStart } from "../TaskForm/taskDates";
 
 export default function QuickTaskRow({ project, catalogs, groupCode, onCreated, onClose, savingRef, onDetachedCreated, parent, onBusyChange }: {
   project: Project; catalogs: ProjectCatalogs; groupCode?: string; onCreated: (task: Task) => void;
@@ -97,7 +98,7 @@ export default function QuickTaskRow({ project, catalogs, groupCode, onCreated, 
         {draft.errors["task-name"] && <p id={`${id}-error`} className="mt-1 text-red-700" role="alert">{draft.errors["task-name"]}</p>}
       </div>
       <TaskOptionalProperties compact project={project} catalogs={catalogs} responsible={draft.responsible} dueDate={draft.dueDate}
-        min={parent?.start_date} max={parent?.due_date ?? project.end_date ?? undefined}
+        min={taskCreationStart(project.start_date, parent?.start_date)} max={parent?.due_date ?? project.end_date ?? undefined}
         priority={draft.priority} labels={draft.labels} errors={draft.errors} onResponsible={draft.setResponsible}
         onDate={draft.setDueDate} onPriority={draft.setPriority} onLabels={draft.setLabels} />
       <button type="button" onClick={cancel} className="cursor-pointer rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-neutral-700 hover:bg-neutral-100">Cancelar</button>

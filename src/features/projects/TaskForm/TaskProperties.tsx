@@ -20,6 +20,7 @@ interface TaskPropertiesProps {
   responsible: number[];
   dueDate: string;
   startDate: string;
+  creationMin?: string;
   onStartDate: (value: string) => void;
   priority: number | null;
   labels: Label[];
@@ -34,7 +35,7 @@ interface TaskPropertiesProps {
 
 export default function TaskProperties({
   project, catalogs, task, parent, stateCode, responsible, dueDate, priority, labels, errors,
-  onState, onResponsible, onDate, onPriority, onLabels, onConfigure, startDate, onStartDate,
+  onState, onResponsible, onDate, onPriority, onLabels, onConfigure, startDate, onStartDate, creationMin,
 }: TaskPropertiesProps) {
   const [stateSearch, setStateSearch] = useState("");
   const canAssign = project.permissions.manage && (!task || task.permissions.assign);
@@ -70,7 +71,7 @@ export default function TaskProperties({
       </>}
     </TaskProperty>
     <TaskProperty id="task-start" label="Fecha de inicio" value={formatTaskDate(startDate)} icon="date" error={errors["task-start"]} content={<><TaskIcon name="date" /><TaskDateValue value={startDate} /></>}>
-      {(close) => <Calendar label="Fecha de inicio" optional={false} value={startDate} min={parent?.start_date ?? project.start_date ?? undefined}
+      {(close) => <Calendar label="Fecha de inicio" optional={false} value={startDate} min={creationMin ?? parent?.start_date ?? project.start_date ?? undefined}
         max={dueDate || parent?.due_date || project.end_date || undefined} onChange={onStartDate} close={close} />}
     </TaskProperty>
     <TaskOptionalProperties project={project} catalogs={catalogs} responsible={responsible} dueDate={dueDate}

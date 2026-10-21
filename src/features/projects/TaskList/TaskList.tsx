@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { Project, ProjectCatalogs, Task, TaskActionKind, TaskListGroup } from "../types";
 import TaskProperty from "../TaskForm/TaskProperty";
 import TaskIcon from "../TaskForm/TaskIcon";
@@ -16,8 +16,6 @@ import ProjectToolbar from "../ProjectWorkspace/ProjectToolbar";
 import TaskSearch from "./TaskSearch";
 import TaskMoveControl from "./TaskMoveControl";
 import { useTaskMove } from "./useTaskMove";
-import TaskStateForm from "../TaskStateForm/TaskStateForm";
-import Modal from "../Modal/Modal";
 import "./taskListInteractions.css";
 
 const styles = {
@@ -96,6 +94,7 @@ export default function TaskList({
   const [collapsedContext, setCollapsedContext] = useState<Set<string>>(new Set());
   const [draftGroup, setDraftGroup] = useState<string | null>(null);
   const pendingQuickTask = useRef(false);
+  const dragClick = useRef(false);
   const listActive = useRef(false);
   useEffect(() => {
     listActive.current = true;
@@ -144,6 +143,21 @@ export default function TaskList({
             data-dragging={movement.dragging?.id === task.id || undefined}
             data-drop={movement.drop?.row === task.id && movement.drop.state === group.stateCode ? movement.drop.side : undefined}
             className={`gm-task-row${context ? " bg-neutral-50" : ""}`}
+            draggable={preferences.mode === "state" && !context && !search.trim() && !movement.busy && task.permissions.state && Boolean(task.move_revision && onMoved)}
+            onDragStart={(event) => {
+              if (!event.currentTarget.draggable || event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable=true], [popover], a")) { event.preventDefault(); return; }
+              event.dataTransfer.effectAllowed = "move";
+              event.dataTransfer.setData("text/plain", String(task.id));
+              const preview = document.createElement("div");
+              preview.className = "gm-task-drag-preview"; preview.textContent = task.name;
+              preview.style.borderInlineStartColor = task.state_color ?? "#525252";
+              preview.setAttribute("aria-hidden", "true"); document.body.append(preview);
+              event.dataTransfer.setDragImage(preview, 16, 16);
+              requestAnimationFrame(() => preview.remove());
+              dragClick.current = true; movement.start(task, event.clientX, event.clientY);
+            }}
+            onDragEnd={() => { movement.end(); requestAnimationFrame(() => { dragClick.current = false; }); }}
+            onClickCapture={(event) => { if (dragClick.current) { event.preventDefault(); event.stopPropagation(); } }}
             onDragOver={(event) => {
               const dragged = movement.dragging;
               if (!dragged || context || !group.stateCode || dragged.id === task.id || dragged.parent_id !== task.parent_id || !movement.permitted(dragged, group.stateCode)) { movement.over(null); event.dataTransfer.dropEffect = "none"; return; }
@@ -174,13 +188,7 @@ export default function TaskList({
               >
                 <span className="inline-flex w-7 shrink-0 items-center justify-center">
                   {preferences.mode === "state" && !context && task.permissions.state && task.move_revision && onMoved && <TaskMoveControl key={`${task.id}:${task.state_code}`} task={task} states={states} tasks={tasks}
-                    disabled={movement.busy || Boolean(search.trim())} onMove={movement.propose} onEnd={movement.end} onStart={(event) => {
-                      if (search.trim() || movement.busy) { event.preventDefault(); return; }
-                      event.dataTransfer.effectAllowed = "move"; event.dataTransfer.setData("text/plain", String(task.id));
-                      const row = event.currentTarget.closest("tr");
-                      if (row) event.dataTransfer.setDragImage(row, 20, 20);
-                      movement.start(task, event.clientX, event.clientY);
-                    }} />}
+                    disabled={movement.busy || Boolean(search.trim())} onMove={movement.propose} />}
                 </span>
                 {children.length > 0 ? (
                   <button
@@ -346,7 +354,7 @@ export default function TaskList({
   }
 
   return (
-    <section aria-label="Lista de tareas" className={styles.list}>
+    <section aria-label="Lista de tareas" className={styles.list} data-moving={Boolean(movement.dragging) || undefined}>
       <ProjectToolbar action={primaryAction}>
         <fieldset className="m-0 min-w-0 border-0 p-0">
           <TaskGroupingControl preferences={preferences} onChange={setPreferences} />
@@ -396,6 +404,8 @@ export default function TaskList({
               key={group.key}
               aria-label={group.name}
               data-group-key={group.key}
+              style={{ "--gm-drop-color": states.find((state) => state.code === group.stateCode)?.color ?? "#525252" } as CSSProperties}
+              data-can-drop={movement.dragging ? Boolean(group.stateCode && movement.permitted(movement.dragging, group.stateCode)) : undefined}
               data-drop-group={movement.drop?.state === group.stateCode && movement.drop?.row === undefined || undefined}
               onDragOver={(event) => {
                 if (event.target instanceof Element && event.target.closest("tr[data-task-id]")) return;
@@ -482,9 +492,10 @@ export default function TaskList({
           );
         })}
       </div>
-      {movement.confirmation && <Modal title="Confirmar cambio de estado y posición" busy={movement.busy} onClose={movement.cancel}>
-        <TaskStateForm task={movement.confirmation.task} states={states} initialState={movement.confirmation.state} fixedTarget onSubmit={async (data) => { await movement.execute(movement.confirmation!, data.reason); }} />
-      </Modal>}
+      {movement.dragging && <div role="status" className="pointer-events-none fixed bottom-4 left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-800">
+        <span className="block max-w-80 truncate font-medium">{movement.dragging.name}</span>
+        <span className="text-neutral-600">{movement.drop ? `Soltar en ${states.find((state) => state.code === movement.drop!.state)?.name ?? movement.drop.state}` : "Arrastra hacia un estado disponible"} · Escape para cancelar</span>
+      </div>}
     </section>
   );
 }

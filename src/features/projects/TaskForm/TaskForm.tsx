@@ -17,7 +17,7 @@ import TaskProperties from "./TaskProperties";
 import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
 import { taskAssignees } from "../taskAssignees";
 import { labelSelection } from "../labelSelection";
-import { projectToday } from "../TaskList/taskGrouping";
+import { taskCreationStart } from "./taskDates";
 const styles = {
   form: "flex min-h-0 flex-col text-neutral-900 [&_[aria-invalid=true]]:border-red-700 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700",
   body: "min-h-0 overflow-y-auto overscroll-contain px-7 pb-7 pt-[22px] max-sm:p-4",
@@ -87,10 +87,12 @@ export default function TaskForm({
   const [description, setDescription] = useState(task?.description ?? "");
   const [stateCode, setStateCode] = useState(initialState ?? project.task_states.states.find((state) => state.category === "not_started" || !state.category && state.code === "PENDIENTE")?.code ?? "PENDIENTE");
   const [priority, setPriority] = useState<number | null>(task ? task.priority : 3);
-  const [dueDate, setDueDate] = useState(
-    task ? task.due_date ?? "" : parent?.due_date ?? project.end_date ?? "",
-  );
-  const [startDate, setStartDate] = useState(task?.start_date ?? parent?.start_date ?? project.start_date ?? projectToday());
+  const creationMin = taskCreationStart(project.start_date, parent?.start_date);
+  const [dueDate, setDueDate] = useState(() => {
+    const value = task ? task.due_date ?? "" : parent?.due_date ?? project.end_date ?? "";
+    return !task && value && value < creationMin ? "" : value;
+  });
+  const [startDate, setStartDate] = useState(task?.start_date ?? creationMin);
   const [responsible, setResponsible] = useState<number[]>(
     task ? taskAssignees(task).map((person) => person.id) : [],
   );
@@ -144,6 +146,8 @@ export default function TaskForm({
     setError("");
     const invalid: FieldErrors = {};
     if (!name.trim()) invalid["task-name"] = "Indica el nombre de la tarea.";
+    if (!task && startDate < creationMin) invalid["task-start"] = "Las tareas nuevas deben iniciar hoy o después.";
+    if (!task && dueDate && dueDate < creationMin) invalid["task-due"] = "La fecha límite de una tarea nueva no puede preceder a hoy.";
     if (!startDate || (project.start_date && startDate < project.start_date) || (lastDate && startDate > lastDate))
       invalid["task-start"] = "El inicio debe quedar dentro del periodo permitido.";
     if (dueDate && (
@@ -278,6 +282,7 @@ export default function TaskForm({
               responsible={responsible}
               dueDate={dueDate}
               startDate={startDate}
+              creationMin={task ? undefined : creationMin}
               onStartDate={(value) => { setStartDate(value); clearError("task-start"); }}
               priority={priority}
               labels={labels}

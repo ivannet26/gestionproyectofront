@@ -87,15 +87,23 @@ async function movementHarness() {
 }
 const task = { id: 8, state_code: "OPEN", move_revision: "a".repeat(64), move_targets: ["ACTIVE", "BLOCKED"], permissions: { state: true }, transitions: [{ target: "ACTIVE", reason_required: false }, { target: "BLOCKED", reason_required: true }, { target: "INVALID", reason_required: false }] };
 
-test("move proposal reuses reason confirmation; cancel and prohibited preview never write", async () => {
+test("move applies immediately without a reason dialog while prohibited targets never write", async () => {
   const hook = await movementHarness();
   hook.render().propose(task, "INVALID", null);
   assert.equal(hook.requests.length, 0);
   hook.render().propose(task, "BLOCKED", null);
-  assert.equal(hook.requests.length, 0);
-  assert.equal(hook.render().confirmation.state, "BLOCKED");
-  hook.render().cancel(); assert.equal(hook.render().confirmation, null);
+  assert.equal(hook.requests.length, 1);
+  assert.equal(hook.requests[0].payload.reason, "");
+  assert.equal(hook.render().confirmation, undefined);
   assert.equal(hook.accepted.length, 0);
+  hook.unmount(); hook.requests[0].resolve([]); await new Promise(resolve => setImmediate(resolve));
+});
+
+test("new task dates start today or at a later project/parent boundary in Lima", () => {
+  const instant = new Date("2026-10-22T02:00:00Z");
+  assert.equal(dates.taskCreationStart("2026-10-07", null, instant), "2026-10-21");
+  assert.equal(dates.taskCreationStart("2026-10-25", null, instant), "2026-10-25");
+  assert.equal(dates.taskCreationStart("2026-10-07", "2026-10-26", instant), "2026-10-26");
 });
 
 test("movement guards duplicate requests, keeps original list on conflict, and discards detached results", async () => {
