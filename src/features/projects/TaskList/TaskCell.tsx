@@ -145,17 +145,10 @@ function Editor({
   );
   const [search, setSearch] = useState("");
   const [taskLabels, setTaskLabels] = useState<Label[]>(task.labels);
-  const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const id = useId();
-  const reasonInput = useRef<HTMLTextAreaElement>(null);
   const errorMessage = useRef<HTMLParagraphElement>(null);
-  const requiresReason =
-    field === "state_code" &&
-    Boolean(
-      task.transitions.find((item) => item.target === value)?.reason_required,
-    );
   const isDate = field === "start_date" || field === "due_date";
   const matches = (name: string) =>
     name
@@ -170,16 +163,11 @@ function Editor({
 
   async function save() {
     if (busy) return;
-    if (requiresReason && !reason.trim()) {
-      setError("Indica el motivo del cambio.");
-      reasonInput.current?.focus();
-      return;
-    }
     setBusy(true);
     setError("");
     try {
       if (field === "state_code")
-        await onState(task, { state_code: value, reason: reason.trim() });
+        await onState(task, { state_code: value, reason: "" });
       else if (field === "responsible_id")
         await onPatch(task, { responsible_ids: responsibles });
       else if (field === "labels") {
@@ -294,28 +282,7 @@ function Editor({
             close={() => undefined}
           />
         )}
-        {field === "state_code" && value !== task.state_code && (
-          <>
-            <label htmlFor={`${id}-reason`}>
-              Motivo {requiresReason ? "obligatorio" : "(opcional)"}
-            </label>
-            <textarea
-              ref={reasonInput}
-              id={`${id}-reason`}
-              name="reason"
-              maxLength={500}
-              rows={2}
-              value={reason}
-              required={requiresReason}
-              aria-invalid={Boolean(requiresReason && error && !reason.trim())}
-              aria-describedby={error ? `${id}-error` : undefined}
-              onChange={(event) => {
-                setReason(event.target.value);
-                setError("");
-              }}
-            />
-          </>
-        )}
+
       </fieldset>
       {error && (
         <p

@@ -215,10 +215,6 @@ export default function TaskBoard({
       if (!task.permissions.state) return;
       const transition = task.transitions.find((item) => item.target === target);
       if (!transition) return;
-      if (transition.reason_required) {
-        onAction("state", task.id);
-        return;
-      }
       try {
         await onState(task, { state_code: target, reason: "" });
       } catch (failure) {

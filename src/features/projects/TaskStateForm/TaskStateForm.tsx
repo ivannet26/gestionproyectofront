@@ -15,16 +15,14 @@ interface TaskStateFormProps {
 
 export default function TaskStateForm({ task, states, onSubmit, initialState = "", fixedTarget = false }: TaskStateFormProps) {
   const [target, setTarget] = useState(initialState);
-  const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const needsReason = task.transitions.find((item) => item.target === target)?.reason_required ?? false;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setError("");
-    try { await onSubmit({ state_code: target, reason: reason.trim() }); }
+    try { await onSubmit({ state_code: target, reason: "" }); }
     catch (failure) { setError(errorText(failure)); }
     finally { setBusy(false); }
   }
@@ -47,11 +45,6 @@ export default function TaskStateForm({ task, states, onSubmit, initialState = "
         </select>
       </div>
       {task.transitions.length === 0 && <p className="m-0 text-xs text-neutral-600 leading-relaxed">No hay transiciones autorizadas desde el estado actual.</p>}
-      <div className={fieldClass}>
-        <label htmlFor="state-reason" className={labelClass}>Motivo {needsReason ? "*" : "(opcional)"}</label>
-        <textarea id="state-reason" required={needsReason} maxLength={500} value={reason} className={inputClass}
-          onChange={(event) => setReason(event.target.value)} />
-      </div>
     </ProjectForm>
   );
 }
