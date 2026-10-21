@@ -14,6 +14,7 @@ import type {
   TaskStatePayload,
   WorkerCandidate,
   TaskStatusTemplate,
+  TeamOption,
 } from "./types";
 
 function projectRequest<T>(path = "", options: RequestInit = {}): Promise<T> {
@@ -104,6 +105,14 @@ export function getWorkerCandidates(
 
 export function createProject(payload: CreateProjectPayload): Promise<Project> {
   return projectRequest("", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function getProjectTeamCandidates(areaId: number): Promise<TeamOption[]> {
+  return projectRequest<TeamOption[]>(`teams/?area_id=${areaId}`);
+}
+
+export function moveTask(projectId: number, taskId: number, payload: TaskStatePayload & { before_id: number | null; expected_revision: string }): Promise<Task[]> {
+  return projectRequest<Task[]>(`${projectId}/tasks/${taskId}/move/`, { method: "POST", body: JSON.stringify(payload) });
 }
 
 export function createTask(

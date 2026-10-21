@@ -9,6 +9,7 @@ import PlusIcon from "../../../shared/icons/PlusIcon";
 import { categoryValue, stateCategories } from "../stateGroups";
 import { emptyState, moveState } from "./stateDraft";
 import { useTaskStatusConfiguration } from "./useTaskStatusConfiguration";
+import type { TaskFlowDraft } from "./useTaskStatusConfiguration";
 
 const styles = {
   root: "flex min-h-0 flex-1 flex-col text-xs text-neutral-800 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700 [&_button]:touch-manipulation [&_button]:cursor-pointer [&_button:disabled]:cursor-default [&_button:disabled]:opacity-50",
@@ -22,10 +23,10 @@ const styles = {
   menu: "absolute z-20 grid w-48 max-w-[calc(100vw-48px)] rounded-lg border border-neutral-200 bg-white p-1 text-xs text-neutral-800 [&_button]:flex [&_button]:w-full [&_button]:items-center [&_button]:gap-2 [&_button]:rounded-lg [&_button]:px-3 [&_button]:py-2 [&_button]:text-left hover:[&_button]:bg-neutral-50",
 };
 
-export default function TaskStatusConfiguration({ project, onConfigured, onClose }: {
-  project: Project; onConfigured: (value: ProjectTaskConfiguration) => void; onClose: () => void;
+export default function TaskStatusConfiguration({ project, onConfigured, onClose, draft }: {
+  project?: Project; draft?: TaskFlowDraft; onConfigured: (value: ProjectTaskConfiguration) => void; onClose: () => void;
 }) {
-  const editor = useTaskStatusConfiguration(project, onConfigured, onClose);
+  const editor = useTaskStatusConfiguration(project, onConfigured, onClose, draft);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<{ code: string; original: string | null } | null>(null);
@@ -35,7 +36,7 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
   const drag = useRef<string | null>(null);
   const pendingFocus = useRef<string | null>(null);
   const id = useId();
-  const allowed = editor.configuration.can_configure && project.permissions.manage;
+  const allowed = editor.configuration.can_configure && Boolean(draft || project?.permissions.manage);
   const namingTemplate = savingName !== null;
 
   useEffect(() => {
@@ -179,6 +180,7 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
                     <div data-state-menu className={`${styles.menu} right-0 top-full overflow-y-auto overscroll-contain`}>
                       <button type="button" onClick={(event) => menuAction(event, () => setEditing({ code: state.code, original: state.name }))}><TaskIcon name="settings" />Cambiar nombre</button>
                       <label className="flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 hover:bg-neutral-50">Cambiar color<input aria-label={`Color de ${state.name}`} name="state_color" type="color" value={state.color ?? category.color} className="w-8 cursor-pointer rounded border border-neutral-200 bg-white p-0.5" onChange={(event) => update(state.code, { color: event.target.value })} /></label>
+                      {draft && <label className="grid gap-1 px-3 py-2">Categoría<select aria-label={`Categoría de ${state.name}`} value={categoryValue(state)} className={styles.input} onChange={(event) => update(state.code, { category: event.target.value as StateCategory })}>{stateCategories.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>}
                       <button type="button" disabled={index === 0} onClick={(event) => menuAction(event, () => move(state.code, -1))}>Subir estado</button>
                       <button type="button" disabled={index === states.length - 1} onClick={(event) => menuAction(event, () => move(state.code, 1))}>Bajar estado</button>
                       <button type="button" onClick={(event) => menuAction(event, () => remove(state))}>Eliminar estado</button>
@@ -208,7 +210,7 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
         {editor.error && <div id={`${id}-error-main`} tabIndex={-1} role="alert" className="mb-2 flex flex-wrap items-center gap-2 text-red-700"><p className="m-0 flex-1 [overflow-wrap:anywhere]">{editor.error}</p><button type="button" className={styles.secondary} disabled={editor.busy} onClick={editor.retry}>Recargar</button></div>}
         {!allowed && <p role="status">No tienes permiso para configurar este proyecto.</p>}
         <div className="flex flex-wrap items-center justify-end gap-3">
-          <div className="flex items-stretch">
+          {!draft && <div className="flex items-stretch">
             <button type="button" disabled={editor.loading || editor.busy || !allowed} className={`${styles.secondary} rounded-r-none`}
               onClick={() => { if (editor.selected && !editor.selected.preset) { void editor.saveTemplate(editor.selected.name, true).then((saved) => { if (saved) setNotice("Plantilla guardada. El flujo del proyecto no ha cambiado."); }); } else setSavingName(""); }}>
               {editor.selected && !editor.selected.preset ? "Guardar plantilla" : "Guardar como plantilla"}
@@ -218,8 +220,9 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
                 onClick={(event) => { if (editor.busy || editor.loading || !allowed) event.preventDefault(); }}><ChevronDownIcon className="size-4" /></summary>
               <div className={`${styles.menu} bottom-full right-0 mb-1`}><button type="button" disabled={editor.busy || !allowed} onClick={(event) => menuAction(event, () => setSavingName(""))}>Guardar como plantilla</button></div>
             </details>
-          </div>
-          <button type="button" disabled={editor.loading || editor.busy || !allowed} className={styles.primary} onClick={() => { void editor.apply(); }}>{editor.busy ? "Guardando…" : "Aplicar cambios"}</button>
+          </div>}
+          {draft && <><p className="m-0 mr-auto text-neutral-600">Solo se guardará al crear el proyecto.</p><button type="button" className={styles.secondary} onClick={editor.close}>Cancelar</button></>}
+          <button type="button" disabled={editor.loading || editor.busy || !allowed} className={styles.primary} onClick={() => { void editor.apply(); }}>{editor.busy ? "Guardando…" : draft ? "Usar este flujo" : "Aplicar cambios"}</button>
         </div>
       </footer>
       {savingName !== null && <Modal title="Nueva plantilla" onClose={() => setSavingName(null)} busy={editor.busy}>

@@ -60,7 +60,7 @@ export function groupTasks(
       case "assignees":
         return tokenGroups(taskAssignees(task).map((person) => ({ id: String(person.id), name: person.name })), preferences.separatePeople, "Sin persona asignada");
       case "labels":
-        return tokenGroups(task.labels.map((label) => ({ id: label.requirement_id == null ? `label:${label.id}` : `requirement:${label.requirement_id}`, name: label.name, kind: label.kind })), preferences.separateLabels, "Sin etiquetas");
+        return tokenGroups(task.labels.map((label) => ({ id: label.specialty_id != null ? `specialty:${label.specialty_id}` : label.requirement_id == null ? `label:${label.id}` : `requirement:${label.requirement_id}`, name: label.name })), preferences.separateLabels, "Sin etiquetas");
       case "due_date":
         return [{ ...taskDueGroup(task, today), tokens: [] }];
     }

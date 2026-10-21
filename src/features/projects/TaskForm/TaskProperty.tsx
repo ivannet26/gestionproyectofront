@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, ButtonHTMLAttributes } from "react";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { TaskIconName } from "./TaskIcon";
 import TaskIcon from "./TaskIcon";
@@ -23,7 +23,8 @@ interface TaskPropertyProps {
   disabled?: boolean;
   cell?: boolean;
   compact?: boolean;
-  appearance?: "detail";
+  appearance?: "detail" | "toolbar" | "list";
+  triggerProps?: Pick<ButtonHTMLAttributes<HTMLButtonElement>, "draggable" | "onDragStart" | "onDragEnd">;
   selected?: boolean;
   triggers?: { label: string; content: ReactNode }[];
   content?: ReactNode;
@@ -40,6 +41,7 @@ export default function TaskProperty({
   cell,
   compact,
   appearance,
+  triggerProps,
   selected,
   triggers,
   content,
@@ -100,10 +102,11 @@ export default function TaskProperty({
       <div className={triggers ? "flex flex-wrap items-center gap-0.5 px-1.5" : "contents"}>
       {(triggers ?? [{ label: `${label}: ${value}`, content: content ?? <><TaskIcon name={icon} /><span>{value}</span></> }]).map((item, index) => <Tooltip key={index} label={item.label} stretch={!compact && !triggers} portalTarget={appearance === "detail" ? "dialog" : undefined} disabled={appearance === "detail" && open}>
       {(description) => <button
+        {...triggerProps}
         ref={index === 0 ? trigger : undefined}
         id={index === 0 ? id : `${id}-${index}`}
         type="button"
-        className={triggers ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-full p-0.5 text-neutral-700 hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 aria-disabled:cursor-default [@media(pointer:coarse)]:p-2" : compact ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-lg border border-neutral-200 bg-white p-1.5 text-neutral-700 hover:bg-neutral-50 aria-pressed:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 aria-disabled:cursor-default [@media(pointer:coarse)]:p-3.5" : `${styles.trigger}${cell ? ` ${styles.cell}` : ""}`}
+        className={appearance === "toolbar" ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-lg p-2 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 aria-expanded:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 [@media(pointer:coarse)]:p-3.5" : triggers ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-full p-0.5 text-neutral-700 hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 aria-disabled:cursor-default [@media(pointer:coarse)]:p-2" : compact ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-lg border border-neutral-200 bg-white p-1.5 text-neutral-700 hover:bg-neutral-50 aria-pressed:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 aria-disabled:cursor-default [@media(pointer:coarse)]:p-3.5" : `${styles.trigger}${cell ? ` ${styles.cell}` : ""}`}
         popoverTarget={disabled ? undefined : panelId}
         disabled={disabled && !triggers && !compact}
         aria-disabled={disabled || undefined}

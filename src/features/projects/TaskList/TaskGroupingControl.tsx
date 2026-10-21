@@ -4,6 +4,7 @@ import type { TaskIconName } from "../TaskForm/TaskIcon";
 import TaskProperty from "../TaskForm/TaskProperty";
 import TaskIcon from "../TaskForm/TaskIcon";
 import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
+import StackIcon from "../../../shared/icons/StackIcon";
 
 const groupingOptions: { value: TaskGroupingMode; label: string; icon: TaskIconName }[] = [
   { value: "state", label: "Estado", icon: "state" },
@@ -23,7 +24,7 @@ export default function TaskGroupingControl({ preferences, onChange }: {
   const custom = preferences.mode === "assignees" || preferences.mode === "labels";
   return (
     <div className="min-w-0 max-w-full [&_[popover]]:shadow-none [&>div>[popover]]:w-[27rem] [&>div>[popover]]:rounded-xl [&>div>[popover]]:p-0">
-      <TaskProperty id="task-list-grouping" label="Agrupar por" value={selected.label} icon={selected.icon}>
+      <TaskProperty id="task-list-grouping" appearance="toolbar" compact label="Agrupar por" value={selected.label} icon={selected.icon} content={<span aria-hidden="true"><StackIcon className="size-4" /></span>}>
         {() => <>
           <div className="grid gap-2 p-3 text-xs text-neutral-800">
             <span className="font-medium text-neutral-600">Agrupar por</span>

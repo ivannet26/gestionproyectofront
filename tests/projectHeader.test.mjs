@@ -29,6 +29,7 @@ const assignees = await load("../src/features/projects/taskAssignees.ts");
 const grouping = await load("../src/features/projects/TaskList/taskGrouping.ts", { "../taskAssignees": assignees });
 const groupingHook = await load("../src/features/projects/TaskList/useTaskGrouping.ts", { "./taskGrouping": grouping, "./taskHierarchy": hierarchy });
 const Icon = ({ name }) => React.createElement("svg", { "data-icon": name, "aria-hidden": true });
+const Toolbar = ({ children, action }) => React.createElement("div", { "aria-label": "Herramientas del proyecto" }, children, action);
 const expansion = await load("../src/features/projects/TaskList/TaskGroupExpansionControl.tsx", {
   "../../../shared/icons/ChevronDownIcon": { default: Icon },
 });
@@ -53,6 +54,13 @@ const { default: TaskList } = await load("../src/features/projects/TaskList/Task
   "./TaskGroupExpansionControl": expansion,
   "./TaskStatusSettingsControl": { default: () => null },
   "./TaskGroupLabel": { default: ({ group }) => React.createElement("span", null, group.name) },
+  "../ProjectWorkspace/ProjectToolbar": { default: Toolbar },
+  "./TaskSearch": { default: () => React.createElement("button", { "aria-label": "Buscar tareas" }) },
+  "./TaskMoveControl": { default: () => null },
+  "./useTaskMove": { useTaskMove: () => ({ permitted: () => false }) },
+  "../TaskStateForm/TaskStateForm": { default: () => null },
+  "../Modal/Modal": { default: () => null },
+  "./taskListInteractions.css": {},
 });
 const project = (changes = {}) => ({
   id: 42, name: "Proyecto sintético", areas: [{ id: 7, name: "Sistemas y Software" }],
@@ -96,11 +104,13 @@ test("dates preserve date-only values and missing dates are never invented", () 
   assert.match(missing, /aria-label="2 tareas y subtareas visibles"/);
 });
 
-test("the unique primary action respects creation permission and busy state", () => {
-  assert.equal((header().match(/aria-label="Crear nueva tarea"/g) ?? []).length, 1);
-  assert.match(header(), /\+ Tarea<\/button>/);
-  assert.doesNotMatch(header("lista", { permissions: { manage: false, create_tasks: false } }), /Crear nueva tarea/);
-  assert.match(header("lista", {}, { busy: true }), /disabled=""[^>]*aria-label="Crear nueva tarea"/);
+test("shared title and period precede breadcrumbs; primary action is no longer duplicated in Header", () => {
+  for (const view of ["lista", "tablero", "gantt"]) {
+    const markup = header(view);
+    assert.ok(markup.indexOf("<h1") < markup.indexOf('aria-label="Ruta de navegación"'));
+    assert.equal((markup.match(/aria-label="Periodo del proyecto"/g) ?? []).length, 1);
+    assert.doesNotMatch(markup, /Crear nueva tarea/);
+  }
 });
 
 test("favorite pressed, pending and error semantics remain available", () => {
@@ -125,7 +135,7 @@ test("List has no duplicate primary action and preserves contextual creation per
   const admin = render({ manage: true, create_tasks: true });
   assert.doesNotMatch(admin, /\+ Tarea/);
   assert.equal((admin.match(/Añadir tarea/g) ?? []).length, 2);
-  assert.match(admin, /Buscar tareas por nombre, responsable o etiqueta/);
+  assert.match(admin, /aria-label="Buscar tareas"/);
   assert.equal((render({ manage: false, create_tasks: true }).match(/Añadir tarea/g) ?? []).length, 1);
   assert.doesNotMatch(render({ manage: false, create_tasks: false }), /Añadir tarea/);
 });
@@ -158,6 +168,8 @@ test("empty List renders configured states through Workspace without extra state
     "../TaskList/taskHierarchy": hierarchy,
     "../TaskStateForm/TaskStateForm": { default: Empty },
     "./ProjectHeader": { default: Empty },
+    "./ProjectToolbar": { default: Toolbar },
+    "../../../shared/icons/PlusIcon": { default: Icon },
     "../taskAssignees": assignees,
   });
   const render = () => { hookIndex = 0; return renderToStaticMarkup(React.createElement(Workspace, {
@@ -170,11 +182,13 @@ test("empty List renders configured states through Workspace without extra state
   assert.match(markup, /En marcha/);
   assert.doesNotMatch(markup, /No configurado|Pendiente general/);
   assert.equal((markup.match(/Añadir tarea/g) ?? []).length, 2);
+  assert.equal((markup.match(/aria-label="Crear nueva tarea"/g) ?? []).length, 1);
   assert.match(markup, /aria-label="Contraer grupos"/);
   permissions = { manage: false, create_tasks: true };
   assert.equal((render().match(/Añadir tarea/g) ?? []).length, 1);
   permissions = { manage: false, create_tasks: false };
   assert.doesNotMatch(render(), /Añadir tarea/);
+  assert.doesNotMatch(render(), /Crear nueva tarea/);
   view = "tablero";
   assert.doesNotMatch(render(), /data-group-key/);
   assert.equal(requests, 0);

@@ -1,0 +1,24 @@
+.gm-task-list .gm-task-row { position: relative; }
+.gm-task-list .gm-row-actions { opacity: 0; pointer-events: none; }
+.gm-task-list .gm-task-row:hover .gm-row-actions,
+.gm-task-list .gm-task-row:focus-within .gm-row-actions,
+.gm-task-list .gm-task-row:has(:popover-open) .gm-row-actions { opacity: 1; pointer-events: auto; }
+.gm-task-list .gm-task-row[data-dragging="true"] { opacity: .5; }
+.gm-task-list .gm-task-row[data-drop]::after {
+  content: ""; position: absolute; left: 0; right: 0; border-top: 2px solid var(--color-neutral-800); pointer-events: none; z-index: 1;
+}
+.gm-task-list .gm-task-row[data-drop="before"]::after { top: 0; }
+.gm-task-list .gm-task-row[data-drop="after"]::after { bottom: 0; }
+.gm-task-list .gm-task-group[data-drop-group="true"] { outline: 2px solid var(--color-neutral-600); outline-offset: -2px; }
+.gm-task-list .gm-task-group[data-drop-group="true"]::after { content: ""; display: block; border-top: 2px solid var(--color-neutral-800); }
+.gm-task-list [data-property-appearance="list"],
+.gm-task-list [data-property-appearance="list"] > div > span { width: 100%; }
+.gm-task-list [data-property-appearance="list"] > div > span > button { padding: 8px; border-color: transparent; }
+.gm-task-list [data-property-appearance="list"] > div > span > button:hover,
+.gm-task-list [data-property-appearance="list"] > div > span > button:focus-visible,
+.gm-task-list [data-property-appearance="list"] > div > span > button[aria-expanded="true"] { border-color: var(--color-neutral-400); }
+.gm-task-list [data-property-appearance="list"] > div > span > button > span { max-width: 100%; }
+.gm-task-list [data-property-appearance="list"] > div > span > button:disabled { background: transparent; opacity: 1; }
+.gm-task-list .gm-group-heading { position: sticky; top: 0; z-index: 2; background: white; border-bottom: 1px solid var(--color-neutral-200); padding-block: 6px; }
+.gm-task-list .gm-group-heading > button { position: sticky; left: 0; background: white; }
+@media (hover: none), (pointer: coarse) { .gm-task-list .gm-row-actions { opacity: 1; pointer-events: auto; } }

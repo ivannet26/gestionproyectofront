@@ -83,6 +83,6 @@ export default function TaskDetailProperties({ project, catalogs, task, parent, 
     <Property label="Prioridad" icon="priority">{cell("priority")}</Property>
     <Property label="Duración estimada" icon="estimate"><TaskProperty appearance="detail" cell id={`detail-${task.id}-estimate`} label="Duración estimada" icon="estimate" value={formatEstimate(task.estimated_minutes)} content={<span>{formatEstimate(task.estimated_minutes)}</span>} disabled={!task.permissions.edit}>
       {(close) => <EstimateEditor task={task} onPatch={changes.onPatch} close={close} />}</TaskProperty></Property>
-    <Property label="Etiquetas" icon="labels"><div className="flex min-w-0 flex-wrap items-center gap-1">{cell("labels")}{task.labels.map((label) => <span key={label.id} title={label.kind === "technical" ? "Técnica" : "No técnica"} className="max-w-full break-words rounded-lg border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-xs text-neutral-800">{label.name}</span>)}</div></Property>
+    <Property label="Etiquetas" icon="labels"><div className="flex min-w-0 flex-wrap items-center gap-1">{cell("labels")}{task.labels.map((label) => <span key={label.id} className="max-w-full break-words rounded-lg border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-xs text-neutral-800">{label.name}</span>)}</div></Property>
   </section>;
 }

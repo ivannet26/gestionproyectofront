@@ -5,9 +5,10 @@ import type { FieldErrors } from "../formErrors";
 import { createTask } from "../services";
 import type { Label, Project, Task } from "../types";
 import { quickTaskState } from "./quickTaskState";
+import { labelSelection } from "../labelSelection";
 
 const fields = { name: "task-name", due_date: "task-due", priority: "task-priority", responsible_id: "task-responsible",
-  responsible_ids: "task-responsible", labels: "task-labels", requirement_ids: "task-labels" };
+  responsible_ids: "task-responsible", labels: "task-labels", requirement_ids: "task-labels", specialty_ids: "task-labels", retained_label_ids: "task-labels" };
 
 export function useQuickTask(project: Project, groupCode: string | undefined, onCreated: (task: Task) => void,
   onDetachedCreated?: (task: Task) => void, parent?: Task) {
@@ -36,7 +37,7 @@ export function useQuickTask(project: Project, groupCode: string | undefined, on
     try {
       const saved = await createTask(project.id, {
         name: name.trim(), state_code: state.code, parent_id: parent?.id ?? null, reason: "",
-        priority, due_date: dueDate || null, labels,
+        priority, due_date: dueDate || null, ...labelSelection(labels),
         ...(project.permissions.manage ? { responsible_ids: responsible } : {}),
       });
       if (!active.current) { onDetachedCreated?.(saved); return false; }

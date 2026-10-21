@@ -27,6 +27,8 @@ import TaskForm from "../TaskForm/TaskForm";
 import TaskList from "../TaskList/TaskList";
 import TaskStateForm from "../TaskStateForm/TaskStateForm";
 import ProjectHeader from "./ProjectHeader";
+import ProjectToolbar from "./ProjectToolbar";
+import PlusIcon from "../../../shared/icons/PlusIcon";
 import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
 import TaskDetailDialog from "../TaskDetail/TaskDetailDialog";
 import { useTaskDetailNavigation } from "../TaskDetail/useTaskDetail";
@@ -162,8 +164,8 @@ export default function ProjectWorkspace({
   function acceptTask(saved: Task) {
     setTasks((current) =>
       current.some((task) => task.id === saved.id)
-        ? current.map((task) => (task.id === saved.id ? saved : task))
-        : [...current, saved],
+        ? current.map((task) => (task.id === saved.id ? saved : { ...task, move_revision: saved.move_revision ?? task.move_revision }))
+        : [...current.map((task) => ({ ...task, move_revision: saved.move_revision ?? task.move_revision })), saved],
     );
     setMessage(`Guardado: ${saved.name}`);
   }
@@ -366,6 +368,12 @@ export default function ProjectWorkspace({
     );
   }
 
+  const primaryAction = project.permissions.create_tasks ? <button type="button" disabled={busy}
+    onClick={() => { setMessage(""); setAction({ kind: "create" }); }} aria-label="Crear nueva tarea"
+    className="inline-flex cursor-pointer touch-manipulation items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700">
+    <span aria-hidden="true"><PlusIcon className="size-4" /></span><span>Tarea</span>
+  </button> : null;
+
   return (
     <main
       className="min-h-screen min-w-0 bg-neutral-50 p-3 text-neutral-900 sm:p-6 sm:pt-3"
@@ -375,12 +383,7 @@ export default function ProjectWorkspace({
         key={project.id}
         project={project}
         view={view}
-        busy={busy}
         taskCount={tasks.length}
-        onCreateTask={() => {
-          setMessage("");
-          setAction({ kind: "create" });
-        }}
       />
 
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{message}</p>
@@ -430,12 +433,14 @@ export default function ProjectWorkspace({
         <h2 className="sr-only">Lista de trabajo</h2>
 
         <div className="min-w-0">
-          {tasks.length > 0 || view === "lista" ? (
+          {view === "lista" ? (
             <TaskList
               key={project.id}
               project={project}
               tasks={tasks}
               catalogs={catalogs}
+              primaryAction={primaryAction}
+              onMoved={setTasks}
               onConfigure={() => setConfiguringStates(true)}
               onAction={(kind, taskId) => {
                 setMessage("");
@@ -451,11 +456,7 @@ export default function ProjectWorkspace({
               }}
             />
           ) : (
-            <p className="m-0 p-3 text-sm text-neutral-600 sm:p-5">
-              No hay tareas disponibles para tu asignación.{" "}
-              {project.permissions.create_tasks &&
-                "Crea la primera tarea para comenzar."}
-            </p>
+            <ProjectToolbar action={primaryAction} />
           )}
         </div>
       </section>

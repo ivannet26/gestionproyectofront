@@ -111,7 +111,7 @@ try {
   await field('Fecha de inicio'); await act(`Array.from(document.querySelectorAll(':popover-open [data-date]:not(:disabled)')).find(e=>e.dataset.date>${JSON.stringify(startBefore)})`); await button('Guardar', ':popover-open');
   await wait('document.querySelector(":popover-open [role=alert]")'); assert.equal((await detail()).start_date, startBefore); assert.equal((await history()).length, beforeInvalidDate);
   await key('Escape'); assert.equal(await evaluate('Boolean(document.querySelector("dialog[open]"))'), true);
-  await field('Etiquetas'); await input(':popover-open input[name="label_name"]', 'Estructuras QA'); await button('Agregar', ':popover-open'); await save(); assert.equal((await detail()).labels[0].name, 'Estructuras QA');
+  await field('Etiquetas'); await button('Ingeniería civil', ':popover-open'); await save(); assert.equal((await detail()).labels[0].specialty_id, context.specialties[0]);
   await click('dialog section[aria-label="Propiedades de la tarea"] button[aria-label="Ángela QA worker"]');
   await button('Sin responsable', ':popover-open'); await save(); assert.equal((await detail()).assignees.length, 0);
   await click('dialog button[aria-label="Asignar responsable"]'); await button('Ángela QA worker', ':popover-open'); await save(); assert.equal((await detail()).assignees.length, 1);

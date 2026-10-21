@@ -1,5 +1,6 @@
 import { useId } from "react";
-import type { ProjectDraft, WorkerCandidate } from "../types";
+import type { ProjectDraft, WorkerCandidate, TeamOption } from "../types";
+import ProjectTeamPicker from "./ProjectTeamPicker";
 import type { FieldErrors } from "../formErrors";
 import { formClasses as formStyles } from "../ProjectForm/formClasses";
 const styles = {
@@ -17,6 +18,10 @@ const styles = {
 };
 
 interface ProjectConfigurationProps {
+  teams?: TeamOption[];
+  teamLoading?: boolean;
+  teamError?: string;
+  onTeamRetry?: () => Promise<void>;
   draft: ProjectDraft;
   onChange: (changes: Partial<ProjectDraft>) => void;
   areaName: string;
@@ -40,6 +45,7 @@ export default function ProjectConfiguration({
   onSearch,
   fieldErrors,
   workerError,
+  teams = [], teamLoading = false, teamError = "", onTeamRetry = async () => undefined,
 }: ProjectConfigurationProps) {
   const permissionHint = useId();
   const workerLabel = useId();
@@ -104,7 +110,7 @@ export default function ProjectConfiguration({
               type="radio"
               name="project-mode"
               checked={draft.mode === "available"}
-              onChange={() => onChange({ mode: "available" })}
+              onChange={() => onChange({ mode: "available", workerIds: [], teamIds: [] })}
             />
             <span>
               Publicar proyecto disponible
@@ -135,6 +141,12 @@ export default function ProjectConfiguration({
         </fieldset>
         {draft.mode === "assigned" && (
           <div className={styles.workerPicker}>
+            <div role="group" aria-label="Origen de participantes" className="flex rounded-lg bg-neutral-100 p-1">
+              {(["workers", "teams"] as const).map((source) => <button key={source} type="button" aria-pressed={(draft.participantSource ?? "workers") === source}
+                className="flex-1 cursor-pointer rounded-lg px-2 py-1.5 text-xs text-neutral-700 hover:bg-neutral-50 aria-pressed:bg-white"
+                onClick={() => { if ((draft.participantSource ?? "workers") !== source) onChange({ participantSource: source, workerIds: [], teamIds: [] }); }}>{source === "workers" ? "Trabajadores" : "Equipos"}</button>)}
+            </div>
+            {draft.participantSource === "teams" ? <div id="project-worker-search" tabIndex={-1} aria-invalid={Boolean(fieldErrors["project-worker-search"])} aria-describedby={fieldErrors["project-worker-search"] ? "project-worker-search-error" : undefined}><ProjectTeamPicker draft={draft} teams={teams} loading={teamLoading} error={teamError} retry={onTeamRetry} onChange={onChange} /></div> : <>
             <label htmlFor="project-worker-search">Buscar trabajadores</label>
             <div className={styles.search}>
               <input
@@ -223,6 +235,8 @@ export default function ProjectConfiguration({
               {draft.workerIds.length} seleccionados. Hasta 100 resultados;
               afina la búsqueda si hace falta.
             </p>
+            </>}
+            {draft.participantSource === "teams" && fieldErrors["project-worker-search"] && <p id="project-worker-search-error" role="alert" className="m-0 text-xs text-red-700">{fieldErrors["project-worker-search"]}</p>}
           </div>
         )}
       </div>

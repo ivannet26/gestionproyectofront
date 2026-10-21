@@ -29,6 +29,7 @@ const { default: Control } = await load("../src/features/projects/TaskList/TaskG
   "../TaskForm/TaskProperty": { default: ({ value, children }) => React.createElement("div", null, React.createElement("button", null, value), children(() => {})) },
   "../TaskForm/TaskIcon": { default: ({ name }) => React.createElement("svg", { "data-icon": name, "aria-hidden": true }) },
   "../../../shared/icons/ChevronDownIcon": { default: () => React.createElement("svg", { "aria-hidden": true }) },
+  "../../../shared/icons/StackIcon": { default: () => React.createElement("svg", { "aria-hidden": true }) },
 });
 const states = [{ code: "EN_CURSO", name: "En marcha" }, { code: "PENDIENTE", name: "Por hacer" }, { code: "COMPLETADA", name: "Revisada" }];
 const priorities = [{ code: 1, name: "Urgente" }, { code: 2, name: "Alta" }, { code: 3, name: "Normal" }, { code: 4, name: "Baja" }];

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { activityValue, formatActivityDate, formatEstimate } from "./detailFormat";
 import { formatTaskDate } from "../TaskList/taskHierarchy";
 
-const fields: Record<string, string> = { name: "el nombre", state_code: "el estado", responsibles: "los responsables", start_date: "la fecha de inicio", due_date: "la fecha límite", priority: "la prioridad", labels: "las etiquetas", estimated_minutes: "la duración estimada" };
+const fields: Record<string, string> = { name: "el nombre", state_code: "el estado", responsibles: "los responsables", start_date: "la fecha de inicio", due_date: "la fecha límite", priority: "la prioridad", labels: "las etiquetas", estimated_minutes: "la duración estimada", position: "la posición" };
 const priorities: Record<string, string> = { 1: "Urgente", 2: "Alta", 3: "Normal", 4: "Baja" };
 function value(event: TaskActivityEvent, input: unknown) {
   if (event.field === "estimated_minutes") return typeof input === "number" ? formatEstimate(input) : "sin definir";

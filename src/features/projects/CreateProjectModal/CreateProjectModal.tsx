@@ -14,6 +14,8 @@ import AreaSelector from "../AreaSelector/AreaSelector";
 import Modal from "../Modal/Modal";
 import ProjectConfiguration from "./ProjectConfiguration";
 import ProjectEndDateSelector from "./ProjectEndDateSelector";
+import { useProjectTeams } from "./useProjectTeams";
+import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
 const formStyles = {
   form: "flex min-h-0 flex-col",
   body: "min-h-0 overflow-y-auto overscroll-contain px-6 py-5 max-sm:p-4",
@@ -44,6 +46,9 @@ const projectFields: Record<string, string> = {
   worker_ids: "project-worker-search",
   mode: "project-mode",
   worker_contribute: "project-permission",
+  team_ids: "project-worker-search",
+  participant_source: "project-worker-search",
+  initial_task_states: "project-flow",
 };
 
 export default function CreateProjectModal({
@@ -69,6 +74,8 @@ export default function CreateProjectModal({
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [workerError, setWorkerError] = useState("");
+  const [flowOpen, setFlowOpen] = useState(false), [flowName, setFlowName] = useState("Estándar");
+  const teamResult = useProjectTeams(draft.areaIds[0], step === 2 && draft.mode === "assigned" && draft.participantSource === "teams");
   const workerRequest = useRef(0);
   const form = useRef<HTMLFormElement>(null);
   const generalError = useRef<HTMLParagraphElement>(null);
@@ -76,7 +83,7 @@ export default function CreateProjectModal({
   const nameInput = useRef<HTMLInputElement>(null);
 
   const loadWorkers = useCallback(async () => {
-    if (step !== 2 || draft.mode !== "assigned") return;
+    if (step !== 2 || draft.mode !== "assigned" || draft.participantSource === "teams") return;
     const request = ++workerRequest.current;
     setSearching(true);
     setWorkerError("");
@@ -89,7 +96,7 @@ export default function CreateProjectModal({
     } finally {
       if (request === workerRequest.current) setSearching(false);
     }
-  }, [draft.areaIds, draft.mode, searchTerm, step]);
+  }, [draft.areaIds, draft.mode, draft.participantSource, searchTerm, step]);
 
   useEffect(() => {
     let current = true;
@@ -125,6 +132,7 @@ export default function CreateProjectModal({
       workerIds: changes.areaIds
         ? []
         : (changes.workerIds ?? current.workerIds),
+      teamIds: changes.areaIds ? [] : changes.teamIds ?? current.teamIds ?? [],
     }));
     const fields: Record<string, string> = {
       ...projectFields,
@@ -176,8 +184,8 @@ export default function CreateProjectModal({
       setStep(2);
       return;
     }
-    if (draft.mode === "assigned" && draft.workerIds.length === 0) {
-      invalid["project-worker-search"] = "Selecciona al menos un trabajador.";
+    if (draft.mode === "assigned" && (draft.participantSource === "teams" ? !(draft.teamIds?.length) : draft.workerIds.length === 0)) {
+      invalid["project-worker-search"] = "Selecciona al menos un trabajador o equipo elegible.";
     }
     if (Object.keys(invalid).length > 0) {
       focusRequested.current = true;
@@ -192,7 +200,10 @@ export default function CreateProjectModal({
         end_date: draft.endDate || null,
         area_ids: draft.areaIds,
         mode: draft.mode,
-        worker_ids: draft.mode === "assigned" ? draft.workerIds : [],
+        worker_ids: draft.mode === "assigned" && draft.participantSource !== "teams" ? draft.workerIds : [],
+        participant_source: draft.participantSource ?? "workers",
+        team_ids: draft.mode === "assigned" && draft.participantSource === "teams" ? draft.teamIds ?? [] : [],
+        ...(draft.initialTaskStates ? { initial_task_states: draft.initialTaskStates.map(({ name, category, color }) => ({ name, category, color })) } : {}),
         worker_contribute: draft.workerContribute,
       });
       onCreated(project);
@@ -206,6 +217,7 @@ export default function CreateProjectModal({
           "project-description",
           "project-areas",
           "project-end-date",
+          "project-flow",
         ].some((id) => fields[id])
       )
         setStep(1);
@@ -216,7 +228,7 @@ export default function CreateProjectModal({
   }
 
   return (
-    <Modal
+    <><Modal
       title={`Crear proyecto · Paso ${step} de 2`}
       onClose={onClose}
       busy={busy}
@@ -313,6 +325,11 @@ export default function CreateProjectModal({
                     onChange={(endDate) => updateDraft({ endDate })}
                   />
                 </div>
+                <div id="project-flow" tabIndex={-1} aria-invalid={Boolean(fieldErrors["project-flow"])} className="flex flex-wrap items-center justify-between gap-2 border-t border-neutral-200 pt-3 text-xs">
+                  <div><span className="font-medium">Flujo de tareas</span><p className="m-0 mt-1 text-neutral-600">{flowName} · {draft.initialTaskStates?.length ?? catalogs.states.length} estados</p></div>
+                  <button type="button" className="cursor-pointer rounded-lg border border-neutral-200 px-3 py-1.5 text-neutral-700 hover:bg-neutral-50" onClick={() => setFlowOpen(true)}>Configurar</button>
+                  {fieldErrors["project-flow"] && <p className="m-0 basis-full text-red-700" role="alert">{fieldErrors["project-flow"]}</p>}
+                </div>
               </>
             ) : (
               <ProjectConfiguration
@@ -329,6 +346,7 @@ export default function CreateProjectModal({
                 search={search}
                 onSearchChange={setSearch}
                 onSearch={searchWorkers}
+                teams={teamResult.items} teamLoading={teamResult.loading} teamError={teamResult.error} onTeamRetry={teamResult.retry}
               />
             )}
           </fieldset>
@@ -364,7 +382,7 @@ export default function CreateProjectModal({
               disabled={
                 busy ||
                 catalogs.areas.length === 0 ||
-                (step === 2 && draft.mode === "assigned" && searching)
+                (step === 2 && draft.mode === "assigned" && (draft.participantSource === "teams" ? teamResult.loading : searching))
               }
             >
               {busy
@@ -379,5 +397,8 @@ export default function CreateProjectModal({
         </footer>
       </form>
     </Modal>
+    {flowOpen && <TaskStatusConfiguration draft={{ states: draft.initialTaskStates ?? catalogs.states, templates: catalogs.task_templates ?? [],
+      onApply: (states, name) => { updateDraft({ initialTaskStates: states }); setFlowName(name); } }} onConfigured={() => undefined} onClose={() => setFlowOpen(false)} />}
+    </>
   );
 }

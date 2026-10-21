@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import TaskProperty from "../TaskForm/TaskProperty";
 import TaskIcon from "../TaskForm/TaskIcon";
+import { projectToday } from "../TaskList/taskGrouping";
 const styles = {
   calendar: "grid gap-2",
   caption:
@@ -64,7 +65,7 @@ export function Calendar({
   label?: string;
   optional?: boolean;
 }) {
-  const today = dateKey(new Date());
+  const today = projectToday();
   const initial = value || min || today;
   const [month, setMonth] = useState(
     () =>
@@ -216,14 +217,16 @@ export function Calendar({
               const disabled = Boolean(
                 (min && key < min) || (max && key > max),
               );
+              const past = key < today && !disabled;
               return (
                 <button
                   type="button"
                   key={key}
                   role="gridcell"
                   data-date={key}
-                  className={`${styles.day}${date.getMonth() !== month.getMonth() ? ` ${styles.outside}` : ""}`}
-                  aria-label={fullDate.format(date)}
+                  className={`${styles.day}${date.getMonth() !== month.getMonth() ? ` ${styles.outside}` : ""}${past ? " bg-neutral-100! text-neutral-600! aria-selected:bg-red-50! aria-selected:text-red-700! aria-selected:border-red-700" : ""}`}
+                  aria-label={`${fullDate.format(date)}${past ? " · Fecha anterior a hoy, seleccionable" : ""}`}
+                  data-past={past || undefined}
                   aria-selected={value === key}
                   aria-current={today === key ? "date" : undefined}
                   disabled={disabled}

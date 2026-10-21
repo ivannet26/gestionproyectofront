@@ -7,6 +7,9 @@ import TaskProperty from "./TaskProperty";
 import TaskIcon from "./TaskIcon";
 import { propertyClasses as styles } from "../ProjectForm/formClasses";
 import { taskAssignees } from "../taskAssignees";
+import { Calendar } from "../CreateProjectModal/ProjectEndDateSelector";
+import TaskDateValue from "./TaskDateValue";
+import { formatTaskDate } from "../TaskList/taskHierarchy";
 
 interface TaskPropertiesProps {
   project: Project;
@@ -16,6 +19,8 @@ interface TaskPropertiesProps {
   stateCode: string;
   responsible: number[];
   dueDate: string;
+  startDate: string;
+  onStartDate: (value: string) => void;
   priority: number | null;
   labels: Label[];
   errors: FieldErrors;
@@ -29,7 +34,7 @@ interface TaskPropertiesProps {
 
 export default function TaskProperties({
   project, catalogs, task, parent, stateCode, responsible, dueDate, priority, labels, errors,
-  onState, onResponsible, onDate, onPriority, onLabels, onConfigure,
+  onState, onResponsible, onDate, onPriority, onLabels, onConfigure, startDate, onStartDate,
 }: TaskPropertiesProps) {
   const [stateSearch, setStateSearch] = useState("");
   const canAssign = project.permissions.manage && (!task || task.permissions.assign);
@@ -64,10 +69,14 @@ export default function TaskProperties({
           onClick={() => { close(); onConfigure(); }}><TaskIcon name="settings" />Configurar estados</button>}
       </>}
     </TaskProperty>
+    <TaskProperty id="task-start" label="Fecha de inicio" value={formatTaskDate(startDate)} icon="date" error={errors["task-start"]} content={<><TaskIcon name="date" /><TaskDateValue value={startDate} /></>}>
+      {(close) => <Calendar label="Fecha de inicio" optional={false} value={startDate} min={parent?.start_date ?? project.start_date ?? undefined}
+        max={dueDate || parent?.due_date || project.end_date || undefined} onChange={onStartDate} close={close} />}
+    </TaskProperty>
     <TaskOptionalProperties project={project} catalogs={catalogs} responsible={responsible} dueDate={dueDate}
       priority={priority} labels={labels} errors={errors} canAssign={canAssign}
       readOnlyResponsible={task ? taskAssignees(task).map((person) => person.name).join(", ") || "Sin persona asignada" : "Tú"}
-      min={parent?.start_date ?? project.start_date ?? undefined} max={parent?.due_date ?? project.end_date ?? undefined}
+      min={startDate || parent?.start_date || project.start_date || undefined} max={parent?.due_date ?? project.end_date ?? undefined}
       onResponsible={onResponsible} onDate={onDate} onPriority={onPriority} onLabels={onLabels} />
   </div>;
 }

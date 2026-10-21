@@ -8,6 +8,8 @@ import { formatTaskDate } from "../TaskList/taskHierarchy";
 import TaskProperty from "./TaskProperty";
 import TaskIcon from "./TaskIcon";
 import PriorityOptions from "./PriorityOptions";
+import TaskDateValue from "./TaskDateValue";
+import { isPastTaskDate } from "./taskDates";
 
 export default function TaskOptionalProperties({ project, catalogs, responsible, dueDate, priority, labels,
   onResponsible, onDate, onPriority, onLabels, errors, compact = false, min, max, readOnlyResponsible = "Tú", canAssign = project.permissions.manage }: {
@@ -19,12 +21,12 @@ export default function TaskOptionalProperties({ project, catalogs, responsible,
   const instance = useId();
   const id = (field: string) => compact ? `${instance}-${field}` : `task-${field}`;
   return <>
-    {canAssign ? <ResponsiblePicker compact={compact} participants={project.participants} value={responsible}
+    {canAssign ? <ResponsiblePicker compact={compact} participants={project.participants} teams={project.assignment_teams} value={responsible}
       error={errors["task-responsible"]} onChange={onResponsible} />
       : <TaskProperty id={id("responsible")} label="Responsable · Asignación administrada" value={compact ? "Tus tareas se asignan a ti según los permisos actuales" : readOnlyResponsible}
         icon="person" compact={compact} disabled content={compact ? <TaskIcon name="person" /> : undefined}>{() => null}</TaskProperty>}
-    <TaskProperty id={id("due")} label="Fecha límite" value={dueDate ? formatTaskDate(dueDate) : "Sin fecha límite"}
-      icon="date" compact={compact} selected={Boolean(dueDate)} content={compact ? <TaskIcon name="date" /> : undefined} error={errors["task-due"]}>
+    <TaskProperty id={id("due")} label={`Fecha límite${isPastTaskDate(dueDate) ? " · Fecha anterior a hoy" : ""}`} value={dueDate ? formatTaskDate(dueDate) : "Sin fecha límite"}
+      icon="date" compact={compact} selected={Boolean(dueDate)} content={compact ? <span className={isPastTaskDate(dueDate) ? "text-red-700" : ""}><TaskIcon name="date" /></span> : <><TaskIcon name="date" /><TaskDateValue value={dueDate} /></>} error={errors["task-due"]}>
       {(close) => <Calendar value={dueDate} min={min ?? project.start_date ?? undefined} max={max ?? project.end_date ?? undefined}
         label="Fecha límite" onChange={onDate} close={close} />}
     </TaskProperty>
@@ -34,7 +36,7 @@ export default function TaskOptionalProperties({ project, catalogs, responsible,
     </TaskProperty>
     <TaskProperty id={id("labels")} label="Etiquetas" value={labels.length ? `${labels.length} seleccionadas` : "Sin etiquetas"}
       icon="labels" compact={compact} selected={labels.length > 0} content={compact ? <TaskIcon name="labels" /> : undefined} error={errors["task-labels"]}>
-      {() => <LabelEditor title="Etiquetas de la tarea" compact labels={labels} onChange={onLabels} />}
+      {() => <LabelEditor title="Etiquetas de la tarea" compact labels={labels} onChange={onLabels} specialties={catalogs.specialties} />}
     </TaskProperty>
   </>;
 }

@@ -20,6 +20,10 @@ import PriorityOptions from "../TaskForm/PriorityOptions";
 import LabelEditor from "../LabelEditor/LabelEditor";
 import type { Label } from "../types";
 import { taskAssignees } from "../taskAssignees";
+import { labelSelection } from "../labelSelection";
+import AssigneeSelector from "../ResponsiblePicker/AssigneeSelector";
+import TaskDateValue from "../TaskForm/TaskDateValue";
+import { isPastTaskDate } from "../TaskForm/taskDates";
 
 const styles = {
   // Keep the module's full-width badge override above TaskProperty's span limit.
@@ -105,7 +109,7 @@ function Editor({
   const [value, setValue] = useState(String(task[field] ?? ""));
   const [responsibles, setResponsibles] = useState(() => field === "responsible_id" ? taskAssignees(task).map((person) => person.id) : []);
   const [search, setSearch] = useState("");
-  const [taskLabels, setTaskLabels] = useState<Label[]>(task.labels.map(({ name, kind }) => ({ name, kind })));
+  const [taskLabels, setTaskLabels] = useState<Label[]>(task.labels);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -128,9 +132,6 @@ function Editor({
       (state.code === task.state_code ||
         task.transitions.some((item) => item.target === state.code)),
   );
-  const participants = project.participants.filter((person) =>
-    matches(person.name),
-  );
 
   async function save() {
     if (busy) return;
@@ -147,12 +148,7 @@ function Editor({
       else if (field === "responsible_id")
         await onPatch(task, { responsible_ids: responsibles });
       else if (field === "labels") {
-        const requirements = task.labels.filter((label) => label.requirement_id !== null);
-        const linked = (label: Label) => requirements.find((item) => item.name === label.name && item.kind === label.kind);
-        await onPatch(task, {
-          labels: taskLabels.filter((label) => !linked(label)),
-          requirement_ids: taskLabels.flatMap((label) => linked(label)?.requirement_id ?? []),
-        });
+        await onPatch(task, labelSelection(taskLabels));
       }
       else
         await onPatch(task, {
@@ -193,7 +189,7 @@ function Editor({
   return (
     <div className={styles.editor} aria-busy={busy}>
       <fieldset disabled={busy}>
-        {(field === "state_code" || field === "responsible_id") && (
+        {field === "state_code" && (
           <>
             <label htmlFor={`${id}-search`}>
               {field === "state_code" ? "Buscar estado" : "Buscar por nombre"}
@@ -209,8 +205,8 @@ function Editor({
             />
           </>
         )}
-        <div className={styles.options}>
-          {field === "labels" && <LabelEditor title="Etiquetas de la tarea" compact labels={taskLabels} onChange={setTaskLabels} />}
+        <div className={field === "responsible_id" ? undefined : styles.options}>
+          {field === "labels" && <LabelEditor title="Etiquetas de la tarea" compact labels={taskLabels} onChange={setTaskLabels} specialties={catalogs.specialties} />}
           {field === "state_code" &&
             groupTaskStates(states).map((group) => (
               <section key={group.label}>
@@ -229,28 +225,7 @@ function Editor({
           )}
           {field === "priority" && <PriorityOptions priorities={catalogs.priorities} value={value ? Number(value) : null}
             onChange={(next) => setValue(next === null ? "" : String(next))} />}
-          {field === "responsible_id" && (
-            <>
-              {option("", "Sin responsable")}
-              {participants.map((person) =>
-                option(
-                  String(person.id),
-                  person.name,
-                  <>
-                    <span className={styles.avatar} aria-hidden="true">
-                      {avatarFor(person.name)}
-                    </span>
-                    <span>{person.name}</span>
-                  </>,
-                ),
-              )}
-              {participants.length === 0 && (
-                <p role="status">
-                  No hay participantes elegibles que coincidan.
-                </p>
-              )}
-            </>
-          )}
+          {field === "responsible_id" && <AssigneeSelector project={project} value={responsibles} onChange={setResponsibles} />}
         </div>
         {isDate && (
           <Calendar
@@ -315,7 +290,7 @@ function Editor({
         <button
           type="button"
           className="primary-button bg-neutral-800 font-medium text-white hover:bg-neutral-700"
-          disabled={busy || (field === "labels" ? JSON.stringify(taskLabels) === JSON.stringify(task.labels.map(({ name, kind }) => ({ name, kind }))) : field === "responsible_id" ? JSON.stringify([...responsibles].sort((a, b) => a - b)) === JSON.stringify(taskAssignees(task).map((person) => person.id)) : value === String(task[field] ?? ""))}
+          disabled={busy || (field === "labels" ? JSON.stringify(labelSelection(taskLabels)) === JSON.stringify(labelSelection(task.labels)) : field === "responsible_id" ? JSON.stringify([...responsibles].sort((a, b) => a - b)) === JSON.stringify(taskAssignees(task).map((person) => person.id)) : value === String(task[field] ?? ""))}
           onClick={() => {
             void save();
           }}
@@ -350,28 +325,31 @@ export default function TaskCell(props: TaskCellProps) {
     field === "state_code" ? (
       <StateLabel code={task.state_code} name={value} category={task.state_category} color={task.state_color} />
     ) : field === "responsible_id" && people.length > 0 ? (
-      <>
-        <span aria-hidden="true">{people.length} responsables</span>
-      </>
+      <span className="flex min-w-0 flex-wrap items-center gap-1">
+        {people.slice(0, 3).map((person) => <span key={person.id} title={person.name} className="inline-grid size-7 shrink-0 place-items-center rounded-full bg-sky-700 text-xs font-medium text-white" aria-hidden="true">{avatarFor(person.name)}</span>)}
+        {people.length > 3 && <span className="text-xs text-neutral-700">+{people.length - 3}</span>}
+      </span>
+    ) : field === "responsible_id" && props.appearance !== "detail" ? (
+      <TaskIcon name="person" />
     ) : field === "labels" ? (props.appearance === "detail" ? <span>{task.labels.length ? "Editar etiquetas" : permitted ? "Añadir etiquetas" : "Sin etiquetas"}</span> : <TaskIcon name="labels" />) : field === "priority" ? (
       <PriorityLabel priority={task.priority} name={value} />
     ) : (
       <>
         {props.appearance !== "detail" && <TaskIcon name={icons[field]} />}
-        <span>{value}</span>
+        {field === "start_date" || field === "due_date" ? <TaskDateValue value={task[field]} /> : <span>{value}</span>}
       </>
     );
   return (
     <TaskProperty
-      appearance={props.appearance}
+      appearance={props.appearance ?? "list"}
       cell
       id={`${instanceId}-task-${task.id}-${field}`}
-      label={props.appearance === "detail" ? labels[field] : `${labels[field]} · ${task.name}`}
+      label={`${props.appearance === "detail" ? labels[field] : `${labels[field]} · ${task.name}`}${(field === "start_date" || field === "due_date") && isPastTaskDate(task[field]) ? " · Fecha anterior a hoy" : ""}`}
       value={value}
       icon={icons[field]}
       disabled={!permitted}
       content={content}
-      triggers={field === "responsible_id" ? (people.length ? people.map((person) => ({
+      triggers={field === "responsible_id" && props.appearance === "detail" ? (people.length ? people.map((person) => ({
         label: person.name,
         content: <span className="inline-grid size-7 shrink-0 place-items-center rounded-full bg-sky-700 text-xs font-medium text-white" aria-hidden="true">{avatarFor(person.name)}</span>,
       })) : [{ label: "Asignar responsable", content: props.appearance === "detail" ? <span className="px-1 text-sm">{permitted ? "Asignar responsable" : "Sin persona asignada"}</span> : <TaskIcon name="person" /> }]) : undefined}
