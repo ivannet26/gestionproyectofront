@@ -63,7 +63,7 @@ function AreasSection() {
           {data.map((area) => (
             <li
               key={area.id}
-              className="px-3 py-2 rounded-lg hover:bg-neutral-50 flex items-center justify-between text-xs"
+              className="px-3 py-2 rounded-lg hover:bg-neutral-100 flex items-center justify-between text-xs"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
@@ -73,7 +73,7 @@ function AreasSection() {
                   <FolderIcon className="size-4" />
                 </span>
                 <span className="text-neutral-800 truncate">{area.name}</span>
-                <span className="px-2 py-0.5 text-[10px] text-neutral-600 bg-neutral-50 rounded font-medium">
+                <span className="px-2 py-0.5 text-[10px] text-neutral-600 bg-neutral-100 rounded font-medium">
                   {area.code}
                 </span>
               </div>

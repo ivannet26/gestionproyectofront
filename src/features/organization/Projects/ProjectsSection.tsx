@@ -39,7 +39,7 @@ function ProjectsSection() {
           {data.map((project) => (
             <li
               key={project.id}
-              className="px-3 py-2 rounded-lg hover:bg-neutral-50 flex items-center gap-2 text-xs"
+              className="px-3 py-2 rounded-lg hover:bg-neutral-100 flex items-center gap-2 text-xs"
             >
               <span
                 className="inline-flex items-center text-orange-500"
@@ -60,7 +60,7 @@ function ProjectsSection() {
                 {project.areas.map((area, index) => (
                   <span
                     key={index}
-                    className="px-2 py-0.5 text-[10px] text-neutral-600 bg-neutral-50 rounded font-medium"
+                    className="px-2 py-0.5 text-[10px] text-neutral-600 bg-neutral-100 rounded font-medium"
                   >
                     {area.name}
                   </span>

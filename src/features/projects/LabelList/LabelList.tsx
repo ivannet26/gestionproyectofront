@@ -12,7 +12,7 @@ export default function LabelList({ labels, onRemove }: LabelListProps) {
       {labels.map((label, index) => (
         <li
           key={label.id ?? `${label.kind}:${label.name}`}
-          className="flex items-center gap-2 px-2 py-1 border border-neutral-200 bg-neutral-50 text-xs text-neutral-900 shadow-none"
+          className="flex items-center gap-2 px-2 py-1 border border-neutral-200 bg-neutral-100 text-xs text-neutral-900 shadow-none"
         >
           <span>
             {label.name} ·{" "}

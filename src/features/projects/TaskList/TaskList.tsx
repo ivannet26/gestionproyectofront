@@ -1,6 +1,12 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import type { Project, ProjectCatalogs, Task, TaskActionKind, TaskListGroup } from "../types";
+import type {
+  Project,
+  ProjectCatalogs,
+  Task,
+  TaskActionKind,
+  TaskListGroup,
+} from "../types";
 import TaskProperty from "../TaskForm/TaskProperty";
 import TaskIcon from "../TaskForm/TaskIcon";
 import TaskCell from "./TaskCell";
@@ -19,8 +25,7 @@ const styles = {
     "flex min-w-0 flex-wrap items-center justify-between gap-2 border-b border-neutral-100 px-3 py-2 sm:px-5",
   tools:
     "min-w-0 basis-44 sm:basis-56 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-lg [&_input]:border [&_input]:border-neutral-200 [&_input]:bg-white [&_input]:px-3 [&_input]:py-1.5 [&_input]:text-xs [&_input]:text-neutral-800 [&_input]:placeholder:text-neutral-600 [&_input:focus-visible]:outline-2 [&_input:focus-visible]:outline-offset-2 [&_input:focus-visible]:outline-neutral-700",
-  legend:
-    "mx-3 mt-2 mb-2.5 text-xs text-neutral-600 sm:mx-5",
+  legend: "mx-3 mt-2 mb-2.5 text-xs text-neutral-600 sm:mx-5",
   scroller:
     "overflow-x-auto overscroll-x-contain px-3 pt-0 pb-6 focus-visible:outline-2 outline-neutral-700 focus-visible:outline-offset-2 sm:px-5 [container-type:inline-size]",
   group: "min-w-[1120px] mb-6",
@@ -31,7 +36,7 @@ const styles = {
   rotated: "[transform:rotate(90deg)]",
   groupCount: "text-neutral-600 text-[0.75rem] font-normal",
   table:
-    "w-full table-fixed border-collapse text-[0.8125rem] text-neutral-800 [&_th]:text-left [&_th]:text-neutral-700 [&_th]:font-medium [&_th]:py-2 [&_th]:px-1.5 [&_th]:border-b [&_th]:border-neutral-200 [&_th]:text-xs [&_th:first-child]:pl-[34px] [&_td]:py-[3px] [&_td]:px-0 [&_td]:border-b [&_td]:border-neutral-200 [&_td]:h-14 [&_tr:hover_td]:bg-neutral-50 [&_tr:focus-within_td]:bg-neutral-50",
+    "w-full table-fixed border-collapse text-[0.8125rem] text-neutral-800 [&_th]:text-left [&_th]:text-neutral-700 [&_th]:font-medium [&_th]:py-2 [&_th]:px-1.5 [&_th]:border-b [&_th]:border-neutral-200 [&_th]:text-xs [&_th:first-child]:pl-[34px] [&_td]:py-[3px] [&_td]:px-0 [&_td]:border-b [&_td]:border-neutral-200 [&_td]:h-14 [&_tr:hover_td]:bg-neutral-100 [&_tr:focus-within_td]:bg-neutral-100",
   nameColumn: "w-auto",
   personColumn: "w-[170px]",
   dateColumn: "w-[140px]",
@@ -43,8 +48,7 @@ const styles = {
   indent: "flex-[0_0_26px]",
   indicator: String.raw`inline-flex flex-[0_0_16px] text-neutral-600 data-[state=EN\_CURSO]:text-[#1678bd] data-[state=COMPLETADA]:text-[#248054]`,
   nameCopy: "flex-1 min-w-0",
-  context:
-    "block text-neutral-600 text-[0.6875rem] truncate my-0.5 mx-0",
+  context: "block text-neutral-600 text-[0.6875rem] truncate my-0.5 mx-0",
   nameLine: "flex items-center gap-1.5 min-w-0",
   nameButton:
     "min-w-0 py-0.5 px-0 bg-transparent [border:0] text-left text-neutral-800 text-[0.8125rem] leading-normal truncate cursor-pointer hover:underline",
@@ -55,9 +59,9 @@ const styles = {
   options:
     "max-h-60 overflow-y-auto [&_h3]:mt-3 [&_h3]:mx-1.5 [&_h3]:mb-[5px] [&_h3]:text-neutral-600 [&_h3]:text-[0.75rem] [&_h3]:font-normal",
   option:
-    "flex items-center gap-2 w-full min-h-9 my-0.5 mx-0 py-[7px] px-2 [border:0] rounded-lg bg-white text-neutral-800 text-left text-[0.8125rem] cursor-pointer hover:bg-neutral-50 aria-pressed:bg-neutral-100 aria-pressed:[@media(pointer:coarse)]:min-h-11",
+    "flex items-center gap-2 w-full min-h-9 my-0.5 mx-0 py-[7px] px-2 [border:0] rounded-lg bg-white text-neutral-800 text-left text-[0.8125rem] cursor-pointer hover:bg-neutral-100 aria-pressed:bg-neutral-100 aria-pressed:[@media(pointer:coarse)]:min-h-11",
   addTask:
-    "flex items-center gap-3.5 py-2.5 px-8 min-h-10 w-full text-left text-neutral-600 [border:0] bg-transparent text-[0.8125rem] cursor-pointer [&>span:first-child]:text-[1.125rem] hover:bg-neutral-50 hover:text-neutral-800 [@media(pointer:coarse)]:min-h-11",
+    "flex items-center gap-3.5 py-2.5 px-8 min-h-10 w-full text-left text-neutral-600 [border:0] bg-transparent text-[0.8125rem] cursor-pointer [&>span:first-child]:text-[1.125rem] hover:bg-neutral-100 hover:text-neutral-800 [@media(pointer:coarse)]:min-h-11",
   empty: "my-4 mx-6 text-[0.8125rem] text-neutral-600",
   emptyGroup: "my-2.5 mx-[34px] text-neutral-600 text-[0.75rem]",
   srOnly:
@@ -86,26 +90,42 @@ export default function TaskList({
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
-  const [collapsedContext, setCollapsedContext] = useState<Set<string>>(new Set());
+  const [collapsedContext, setCollapsedContext] = useState<Set<string>>(
+    new Set(),
+  );
   const [draftGroup, setDraftGroup] = useState<string | null>(null);
   const pendingQuickTask = useRef(false);
   const listActive = useRef(false);
   useEffect(() => {
     listActive.current = true;
-    return () => { listActive.current = false; };
+    return () => {
+      listActive.current = false;
+    };
   }, []);
   const listId = useId();
-  const { hierarchy, groups, preferences, setPreferences } = useTaskGrouping(tasks, search, project.task_states.states, catalogs.priorities);
+  const { hierarchy, groups, preferences, setPreferences } = useTaskGrouping(
+    tasks,
+    search,
+    project.task_states.states,
+    catalogs.priorities,
+  );
   const byId = useMemo(
     () => new Map(tasks.map((task) => [task.id, task])),
     [tasks],
   );
   const states = project.task_states.states;
-  const allGroupsExpanded = groups.length > 0 && groups.every((group) => !collapsed.has(group.key));
+  const allGroupsExpanded =
+    groups.length > 0 && groups.every((group) => !collapsed.has(group.key));
   const canCreateIn = (code: string) =>
     project.permissions.create_tasks &&
     states.some((state) => state.code === code) &&
-    (project.permissions.manage || states.some((state) => state.code === code && (state.category === "not_started" || !state.category && code === "PENDIENTE")));
+    (project.permissions.manage ||
+      states.some(
+        (state) =>
+          state.code === code &&
+          (state.category === "not_started" ||
+            (!state.category && code === "PENDIENTE")),
+      ));
 
   function rows(
     items: Task[],
@@ -114,14 +134,16 @@ export default function TaskList({
     ancestors = new Set<number>(),
   ): ReactNode {
     return items
-      .filter(
-        (task) => group.visible.has(task.id) && !ancestors.has(task.id),
-      )
+      .filter((task) => group.visible.has(task.id) && !ancestors.has(task.id))
       .flatMap((task) => {
-        const children = (hierarchy.children.get(task.id) ?? []).filter((child) => group.visible.has(child.id));
+        const children = (hierarchy.children.get(task.id) ?? []).filter(
+          (child) => group.visible.has(child.id),
+        );
         const context = !group.members.has(task.id);
         const contextKey = `${group.key}:${task.id}`;
-        const open = Boolean(search.trim()) || (context ? !collapsedContext.has(contextKey) : expanded.has(task.id));
+        const open =
+          Boolean(search.trim()) ||
+          (context ? !collapsedContext.has(contextKey) : expanded.has(task.id));
         const next = new Set([...ancestors, task.id]);
         const actions =
           task.permissions.edit ||
@@ -132,7 +154,7 @@ export default function TaskList({
             key={task.id}
             data-task-id={task.id}
             data-context={context || undefined}
-            className={context ? "bg-neutral-50" : undefined}
+            className={context ? "bg-neutral-100" : undefined}
             onClick={(event) => {
               if (
                 event.target instanceof Element &&
@@ -154,17 +176,20 @@ export default function TaskList({
                     aria-expanded={open}
                     disabled={Boolean(search.trim())}
                     onClick={() => {
-                      if (context) setCollapsedContext((current) => {
-                        const result = new Set(current);
-                        if (result.has(contextKey)) result.delete(contextKey); else result.add(contextKey);
-                        return result;
-                      });
-                      else setExpanded((current) => {
-                        const result = new Set(current);
-                        if (result.has(task.id)) result.delete(task.id);
-                        else result.add(task.id);
-                        return result;
-                      });
+                      if (context)
+                        setCollapsedContext((current) => {
+                          const result = new Set(current);
+                          if (result.has(contextKey)) result.delete(contextKey);
+                          else result.add(contextKey);
+                          return result;
+                        });
+                      else
+                        setExpanded((current) => {
+                          const result = new Set(current);
+                          if (result.has(task.id)) result.delete(task.id);
+                          else result.add(task.id);
+                          return result;
+                        });
                     }}
                   >
                     <span className={open ? styles.rotated : undefined}>
@@ -178,10 +203,27 @@ export default function TaskList({
                   className={styles.indicator}
                   data-state={task.state_code}
                   title={task.state_name}
-                  style={task.state_color ? { backgroundColor: task.state_color, color: stateInk(task.state_color), borderRadius: "50%", outline: "1px solid #737373" } : undefined}
+                  style={
+                    task.state_color
+                      ? {
+                          backgroundColor: task.state_color,
+                          color: stateInk(task.state_color),
+                          borderRadius: "50%",
+                          outline: "1px solid #737373",
+                        }
+                      : undefined
+                  }
                 >
                   <TaskIcon
-                    name={task.state_code !== "CANCELADA" && (task.state_category === "closed" || task.state_category === "done" || !task.state_category && task.state_code === "COMPLETADA") ? "check" : "state"}
+                    name={
+                      task.state_code !== "CANCELADA" &&
+                      (task.state_category === "closed" ||
+                        task.state_category === "done" ||
+                        (!task.state_category &&
+                          task.state_code === "COMPLETADA"))
+                        ? "check"
+                        : "state"
+                    }
                   />
                 </span>
                 <div
@@ -189,7 +231,11 @@ export default function TaskList({
                 >
                   {(context || depth > 0 || task.parent_id !== null) && (
                     <span className={styles.context}>
-                      {context ? "Padre de contexto · no suma al grupo" : depth ? "Subtarea" : "Subtarea asignada"}
+                      {context
+                        ? "Padre de contexto · no suma al grupo"
+                        : depth
+                          ? "Subtarea"
+                          : "Subtarea asignada"}
                     </span>
                   )}
                   <div className={styles.nameLine}>
@@ -202,7 +248,11 @@ export default function TaskList({
                     </button>
                     {children.length > 0 && (
                       <span className={styles.count} title="Subtareas visibles">
-                        {hierarchy.descendants(task.id, new Set(), group.visible)}
+                        {hierarchy.descendants(
+                          task.id,
+                          new Set(),
+                          group.visible,
+                        )}
                       </span>
                     )}
                     {task.labels.slice(0, 2).map((label) => (
@@ -223,7 +273,16 @@ export default function TaskList({
                 </div>
                 {actions && (
                   <div className={styles.rowActions}>
-                    {task.permissions.edit && <TaskCell field="labels" task={task} project={project} catalogs={catalogs} onPatch={onPatch} onState={onState} />}
+                    {task.permissions.edit && (
+                      <TaskCell
+                        field="labels"
+                        task={task}
+                        project={project}
+                        catalogs={catalogs}
+                        onPatch={onPatch}
+                        onState={onState}
+                      />
+                    )}
                     <TaskProperty
                       cell
                       id={`${listId}-${encodeURIComponent(group.key)}-task-${task.id}-actions`}
@@ -312,19 +371,32 @@ export default function TaskList({
     <section aria-label="Lista de tareas" className={styles.list}>
       <div className={styles.toolbar}>
         <fieldset className="m-0 min-w-0 border-0 p-0">
-          <TaskGroupingControl preferences={preferences} onChange={setPreferences} />
+          <TaskGroupingControl
+            preferences={preferences}
+            onChange={setPreferences}
+          />
         </fieldset>
         <div className="ml-auto flex min-w-0 items-center justify-end gap-2 max-sm:flex-1">
-          {project.permissions.manage && project.task_states.can_configure && onConfigure && <TaskStatusSettingsControl onClick={onConfigure} />}
-          <TaskGroupExpansionControl expanded={allGroupsExpanded} disabled={!groups.length}
-            controls={groups.map((_, index) => `${listId}-group-${index}`).join(" ")}
-            onToggle={() => setCollapsed((current) => {
-              const next = new Set(current);
-              for (const group of groups) {
-                if (allGroupsExpanded) next.add(group.key); else next.delete(group.key);
-              }
-              return next;
-            })} />
+          {project.permissions.manage &&
+            project.task_states.can_configure &&
+            onConfigure && <TaskStatusSettingsControl onClick={onConfigure} />}
+          <TaskGroupExpansionControl
+            expanded={allGroupsExpanded}
+            disabled={!groups.length}
+            controls={groups
+              .map((_, index) => `${listId}-group-${index}`)
+              .join(" ")}
+            onToggle={() =>
+              setCollapsed((current) => {
+                const next = new Set(current);
+                for (const group of groups) {
+                  if (allGroupsExpanded) next.add(group.key);
+                  else next.delete(group.key);
+                }
+                return next;
+              })
+            }
+          />
           <div className={styles.tools}>
             <input
               aria-label="Buscar tareas por nombre, responsable o etiqueta"
@@ -339,9 +411,12 @@ export default function TaskList({
         </div>
       </div>
       <p className={styles.legend}>
-        {hierarchy.visible.size} tareas únicas visibles. Los contadores incluyen subtareas contraídas, no padres de contexto.
-        {preferences.mode === "assignees" && preferences.separatePeople || preferences.mode === "labels" && preferences.separateLabels
-          ? " Una tarea puede aparecer en varios grupos sin duplicarse en el total." : ""}
+        {hierarchy.visible.size} tareas únicas visibles. Los contadores incluyen
+        subtareas contraídas, no padres de contexto.
+        {(preferences.mode === "assignees" && preferences.separatePeople) ||
+        (preferences.mode === "labels" && preferences.separateLabels)
+          ? " Una tarea puede aparecer en varios grupos sin duplicarse en el total."
+          : ""}
       </p>
       {hierarchy.roots.length === 0 && (
         <p className={styles.empty} role="status">
@@ -359,7 +434,9 @@ export default function TaskList({
         {groups.map((group, index) => {
           const open = !collapsed.has(group.key);
           const groupId = `${listId}-group-${index}`;
-          const canCreate = group.stateCode ? canCreateIn(group.stateCode) : project.permissions.create_tasks;
+          const canCreate = group.stateCode
+            ? canCreateIn(group.stateCode)
+            : project.permissions.create_tasks;
           return (
             <section
               className={styles.group}
@@ -387,7 +464,8 @@ export default function TaskList({
                   </span>
                   <TaskGroupLabel group={group} mode={preferences.mode} />
                   <span className={styles.groupCount}>
-                    {group.members.size} {group.members.size === 1 ? "tarea" : "tareas"}
+                    {group.members.size}{" "}
+                    {group.members.size === 1 ? "tarea" : "tareas"}
                   </span>
                 </button>
               </h2>
@@ -422,22 +500,46 @@ export default function TaskList({
                   </thead>
                   <tbody>{rows(group.roots, group)}</tbody>
                 </table>
-                {canCreate && draftGroup === group.key ? <QuickTaskRow key={`${project.id}:${group.key}`} project={project} catalogs={catalogs}
-                  groupCode={group.stateCode} onCreated={onCreated} savingRef={pendingQuickTask} onClose={(returnFocus = true) => {
-                    setDraftGroup(null);
-                    if (returnFocus) requestAnimationFrame(() => document.getElementById(`${listId}-${encodeURIComponent(group.key)}-create`)?.focus({ preventScroll: true }));
-                  }} onDetachedCreated={(task) => {
-                    if (listActive.current) { setDraftGroup(null); onCreated(task); }
-                  }} /> : canCreate && (
-                  <button
-                    id={`${listId}-${encodeURIComponent(group.key)}-create`}
-                    className={styles.addTask}
-                    type="button"
-                    onClick={() => { if (!pendingQuickTask.current) setDraftGroup(group.key); }}
-                  >
-                    <span aria-hidden="true">+</span> Añadir tarea
-                    <span className={styles.srOnly}> · {group.name}</span>
-                  </button>
+                {canCreate && draftGroup === group.key ? (
+                  <QuickTaskRow
+                    key={`${project.id}:${group.key}`}
+                    project={project}
+                    catalogs={catalogs}
+                    groupCode={group.stateCode}
+                    onCreated={onCreated}
+                    savingRef={pendingQuickTask}
+                    onClose={(returnFocus = true) => {
+                      setDraftGroup(null);
+                      if (returnFocus)
+                        requestAnimationFrame(() =>
+                          document
+                            .getElementById(
+                              `${listId}-${encodeURIComponent(group.key)}-create`,
+                            )
+                            ?.focus({ preventScroll: true }),
+                        );
+                    }}
+                    onDetachedCreated={(task) => {
+                      if (listActive.current) {
+                        setDraftGroup(null);
+                        onCreated(task);
+                      }
+                    }}
+                  />
+                ) : (
+                  canCreate && (
+                    <button
+                      id={`${listId}-${encodeURIComponent(group.key)}-create`}
+                      className={styles.addTask}
+                      type="button"
+                      onClick={() => {
+                        if (!pendingQuickTask.current) setDraftGroup(group.key);
+                      }}
+                    >
+                      <span aria-hidden="true">+</span> Añadir tarea
+                      <span className={styles.srOnly}> · {group.name}</span>
+                    </button>
+                  )
                 )}
               </div>
             </section>

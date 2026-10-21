@@ -57,7 +57,7 @@ function WorkerForm({
           <h3 className="text-neutral-700">Editar trabajador</h3>
           <button
             type="button"
-            className="p-2 flex items-center justify-center text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 rounded-lg cursor-pointer text-base leading-none"
+            className="p-2 flex items-center justify-center text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg cursor-pointer text-base leading-none"
             onClick={onClose}
             aria-label="Cerrar"
           >
@@ -126,7 +126,7 @@ function WorkerForm({
         <footer className="flex items-center justify-end gap-2 p-4">
           <button
             type="button"
-            className="px-4 py-2 text-sm text-neutral-900 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 cursor-pointer"
+            className="px-4 py-2 text-sm text-neutral-900 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-100 cursor-pointer"
             onClick={onClose}
           >
             Cancelar

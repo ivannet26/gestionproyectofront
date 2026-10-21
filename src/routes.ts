@@ -4,8 +4,8 @@ import DashboardPage from "./features/dashboard/DashboardPage/DashboardPage";
 import ProjectList from "./features/projects/ProjectList/ProjectList";
 import ProjectRoute from "./features/projects/ProjectRoute/ProjectRoute";
 import WorkersPage from "./features/workers/WorkersPage";
-import AbsencesPage from "./features/absences/AbsencesPage";
 import OrganizationPage from "./features/organization/OrganizationPage";
+import TeamsPage from "./features/teams/TeamsPage";
 import TeamDetailPage from "./features/teams/TeamDetailPage";
 import AccountsPage from "./features/accounts/AccountsPage";
 import RecoveryRequestsPage from "./features/recovery-requests/RecoveryRequestsPage";
@@ -53,18 +53,18 @@ export const appRoutes: AppRoute[] = [
     requiresAdmin: true,
   },
   {
-    path: "/ausencias",
-    Component: AbsencesPage,
-    requiresAdmin: true,
-  },
-  {
-    path: "/organizacion",
-    Component: OrganizationPage,
+    path: "/equipos",
+    Component: TeamsPage,
     requiresAdmin: false,
   },
   {
     path: "/equipos/:teamId",
     Component: TeamDetailPage,
+    requiresAdmin: false,
+  },
+  {
+    path: "/organizacion",
+    Component: OrganizationPage,
     requiresAdmin: false,
   },
 ];

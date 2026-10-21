@@ -80,17 +80,17 @@ function TeamsSection() {
           {data.map((team) => (
             <li
               key={team.id}
-              className="px-3 py-2 rounded-lg hover:bg-neutral-50 flex items-center justify-between text-xs"
+              className="px-3 py-2 rounded-lg hover:bg-neutral-100 flex items-center justify-between text-xs"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span className="inline-flex items-center" aria-hidden="true">
                   <TeamsIcon className="size-4" />
                 </span>
                 <span className="text-neutral-800 truncate">{team.name}</span>
-                <span className="px-2 py-0.5 text-[10px] text-neutral-600 bg-neutral-50 rounded font-medium">
+                <span className="px-2 py-0.5 text-[10px] text-neutral-600 bg-neutral-100 rounded font-medium">
                   {team.area_name}
                 </span>
-                <span className="px-2 py-0.5 text-[10px] text-neutral-600 bg-neutral-50 rounded font-medium">
+                <span className="px-2 py-0.5 text-[10px] text-neutral-600 bg-neutral-100 rounded font-medium">
                   {team.active_members} miembros
                 </span>
               </div>

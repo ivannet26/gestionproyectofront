@@ -24,7 +24,7 @@ const formStyles = {
     "shrink-0 border-t border-neutral-200 bg-white px-6 py-3.5 max-sm:px-4",
   actions: "flex flex-wrap items-center justify-end gap-2",
   secondary:
-    "min-h-10 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
+    "min-h-10 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 hover:bg-neutral-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
   fieldError:
     "m-0 text-xs leading-relaxed text-red-700 [overflow-wrap:anywhere]",
   generalError: "mb-2.5 mt-0 text-[13px] text-red-700 [overflow-wrap:anywhere]",

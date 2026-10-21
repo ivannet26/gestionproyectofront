@@ -1,0 +1,251 @@
+import { useState } from "react";
+import { Link } from "react-router";
+import { createTeam } from "../../core/services/organizationService";
+import type { TeamWriteData } from "../../core/interfaces/organization.interface";
+import ActivityIcon from "../../shared/icons/ActivityIcon";
+import ChevronDownIcon from "../../shared/icons/ChevronDownIcon";
+import DotsIcon from "../../shared/icons/DotsIcon";
+import PlusIcon from "../../shared/icons/PlusIcon";
+import SearchIcon from "../../shared/icons/SearchIcon";
+import StackIcon from "../../shared/icons/StackIcon";
+import UserIcon from "../../shared/icons/UserIcon";
+import { useAreas } from "../organization/Area/useAreas";
+import TeamForm from "../organization/Teams/TeamForm/TeamForm";
+import type { TeamFormState } from "../organization/Teams/TeamForm/useTeamForm";
+import { useTeams } from "../organization/Teams/useTeams";
+import BriefcaseIcon from "../../shared/icons/BriefcaseIcon";
+
+const emptyTeam: TeamFormState = { area: "", name: "", active: true };
+
+function TeamsPage() {
+  const { data, refetch } = useTeams();
+  const { data: areas } = useAreas();
+  const [searchInput, setSearchInput] = useState("");
+  const [appliedSearch, setAppliedSearch] = useState("");
+  const [activeInput, setActiveInput] = useState("");
+  const [appliedActive, setAppliedActive] = useState<boolean | undefined>(
+    undefined,
+  );
+  const [creating, setCreating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const query = appliedSearch.trim().toLowerCase();
+  const visible = data.filter(
+    (team) =>
+      (query === "" ||
+        team.name.toLowerCase().includes(query) ||
+        team.area_name.toLowerCase().includes(query)) &&
+      (appliedActive === undefined || team.active === appliedActive),
+  );
+  const hasFilters = appliedSearch !== "" || appliedActive !== undefined;
+
+  const applyFilters = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAppliedSearch(searchInput.trim());
+    setAppliedActive(activeInput === "" ? undefined : activeInput === "true");
+  };
+
+  const clearFilters = () => {
+    setSearchInput("");
+    setAppliedSearch("");
+    setActiveInput("");
+    setAppliedActive(undefined);
+  };
+
+  const handleCreate = async (formData: TeamWriteData) => {
+    setSubmitting(true);
+    try {
+      await createTeam(formData);
+      await refetch();
+      setCreating(false);
+    } catch (e) {
+      console.error("Error creating team:", e);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-white text-neutral-800" id="main-content">
+      <header className="flex flex-wrap items-end justify-between gap-4 mb-8">
+        <div className="max-w-2xl">
+          <h1 className="m-0 text-lg font-medium text-neutral-800">Equipos</h1>
+          <p className="m-0 mt-0.5 text-sm text-neutral-600">
+            Consulta los equipos de la organización y accede a sus integrantes.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 cursor-pointer"
+        >
+          <PlusIcon className="size-4" />
+          Nuevo equipo
+        </button>
+      </header>
+
+      <form
+        onSubmit={applyFilters}
+        className="flex flex-wrap items-center gap-2 mb-6"
+      >
+        <h2 className="m-0 mr-auto text-sm font-medium text-neutral-800">
+          Equipos{" "}
+          <span className="font-normal text-neutral-600">
+            ({visible.length})
+          </span>
+        </h2>
+
+        <div className="relative flex-1 min-w-48 max-w-sm">
+          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600" />
+          <input
+            type="search"
+            value={searchInput}
+            maxLength={100}
+            placeholder="Buscar por nombre o área"
+            aria-label="Buscar equipos"
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="w-full bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 pl-8 pr-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none"
+          />
+        </div>
+
+        <div className="relative">
+          <select
+            value={activeInput}
+            aria-label="Filtrar por estado"
+            onChange={(e) => setActiveInput(e.target.value)}
+            className="bg-white border border-neutral-200 text-neutral-800 pl-3 pr-8 py-1.5 text-xs rounded-lg appearance-none focus:border-neutral-400 focus:outline-none cursor-pointer"
+          >
+            <option value="">Todos</option>
+            <option value="true">Activos</option>
+            <option value="false">Inactivos</option>
+          </select>
+          <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600" />
+        </div>
+
+        <button
+          type="submit"
+          className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer"
+        >
+          Buscar equipo
+        </button>
+
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="text-xs font-medium text-neutral-700 hover:text-neutral-800 px-2 py-1.5 rounded-lg hover:bg-neutral-100 cursor-pointer"
+          >
+            Limpiar
+          </button>
+        )}
+      </form>
+
+      <section className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full border-collapse text-xs text-neutral-600 text-left">
+            <thead className="border-b border-neutral-200 font-medium text-neutral-700">
+              <tr>
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <BriefcaseIcon className="size-4" fill={false} />
+                    Equipo
+                  </span>
+                </th>
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <StackIcon className="size-4" />
+                    Área
+                  </span>
+                </th>
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <UserIcon className="size-4" />
+                    Integrantes
+                  </span>
+                </th>
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <ActivityIcon className="size-4" />
+                    Estado
+                  </span>
+                </th>
+                <th scope="col" className="p-3 items-center">
+                  <span className="inline-flex items-center gap-1.5">
+                    <DotsIcon className="size-4" />
+                    Acciones
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((team) => (
+                <tr
+                  key={team.id}
+                  className="border-b border-neutral-200 last:border-b-0 hover:bg-neutral-100"
+                >
+                  <td className="px-3 py-2.5 items-center">
+                    <span className="flex items-center min-w-0 line-clamp-1">
+                      {team.name}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 items-center">
+                    <span className="flex items-center min-w-0 line-clamp-1">
+                      {team.area_name}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 items-center">
+                    <span className="flex items-center min-w-0 line-clamp-1">
+                      {team.active_members}{" "}
+                      {team.active_members === 1 ? "miembro" : "miembros"}
+                    </span>
+                  </td>
+                  <td
+                    className={`px-3 py-2.5 items-center font-medium ${
+                      team.active ? "text-green-500" : "text-red-600"
+                    }`}
+                  >
+                    <span className="flex items-center min-w-0 line-clamp-1">
+                      {team.active ? "Activo" : "Inactivo"}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2.5 items-center">
+                    <Link
+                      to={`/equipos/${team.id}`}
+                      className="bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-100 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer whitespace-nowrap inline-flex items-center"
+                    >
+                      Ver detalle
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {visible.length === 0 && (
+          <p
+            role="status"
+            className="m-0 px-3 py-8 text-xs text-neutral-600 text-center"
+          >
+            {hasFilters
+              ? "Sin equipos para los filtros aplicados."
+              : "No hay equipos registrados."}
+          </p>
+        )}
+      </section>
+
+      {creating && (
+        <TeamForm
+          title="Nuevo equipo"
+          submitLabel="Crear"
+          initialData={emptyTeam}
+          areas={areas}
+          submitting={submitting}
+          onClose={() => setCreating(false)}
+          onSubmit={handleCreate}
+        />
+      )}
+    </main>
+  );
+}
+
+export default TeamsPage;

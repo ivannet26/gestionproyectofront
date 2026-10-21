@@ -7,7 +7,7 @@ const styles = {
   property: "min-w-0 max-w-full",
   cell: "w-full min-h-10 border-transparent !px-1.5 !py-1.5 text-left disabled:bg-transparent disabled:text-neutral-700 disabled:opacity-100",
   trigger:
-    "inline-flex min-h-9 w-full max-w-full items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-[13px] leading-snug text-neutral-700 cursor-pointer hover:enabled:bg-neutral-50 aria-expanded:bg-neutral-50 aria-expanded:border-neutral-600 aria-invalid:border-red-700 disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-default [&>svg]:shrink-0 [&>span]:max-w-[150px] [&>span]:truncate focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 [@media(pointer:coarse)]:min-h-10",
+    "inline-flex min-h-9 w-full max-w-full items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-[13px] leading-snug text-neutral-700 cursor-pointer hover:enabled:bg-neutral-100 aria-expanded:bg-neutral-100 aria-expanded:border-neutral-600 aria-invalid:border-red-700 disabled:bg-neutral-100 disabled:text-neutral-500 disabled:cursor-default [&>svg]:shrink-0 [&>span]:max-w-[150px] [&>span]:truncate focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 [@media(pointer:coarse)]:min-h-10",
   error:
     "mb-0 mt-1 max-w-[230px] text-xs leading-relaxed text-red-700 [overflow-wrap:anywhere]",
   panel:
@@ -90,36 +90,71 @@ export default function TaskProperty({
 
   function close() {
     document.getElementById(panelId)?.hidePopover();
-    document.getElementById(document.getElementById(panelId)?.dataset.returnFocus ?? id)?.focus();
+    document
+      .getElementById(
+        document.getElementById(panelId)?.dataset.returnFocus ?? id,
+      )
+      ?.focus();
   }
 
   return (
     <div className={styles.property}>
-      <div className={triggers ? "flex flex-wrap items-center gap-0.5 px-1.5" : "contents"}>
-      {(triggers ?? [{ label: `${label}: ${value}`, content: content ?? <><TaskIcon name={icon} /><span>{value}</span></> }]).map((item, index) => <Tooltip key={index} label={item.label} stretch={!compact && !triggers}>
-      {(description) => <button
-        ref={index === 0 ? trigger : undefined}
-        id={index === 0 ? id : `${id}-${index}`}
-        type="button"
-        className={triggers ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-full p-0.5 text-neutral-700 hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 aria-disabled:cursor-default [@media(pointer:coarse)]:p-2" : compact ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-lg border border-neutral-200 bg-white p-1.5 text-neutral-700 hover:bg-neutral-50 aria-pressed:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 aria-disabled:cursor-default [@media(pointer:coarse)]:p-3.5" : `${styles.trigger}${cell ? ` ${styles.cell}` : ""}`}
-        popoverTarget={disabled ? undefined : panelId}
-        disabled={disabled && !triggers && !compact}
-        aria-disabled={disabled || undefined}
-        aria-label={item.label}
-        aria-pressed={compact ? selected : undefined}
-        onClick={(event) => {
-          trigger.current = event.currentTarget;
-          if (panel.current) panel.current.dataset.returnFocus = event.currentTarget.id;
-        }}
-        aria-expanded={open}
-        aria-controls={panelId}
-        aria-haspopup="dialog"
-        aria-invalid={Boolean(error)}
-        aria-describedby={`${description}${error ? ` ${id}-error` : ""}`}
+      <div
+        className={
+          triggers ? "flex flex-wrap items-center gap-0.5 px-1.5" : "contents"
+        }
       >
-        {item.content}
-      </button>}
-      </Tooltip>)}
+        {(
+          triggers ?? [
+            {
+              label: `${label}: ${value}`,
+              content: content ?? (
+                <>
+                  <TaskIcon name={icon} />
+                  <span>{value}</span>
+                </>
+              ),
+            },
+          ]
+        ).map((item, index) => (
+          <Tooltip
+            key={index}
+            label={item.label}
+            stretch={!compact && !triggers}
+          >
+            {(description) => (
+              <button
+                ref={index === 0 ? trigger : undefined}
+                id={index === 0 ? id : `${id}-${index}`}
+                type="button"
+                className={
+                  triggers
+                    ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-full p-0.5 text-neutral-700 hover:bg-neutral-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 aria-disabled:cursor-default [@media(pointer:coarse)]:p-2"
+                    : compact
+                      ? "inline-flex cursor-pointer touch-manipulation items-center justify-center rounded-lg border border-neutral-200 bg-white p-1.5 text-neutral-700 hover:bg-neutral-100 aria-pressed:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 aria-disabled:cursor-default [@media(pointer:coarse)]:p-3.5"
+                      : `${styles.trigger}${cell ? ` ${styles.cell}` : ""}`
+                }
+                popoverTarget={disabled ? undefined : panelId}
+                disabled={disabled && !triggers && !compact}
+                aria-disabled={disabled || undefined}
+                aria-label={item.label}
+                aria-pressed={compact ? selected : undefined}
+                onClick={(event) => {
+                  trigger.current = event.currentTarget;
+                  if (panel.current)
+                    panel.current.dataset.returnFocus = event.currentTarget.id;
+                }}
+                aria-expanded={open}
+                aria-controls={panelId}
+                aria-haspopup="dialog"
+                aria-invalid={Boolean(error)}
+                aria-describedby={`${description}${error ? ` ${id}-error` : ""}`}
+              >
+                {item.content}
+              </button>
+            )}
+          </Tooltip>
+        ))}
       </div>
       {error && (
         <p id={`${id}-error`} className={styles.error} role="alert">

@@ -63,7 +63,7 @@ function SpecialtyForm({
           <footer className="flex items-center justify-end gap-2 pt-1">
             <button
               type="button"
-              className="bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-50 px-3 py-1.5 text-xs rounded-lg cursor-pointer"
+              className="bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-100 px-3 py-1.5 text-xs rounded-lg cursor-pointer"
               onClick={onClose}
             >
               Cancelar

@@ -1,11 +1,11 @@
 import type { ComponentType } from "react";
 import AdminIcon from "../../../shared/icons/AdminIcon";
-import ClockIcon from "../../../shared/icons/ClockIcon";
 import FolderIcon from "../../../shared/icons/FolderIcon";
 import HomeIcon from "../../../shared/icons/HomeIcon";
 import KeyIcon from "../../../shared/icons/KeyIcon";
 import TeamsIcon from "../../../shared/icons/TeamsIcon";
 import type { IconProps } from "../../../shared/icons/types";
+import BriefcaseIcon from "../../../shared/icons/BriefcaseIcon";
 
 export interface NavigationEntry {
   label: string;
@@ -23,10 +23,10 @@ export const navigation: NavigationEntry[] = [
     requiresAdmin: true,
   },
   {
-    label: "Ausencias",
-    path: "/ausencias",
-    icon: ClockIcon,
-    requiresAdmin: true,
+    label: "Equipos",
+    path: "/equipos",
+    icon: BriefcaseIcon,
+    requiresAdmin: false,
   },
   {
     label: "Organización",

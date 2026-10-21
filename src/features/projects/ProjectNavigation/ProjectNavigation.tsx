@@ -9,14 +9,15 @@ import { projectCreateActionClassName } from "./navigationClasses";
 const styles = {
   projects: "m-0 p-0 list-none flex flex-col gap-2",
   children:
-    "m-0 ml-7 mt-1 list-none p-0 hidden:hidden [&_a]:block [&_a]:rounded-lg [&_a]:px-3 [&_a]:py-1.5 [&_a]:text-xs [&_a]:text-neutral-600 [&_a]:no-underline [&_a]:cursor-pointer [&_a:hover]:bg-neutral-50 [&_a[aria-current=page]]:bg-neutral-100 [&_a[aria-current=page]]:text-neutral-800 [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-offset-[-2px] [&_a:focus-visible]:outline-neutral-700",
-  heading: "group/project relative flex min-w-0 items-center rounded-lg hover:bg-neutral-50",
+    "m-0 ml-7 mt-1 list-none p-0 hidden:hidden [&_a]:block [&_a]:rounded-lg [&_a]:px-3 [&_a]:py-1.5 [&_a]:text-xs [&_a]:text-neutral-600 [&_a]:no-underline [&_a]:cursor-pointer [&_a:hover]:bg-neutral-100 [&_a[aria-current=page]]:bg-neutral-100 [&_a[aria-current=page]]:text-neutral-800 [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-offset-[-2px] [&_a:focus-visible]:outline-neutral-700",
+  heading:
+    "group/project relative flex min-w-0 items-center rounded-lg hover:bg-neutral-100",
   project:
     "flex min-w-0 flex-1 items-center gap-2 rounded-lg border-0 bg-transparent px-3 py-1.5 text-left text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700",
   message:
     "mx-2 mb-2 mt-1 text-xs leading-relaxed text-neutral-600 [overflow-wrap:anywhere]",
   retry:
-    "rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 mx-2 mb-3",
+    "rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 mx-2 mb-3",
 };
 
 export default function ProjectNavigation({
@@ -39,9 +40,15 @@ export default function ProjectNavigation({
     if (activeProjectId === undefined) return;
     let current = true;
     void Promise.resolve().then(() => {
-      if (current) setExpandedProjects((expanded) => ({ ...expanded, [activeProjectId]: true }));
+      if (current)
+        setExpandedProjects((expanded) => ({
+          ...expanded,
+          [activeProjectId]: true,
+        }));
     });
-    return () => { current = false; };
+    return () => {
+      current = false;
+    };
   }, [activeProjectId, currentPath]);
   return (
     <div aria-busy={loading}>
@@ -83,9 +90,7 @@ export default function ProjectNavigation({
           const childrenId = `project-${project.id}-navigation`;
           return (
             <li key={project.id}>
-              <div
-                className={styles.heading}
-              >
+              <div className={styles.heading}>
                 <button
                   className={`${styles.project} ${active ? "text-neutral-800" : "text-neutral-600"}`}
                   type="button"
@@ -115,9 +120,13 @@ export default function ProjectNavigation({
                   <span aria-hidden="true" className="shrink-0">
                     <ProjectsIcon className="size-4" fill={false} />
                   </span>
-                  <span className="min-w-0 flex-1 truncate pr-9">{project.name}</span>
+                  <span className="min-w-0 flex-1 truncate pr-9">
+                    {project.name}
+                  </span>
                   <span aria-hidden="true" className="shrink-0">
-                    <ChevronDownIcon className={`size-4 ${expanded ? "" : "-rotate-90"}`} />
+                    <ChevronDownIcon
+                      className={`size-4 ${expanded ? "" : "-rotate-90"}`}
+                    />
                   </span>
                 </button>
                 {canCreateTasks && project.permissions.create_tasks && (

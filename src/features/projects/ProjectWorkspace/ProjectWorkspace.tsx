@@ -306,7 +306,11 @@ export default function ProjectWorkspace({
               <dd>{activeTask.state_name}</dd>
 
               <dt>Responsable</dt>
-              <dd>{taskAssignees(activeTask).map((person) => person.name).join(", ") || "Sin persona asignada"}</dd>
+              <dd>
+                {taskAssignees(activeTask)
+                  .map((person) => person.name)
+                  .join(", ") || "Sin persona asignada"}
+              </dd>
 
               <dt>Inicio</dt>
               <dd>{formatTaskDate(activeTask.start_date)}</dd>
@@ -406,7 +410,7 @@ export default function ProjectWorkspace({
   if (loading) {
     return (
       <main
-        className="min-h-screen bg-neutral-50 p-6 text-neutral-900"
+        className="min-h-screen bg-neutral-100 p-6 text-neutral-900"
         id="main-content"
       >
         <p role="status" className="text-sm text-neutral-600">
@@ -419,7 +423,7 @@ export default function ProjectWorkspace({
   if (error || !project) {
     return (
       <main
-        className="min-h-screen bg-neutral-50 p-6 text-neutral-900"
+        className="min-h-screen bg-neutral-100 p-6 text-neutral-900"
         id="main-content"
       >
         <p
@@ -437,7 +441,7 @@ export default function ProjectWorkspace({
 
   return (
     <main
-      className="min-h-screen min-w-0 bg-neutral-50 p-3 text-neutral-900 sm:p-6 sm:pt-3"
+      className="min-h-screen min-w-0 bg-neutral-100 p-3 text-neutral-900 sm:p-6 sm:pt-3"
       id="main-content"
     >
       <ProjectHeader
@@ -452,7 +456,14 @@ export default function ProjectWorkspace({
         }}
       />
 
-      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{message}</p>
+      <p
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {message}
+      </p>
 
       {refreshError && (
         <p
@@ -558,7 +569,13 @@ export default function ProjectWorkspace({
         </p>
       )}
 
-      {configuringStates && <TaskStatusConfiguration project={project} onConfigured={configured} onClose={() => setConfiguringStates(false)} />}
+      {configuringStates && (
+        <TaskStatusConfiguration
+          project={project}
+          onConfigured={configured}
+          onClose={() => setConfiguringStates(false)}
+        />
+      )}
       {activeAction && (
         <Modal
           busy={busy}

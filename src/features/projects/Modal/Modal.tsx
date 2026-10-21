@@ -13,7 +13,7 @@ const styles = {
   header:
     "sticky top-0 z-2 flex shrink-0 items-center justify-between gap-4 border-b border-neutral-200 bg-white px-6 py-3 max-sm:px-4 [&_h2]:m-0 [&_h2]:text-[15px] [&_h2]:[&_h2]:break-words",
   close:
-    "min-h-8 min-w-8 rounded-lg border-0 bg-neutral-50 text-xl text-neutral-900 hover:bg-neutral-50 cursor-pointer disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
+    "min-h-8 min-w-8 rounded-lg border-0 bg-neutral-100 text-xl text-neutral-900 hover:bg-neutral-100 cursor-pointer disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
 };
 
 interface ModalProps {

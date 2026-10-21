@@ -38,7 +38,7 @@ const styles = {
   footerRow: "flex items-center justify-between gap-3 max-sm:flex-wrap",
   actions: "flex shrink-0 items-center gap-2 max-sm:ml-auto",
   cancel:
-    "min-h-9 rounded-lg border border-transparent bg-white px-3 py-2 text-[13px] text-neutral-600 hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 cursor-pointer disabled:opacity-50",
+    "min-h-9 rounded-lg border border-transparent bg-white px-3 py-2 text-[13px] text-neutral-600 hover:border-neutral-200 hover:bg-neutral-100 hover:text-neutral-900 cursor-pointer disabled:opacity-50",
   generalError:
     "mb-2.5 mt-0 text-[13px] leading-relaxed text-red-700 [overflow-wrap:anywhere]",
   srOnly: "sr-only",
@@ -80,10 +80,20 @@ export default function TaskForm({
 }: TaskFormProps) {
   const [name, setName] = useState(task?.name ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
-  const [stateCode, setStateCode] = useState(initialState ?? project.task_states.states.find((state) => state.category === "not_started" || !state.category && state.code === "PENDIENTE")?.code ?? "PENDIENTE");
-  const [priority, setPriority] = useState<number | null>(task ? task.priority : 3);
+  const [stateCode, setStateCode] = useState(
+    initialState ??
+      project.task_states.states.find(
+        (state) =>
+          state.category === "not_started" ||
+          (!state.category && state.code === "PENDIENTE"),
+      )?.code ??
+      "PENDIENTE",
+  );
+  const [priority, setPriority] = useState<number | null>(
+    task ? task.priority : 3,
+  );
   const [dueDate, setDueDate] = useState(
-    task ? task.due_date ?? "" : parent?.due_date ?? project.end_date ?? "",
+    task ? (task.due_date ?? "") : (parent?.due_date ?? project.end_date ?? ""),
   );
   const [responsible, setResponsible] = useState<number[]>(
     task ? taskAssignees(task).map((person) => person.id) : [],
@@ -146,13 +156,17 @@ export default function TaskForm({
     setError("");
     const invalid: FieldErrors = {};
     if (!name.trim()) invalid["task-name"] = "Indica el nombre de la tarea.";
-    if (dueDate && (
-      (project.start_date && dueDate < project.start_date) ||
-      (lastDate && dueDate > lastDate)
-    ))
+    if (
+      dueDate &&
+      ((project.start_date && dueDate < project.start_date) ||
+        (lastDate && dueDate > lastDate))
+    )
       invalid["task-due"] =
         "La fecha límite debe quedar dentro del periodo permitido.";
-    if (priority !== null && !catalogs.priorities.some((item) => item.code === priority))
+    if (
+      priority !== null &&
+      !catalogs.priorities.some((item) => item.code === priority)
+    )
       invalid["task-priority"] = "Selecciona una prioridad del catálogo.";
     if (
       !task &&
@@ -176,8 +190,7 @@ export default function TaskForm({
     };
     if (!task || project.permissions.manage)
       data.description = description.trim();
-    if (canAssign)
-      data.responsible_ids = responsible;
+    if (canAssign) data.responsible_ids = responsible;
     try {
       await onSubmit(
         task
@@ -200,7 +213,13 @@ export default function TaskForm({
 
   function configured(configuration: ProjectTaskConfiguration) {
     if (!configuration.states.some((state) => state.code === stateCode))
-      setStateCode(configuration.states.find((state) => state.category === "not_started" || !state.category && state.code === "PENDIENTE")?.code ?? "");
+      setStateCode(
+        configuration.states.find(
+          (state) =>
+            state.category === "not_started" ||
+            (!state.category && state.code === "PENDIENTE"),
+        )?.code ?? "",
+      );
     onConfigured(configuration);
   }
 

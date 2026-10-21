@@ -80,7 +80,7 @@ function SpecialtiesSection() {
           {data.map((specialty) => (
             <li
               key={specialty.id}
-              className="px-3 py-2 rounded-lg hover:bg-neutral-50 flex items-center justify-between text-xs"
+              className="px-3 py-2 rounded-lg hover:bg-neutral-100 flex items-center justify-between text-xs"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
