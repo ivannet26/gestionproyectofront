@@ -1,29 +1,29 @@
 import { useId, useRef, useState } from "react";
-import { errorText } from "../../auth/api";
-import type {
-  EditTaskPayload,
-  Project,
-  ProjectCatalogs,
-  Task,
-  TaskStatePayload,
-  ProjectTaskState,
-} from "../types";
-import TaskProperty from "../TaskForm/TaskProperty";
-import TaskIcon from "../TaskForm/TaskIcon";
-import type { TaskIconName } from "../TaskForm/TaskIcon";
-import { Calendar } from "../CreateProjectModal/ProjectEndDateSelector";
-import { groupTaskStates } from "../stateGroups";
-import { formatTaskDate } from "./taskHierarchy";
 import { avatarFor } from "../../../shared/avatar";
-import { stateInk } from "./stateInk";
-import PriorityOptions from "../TaskForm/PriorityOptions";
+import { errorText } from "../../auth/api";
+import { Calendar } from "../CreateProjectModal/ProjectEndDateSelector";
 import LabelEditor from "../LabelEditor/LabelEditor";
-import type { Label } from "../types";
-import { taskAssignees } from "../taskAssignees";
 import { labelSelection } from "../labelSelection";
 import AssigneeSelector from "../ResponsiblePicker/AssigneeSelector";
-import TaskDateValue from "../TaskForm/TaskDateValue";
+import { groupTaskStates } from "../stateGroups";
+import { taskAssignees } from "../taskAssignees";
+import PriorityOptions from "../TaskForm/PriorityOptions";
 import { isPastTaskDate } from "../TaskForm/taskDates";
+import TaskDateValue from "../TaskForm/TaskDateValue";
+import type { TaskIconName } from "../TaskForm/TaskIcon";
+import TaskIcon from "../TaskForm/TaskIcon";
+import TaskProperty from "../TaskForm/TaskProperty";
+import type {
+  EditTaskPayload,
+  Label,
+  Project,
+  ProjectCatalogs,
+  ProjectTaskState,
+  Task,
+  TaskStatePayload,
+} from "../types";
+import { stateInk } from "./stateInk";
+import { formatTaskDate } from "./taskHierarchy";
 
 const styles = {
   // Keep the module's full-width badge override above TaskProperty's span limit.
@@ -33,7 +33,7 @@ const styles = {
   options:
     "max-h-60 overflow-y-auto [&_h3]:mt-3 [&_h3]:mx-1.5 [&_h3]:mb-[5px] [&_h3]:text-neutral-600 [&_h3]:text-[0.75rem] [&_h3]:font-normal",
   option:
-    "flex items-center gap-2 w-full min-h-9 my-0.5 mx-0 py-[7px] px-2 [border:0] rounded-lg bg-white text-neutral-800 text-left text-[0.8125rem] cursor-pointer hover:bg-neutral-50 aria-pressed:bg-neutral-100 aria-pressed:[@media(pointer:coarse)]:min-h-11",
+    "flex items-center gap-2 w-full min-h-9 my-0.5 mx-0 py-[7px] px-2 [border:0] rounded-lg bg-white text-neutral-800 text-left text-[0.8125rem] cursor-pointer hover:bg-neutral-100 aria-pressed:bg-neutral-100 aria-pressed:[@media(pointer:coarse)]:min-h-11",
   check: "ml-auto",
   avatar:
     "inline-grid place-items-center flex-[0_0_26px] size-[26px] rounded-full bg-sky-700 text-white text-[0.625rem] font-semibold",
@@ -82,18 +82,49 @@ const icons: Record<Field, TaskIconName> = {
 
 export function StateLabel({ code, name, category, color }: ProjectTaskState) {
   return (
-    <span className={`${styles.state} border border-neutral-200 font-medium`} data-state={code}
-      style={color ? { backgroundColor: color, color: stateInk(color), borderColor: "#737373" } : undefined}>
-      <span className="inline-flex shrink-0"><TaskIcon name={code !== "CANCELADA" && (category === "closed" || category === "done" || !category && code === "COMPLETADA") ? "check" : "state"} /></span>
+    <span
+      className={`${styles.state} border border-neutral-200 font-medium`}
+      data-state={code}
+      style={
+        color
+          ? {
+            backgroundColor: color,
+            color: stateInk(color),
+            borderColor: "#737373",
+          }
+          : undefined
+      }
+    >
+      <span className="inline-flex shrink-0">
+        <TaskIcon
+          name={
+            code !== "CANCELADA" &&
+              (category === "closed" ||
+                category === "done" ||
+                (!category && code === "COMPLETADA"))
+              ? "check"
+              : "state"
+          }
+        />
+      </span>
       {name}
     </span>
   );
 }
 
-export function PriorityLabel({ priority, name }: { priority?: number | null; name: string }) {
-  return <span className={styles.priority} data-priority={priority}>
-    <TaskIcon name="priority" />{name}
-  </span>;
+export function PriorityLabel({
+  priority,
+  name,
+}: {
+  priority?: number | null;
+  name: string;
+}) {
+  return (
+    <span className={styles.priority} data-priority={priority}>
+      <TaskIcon name="priority" />
+      {name}
+    </span>
+  );
 }
 
 function Editor({
@@ -107,7 +138,11 @@ function Editor({
   close,
 }: TaskCellProps & { close: () => void }) {
   const [value, setValue] = useState(String(task[field] ?? ""));
-  const [responsibles, setResponsibles] = useState(() => field === "responsible_id" ? taskAssignees(task).map((person) => person.id) : []);
+  const [responsibles, setResponsibles] = useState(() =>
+    field === "responsible_id"
+      ? taskAssignees(task).map((person) => person.id)
+      : [],
+  );
   const [search, setSearch] = useState("");
   const [taskLabels, setTaskLabels] = useState<Label[]>(task.labels);
   const [reason, setReason] = useState("");
@@ -154,7 +189,9 @@ function Editor({
         await onPatch(task, {
           [field]:
             field === "priority"
-              ? (value ? Number(value) : null)
+              ? value
+                ? Number(value)
+                : null
               : value || null,
         });
       close();
@@ -166,7 +203,12 @@ function Editor({
     }
   }
   function option(key: string, name: string, content = <>{name}</>) {
-    const selected = field === "responsible_id" ? (key === "" ? responsibles.length === 0 : responsibles.includes(Number(key))) : value === key;
+    const selected =
+      field === "responsible_id"
+        ? key === ""
+          ? responsibles.length === 0
+          : responsibles.includes(Number(key))
+        : value === key;
     return (
       <button
         type="button"
@@ -174,7 +216,14 @@ function Editor({
         className={styles.option}
         aria-pressed={selected}
         onClick={() => {
-          if (field === "responsible_id") setResponsibles((current) => key === "" ? [] : current.includes(Number(key)) ? current.filter((id) => id !== Number(key)) : [...current, Number(key)]);
+          if (field === "responsible_id")
+            setResponsibles((current) =>
+              key === ""
+                ? []
+                : current.includes(Number(key))
+                  ? current.filter((id) => id !== Number(key))
+                  : [...current, Number(key)],
+            );
           else setValue(key);
           setError("");
         }}
@@ -212,11 +261,7 @@ function Editor({
               <section key={group.label}>
                 <h3>{group.label}</h3>
                 {group.states.map((state) =>
-                  option(
-                    state.code,
-                    state.name,
-                    <StateLabel {...state} />,
-                  ),
+                  option(state.code, state.name, <StateLabel {...state} />),
                 )}
               </section>
             ))}
@@ -239,7 +284,7 @@ function Editor({
             }
             max={
               field === "start_date"
-                ? task.due_date ?? undefined
+                ? (task.due_date ?? undefined)
                 : (parent?.due_date ?? project.end_date ?? undefined)
             }
             onChange={(next) => {
@@ -316,14 +361,24 @@ export default function TaskCell(props: TaskCellProps) {
     field === "state_code"
       ? task.state_name
       : field === "responsible_id"
-        ? (people.map((person) => person.name).join(", ") || "Sin persona asignada")
+        ? people.map((person) => person.name).join(", ") ||
+        "Sin persona asignada"
         : field === "priority"
-          ? (task.priority == null ? "Sin prioridad" : catalogs.priorities.find((item) => item.code === task.priority)
+          ? task.priority == null
+            ? "Sin prioridad"
+            : (catalogs.priorities.find((item) => item.code === task.priority)
               ?.name ?? String(task.priority))
-          : field === "labels" ? `${task.labels.length} etiquetas` : formatTaskDate(task[field]);
+          : field === "labels"
+            ? `${task.labels.length} etiquetas`
+            : formatTaskDate(task[field]);
   const content =
     field === "state_code" ? (
-      <StateLabel code={task.state_code} name={value} category={task.state_category} color={task.state_color} />
+      <StateLabel
+        code={task.state_code}
+        name={value}
+        category={task.state_category}
+        color={task.state_color}
+      />
     ) : field === "responsible_id" && people.length > 0 ? (
       <span className="flex min-w-0 flex-wrap items-center gap-1">
         {people.slice(0, 3).map((person) => <span key={person.id} title={person.name} className="inline-grid size-7 shrink-0 place-items-center rounded-full bg-sky-700 text-xs font-medium text-white" aria-hidden="true">{avatarFor(person.name)}</span>)}

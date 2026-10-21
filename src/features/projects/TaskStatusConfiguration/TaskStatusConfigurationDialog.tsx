@@ -1,15 +1,20 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { Project, ProjectTaskConfiguration, ProjectTaskState, StateCategory } from "../types";
-import Modal from "../Modal/Modal";
-import TaskIcon from "../TaskForm/TaskIcon";
 import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
 import DotsIcon from "../../../shared/icons/DotsIcon";
 import InfoIcon from "../../../shared/icons/InfoIcon";
 import PlusIcon from "../../../shared/icons/PlusIcon";
+import Modal from "../Modal/Modal";
 import { categoryValue, stateCategories } from "../stateGroups";
+import TaskIcon from "../TaskForm/TaskIcon";
+import type {
+  Project,
+  ProjectTaskConfiguration,
+  ProjectTaskState,
+  StateCategory,
+} from "../types";
 import { emptyState, moveState } from "./stateDraft";
-import { useTaskStatusConfiguration } from "./useTaskStatusConfiguration";
 import type { TaskFlowDraft } from "./useTaskStatusConfiguration";
+import { useTaskStatusConfiguration } from "./useTaskStatusConfiguration";
 
 const styles = {
   root: "flex min-h-0 flex-1 flex-col text-xs text-neutral-800 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700 [&_button]:touch-manipulation [&_button]:cursor-pointer [&_button:disabled]:cursor-default [&_button:disabled]:opacity-50",
@@ -17,10 +22,13 @@ const styles = {
   side: "relative border-r border-neutral-200 p-5 max-sm:shrink-0 max-sm:border-r-0 max-sm:border-b max-sm:p-4",
   list: "min-h-0 space-y-6 overflow-y-auto overscroll-contain p-5 max-sm:overflow-visible max-sm:p-4",
   icon: "inline-flex shrink-0 items-center justify-center rounded-lg p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 [@media(pointer:coarse)]:p-3",
-  secondary: "rounded-lg border border-neutral-200 bg-white px-3 py-1.5 font-medium text-neutral-800 hover:bg-neutral-50",
-  primary: "rounded-lg bg-neutral-800 px-3 py-1.5 font-medium text-white hover:bg-neutral-700",
-  input: "min-w-0 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-800 placeholder:text-neutral-600 focus:border-neutral-400 focus:outline-none",
-  menu: "absolute z-20 grid w-48 max-w-[calc(100vw-48px)] rounded-lg border border-neutral-200 bg-white p-1 text-xs text-neutral-800 [&_button]:flex [&_button]:w-full [&_button]:items-center [&_button]:gap-2 [&_button]:rounded-lg [&_button]:px-3 [&_button]:py-2 [&_button]:text-left hover:[&_button]:bg-neutral-50",
+  secondary:
+    "rounded-lg border border-neutral-200 bg-white px-3 py-1.5 font-medium text-neutral-800 hover:bg-neutral-100",
+  primary:
+    "rounded-lg bg-neutral-800 px-3 py-1.5 font-medium text-white hover:bg-neutral-700",
+  input:
+    "min-w-0 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-800 placeholder:text-neutral-600 focus:border-neutral-400 focus:outline-none",
+  menu: "absolute z-20 grid w-48 max-w-[calc(100vw-48px)] rounded-lg border border-neutral-200 bg-white p-1 text-xs text-neutral-800 [&_button]:flex [&_button]:w-full [&_button]:items-center [&_button]:gap-2 [&_button]:rounded-lg [&_button]:px-3 [&_button]:py-2 [&_button]:text-left hover:[&_button]:bg-neutral-100",
 };
 
 export default function TaskStatusConfiguration({ project, onConfigured, onClose, draft }: {
@@ -29,10 +37,15 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
   const editor = useTaskStatusConfiguration(project, onConfigured, onClose, draft);
   const [templateOpen, setTemplateOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState<{ code: string; original: string | null } | null>(null);
+  const [editing, setEditing] = useState<{
+    code: string;
+    original: string | null;
+  } | null>(null);
   const [savingName, setSavingName] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
-  const [dismissedHelp, setDismissedHelp] = useState<StateCategory | null>(null);
+  const [dismissedHelp, setDismissedHelp] = useState<StateCategory | null>(
+    null,
+  );
   const drag = useRef<string | null>(null);
   const pendingFocus = useRef<string | null>(null);
   const id = useId();
@@ -40,7 +53,10 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
   const namingTemplate = savingName !== null;
 
   useEffect(() => {
-    if (editor.error) document.getElementById(`${id}-error-${namingTemplate ? "name" : "main"}`)?.focus();
+    if (editor.error)
+      document
+        .getElementById(`${id}-error-${namingTemplate ? "name" : "main"}`)
+        ?.focus();
   }, [editor.error, id, namingTemplate]);
 
   useEffect(() => {
@@ -51,14 +67,26 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
   }, [editor.states]);
 
   function update(code: string, change: Partial<ProjectTaskState>) {
-    editor.setStates((states) => states.map((state) => state.code === code ? { ...state, ...change } : state));
+    editor.setStates((states) =>
+      states.map((state) =>
+        state.code === code ? { ...state, ...change } : state,
+      ),
+    );
     editor.setError("");
   }
 
   function add(category: StateCategory) {
-    if (editor.states.length >= 50) { editor.setError("El flujo admite hasta 50 estados."); return; }
-    if (editing && !editor.states.find((state) => state.code === editing.code)?.name.trim()) {
-      editor.setError("Debes especificar el nombre del estado antes de añadir otro.");
+    if (editor.states.length >= 50) {
+      editor.setError("El flujo admite hasta 50 estados.");
+      return;
+    }
+    if (
+      editing &&
+      !editor.states.find((state) => state.code === editing.code)?.name.trim()
+    ) {
+      editor.setError(
+        "Debes especificar el nombre del estado antes de añadir otro.",
+      );
       document.getElementById(`${id}-${editing.code}`)?.focus();
       return;
     }
@@ -70,25 +98,39 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
 
   function move(code: string, offset: number) {
     const state = editor.states.find((item) => item.code === code)!;
-    const group = editor.states.filter((item) => categoryValue(item) === categoryValue(state));
-    const destination = group[group.findIndex((item) => item.code === code) + offset];
+    const group = editor.states.filter(
+      (item) => categoryValue(item) === categoryValue(state),
+    );
+    const destination =
+      group[group.findIndex((item) => item.code === code) + offset];
     if (!destination) return;
     editor.setStates((states) => moveState(states, code, destination.code));
-    setNotice(`${state.name}: posición ${group.indexOf(destination) + 1} de ${group.length}.`);
+    setNotice(
+      `${state.name}: posición ${group.indexOf(destination) + 1} de ${group.length}.`,
+    );
   }
 
-  function menuAction(event: React.MouseEvent<HTMLElement>, action: () => void) {
+  function menuAction(
+    event: React.MouseEvent<HTMLElement>,
+    action: () => void,
+  ) {
     const details = event.currentTarget.closest("details");
     if (details) details.open = false;
     action();
   }
 
   function remove(state: ProjectTaskState) {
-    const group = editor.states.filter((item) => categoryValue(item) === categoryValue(state));
+    const group = editor.states.filter(
+      (item) => categoryValue(item) === categoryValue(state),
+    );
     const index = group.findIndex((item) => item.code === state.code);
     const next = group[index + 1] ?? group[index - 1];
-    pendingFocus.current = next ? `${id}-name-${next.code}` : `${id}-add-${categoryValue(state)}`;
-    editor.setStates((items) => items.filter((item) => item.code !== state.code));
+    pendingFocus.current = next
+      ? `${id}-name-${next.code}`
+      : `${id}-add-${categoryValue(state)}`;
+    editor.setStates((items) =>
+      items.filter((item) => item.code !== state.code),
+    );
   }
 
   return <Modal title="Modifica los estados de Tareas" busy={editor.busy} onClose={editor.close} statusComposer>

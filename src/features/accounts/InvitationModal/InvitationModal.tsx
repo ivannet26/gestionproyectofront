@@ -24,7 +24,7 @@ const field =
   "w-full bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 px-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none";
 const label = "text-xs text-neutral-800";
 const secondary =
-  "bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-50 px-3 py-1.5 text-xs rounded-lg cursor-pointer";
+  "bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-100 px-3 py-1.5 text-xs rounded-lg cursor-pointer";
 
 export default function InvitationModal({
   areas,

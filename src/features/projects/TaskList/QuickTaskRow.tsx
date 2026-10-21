@@ -1,12 +1,12 @@
 import { useEffect, useId, useLayoutEffect, useRef } from "react";
-import type { Project, ProjectCatalogs, Task } from "../types";
-import TaskOptionalProperties from "../TaskForm/TaskOptionalProperties";
-import { useQuickTask } from "./useQuickTask";
-import { useQuickTaskAlignment } from "./useQuickTaskAlignment";
-import { StateLabel } from "./TaskCell";
-import TaskIcon from "../TaskForm/TaskIcon";
 import Tooltip from "../../../shared/Tooltip";
 import { taskCreationStart } from "../TaskForm/taskDates";
+import TaskIcon from "../TaskForm/TaskIcon";
+import TaskOptionalProperties from "../TaskForm/TaskOptionalProperties";
+import type { Project, ProjectCatalogs, Task } from "../types";
+import { StateLabel } from "./TaskCell";
+import { useQuickTask } from "./useQuickTask";
+import { useQuickTaskAlignment } from "./useQuickTaskAlignment";
 
 export default function QuickTaskRow({ project, catalogs, groupCode, onCreated, onClose, savingRef, onDetachedCreated, parent, onBusyChange }: {
   project: Project; catalogs: ProjectCatalogs; groupCode?: string; onCreated: (task: Task) => void;
@@ -22,17 +22,32 @@ export default function QuickTaskRow({ project, catalogs, groupCode, onCreated, 
   const composing = useRef(false);
   const insideEvents = useRef(new WeakSet<Event>());
   const id = useId();
-  const alignmentState = project.task_states.states.find((state) => state.code === groupCode) ?? draft.state;
-  const differentState = Boolean(groupCode && draft.state && draft.state.code !== groupCode);
+  const alignmentState =
+    project.task_states.states.find((state) => state.code === groupCode) ??
+    draft.state;
+  const differentState = Boolean(
+    groupCode && draft.state && draft.state.code !== groupCode,
+  );
   const stateHelp = `Se creará en ${draft.state?.name}. El grupo requiere datos adicionales para crear en su estado.`;
   useQuickTaskAlignment(form, probe);
   useEffect(() => {
     const outside = (event: PointerEvent) => {
-      if (!pending.current && !insideEvents.current.has(event) &&
-        event.target instanceof Node && !form.current?.contains(event.target)) onClose(false);
+      if (
+        !pending.current &&
+        !insideEvents.current.has(event) &&
+        event.target instanceof Node &&
+        !form.current?.contains(event.target)
+      )
+        onClose(false);
     };
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !event.defaultPrevented && !event.isComposing && !composing.current && !pending.current) {
+      if (
+        event.key === "Escape" &&
+        !event.defaultPrevented &&
+        !event.isComposing &&
+        !composing.current &&
+        !pending.current
+      ) {
         event.preventDefault();
         onClose(true);
       }
@@ -44,11 +59,17 @@ export default function QuickTaskRow({ project, catalogs, groupCode, onCreated, 
       document.removeEventListener("keydown", escape);
     };
   }, [onClose]);
-  const cancel = () => { if (!pending.current) onClose(true); };
-  useLayoutEffect(() => { name.current?.focus(); }, []);
+  const cancel = () => {
+    if (!pending.current) onClose(true);
+  };
+  useLayoutEffect(() => {
+    name.current?.focus();
+  }, []);
   useLayoutEffect(() => {
     if (!draft.busy && (draft.error || Object.keys(draft.errors).length)) {
-      form.current?.querySelector<HTMLElement>('[aria-invalid="true"], [role="alert"]')?.focus();
+      form.current
+        ?.querySelector<HTMLElement>('[aria-invalid="true"], [role="alert"]')
+        ?.focus();
     }
   }, [draft.busy, draft.errors, draft.error]);
   // React capture also reaches owned portals, unlike DOM contains().
@@ -85,15 +106,15 @@ export default function QuickTaskRow({ project, catalogs, groupCode, onCreated, 
     <fieldset disabled={draft.busy} className="col-start-1 row-start-1 m-0 flex min-w-0 flex-wrap items-center gap-2 border-0 p-0">
       <div className={`min-w-0 flex-[1_1_10rem] ${differentState ? "basis-full @[36rem]:basis-40" : ""}`}>
         <div className="flex min-w-0 items-center gap-2">
-        <label htmlFor={`${id}-name`} className="sr-only">Nombre de la tarea</label>
-        <input ref={name} id={`${id}-name`} name="name" autoComplete="off" maxLength={180}
-          placeholder="Nombre de la tarea…" value={draft.name} onChange={(event) => draft.setName(event.target.value)}
-          aria-invalid={Boolean(draft.errors["task-name"])} aria-describedby={draft.errors["task-name"] ? `${id}-error` : undefined}
-          className="w-0 min-w-0 flex-1 border-0 border-b-2 border-transparent bg-transparent px-1 py-1.5 text-xs text-neutral-800 placeholder:text-neutral-600 focus-visible:border-neutral-700 focus-visible:outline-none! aria-invalid:border-red-700" />
-        {differentState && <Tooltip label={stateHelp}>{(description) => <button type="button" aria-label={stateHelp} aria-describedby={description}
-          className="inline-flex max-w-32 shrink-0 cursor-help items-center gap-1 rounded-lg border border-neutral-200 px-1.5 py-1 text-[10px] text-neutral-700 hover:bg-neutral-100">
-          <TaskIcon name="state" /><span className="truncate">{draft.state?.name}</span>
-        </button>}</Tooltip>}
+          <label htmlFor={`${id}-name`} className="sr-only">Nombre de la tarea</label>
+          <input ref={name} id={`${id}-name`} name="name" autoComplete="off" maxLength={180}
+            placeholder="Nombre de la tarea…" value={draft.name} onChange={(event) => draft.setName(event.target.value)}
+            aria-invalid={Boolean(draft.errors["task-name"])} aria-describedby={draft.errors["task-name"] ? `${id}-error` : undefined}
+            className="w-0 min-w-0 flex-1 border-0 border-b-2 border-transparent bg-transparent px-1 py-1.5 text-xs text-neutral-800 placeholder:text-neutral-600 focus-visible:border-neutral-700 focus-visible:outline-none! aria-invalid:border-red-700" />
+          {differentState && <Tooltip label={stateHelp}>{(description) => <button type="button" aria-label={stateHelp} aria-describedby={description}
+            className="inline-flex max-w-32 shrink-0 cursor-help items-center gap-1 rounded-lg border border-neutral-200 px-1.5 py-1 text-[10px] text-neutral-700 hover:bg-neutral-100">
+            <TaskIcon name="state" /><span className="truncate">{draft.state?.name}</span>
+          </button>}</Tooltip>}
         </div>
         {draft.errors["task-name"] && <p id={`${id}-error`} className="mt-1 text-red-700" role="alert">{draft.errors["task-name"]}</p>}
       </div>

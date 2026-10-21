@@ -1,30 +1,40 @@
 import { useId } from "react";
-import type { TaskGroupingMode, TaskGroupingPreferences } from "../types";
-import type { TaskIconName } from "../TaskForm/TaskIcon";
-import TaskProperty from "../TaskForm/TaskProperty";
-import TaskIcon from "../TaskForm/TaskIcon";
 import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
-import StackIcon from "../../../shared/icons/StackIcon";
+import type { TaskIconName } from "../TaskForm/TaskIcon";
+import TaskIcon from "../TaskForm/TaskIcon";
+import TaskProperty from "../TaskForm/TaskProperty";
+import type { TaskGroupingMode, TaskGroupingPreferences } from "../types";
 
-const groupingOptions: { value: TaskGroupingMode; label: string; icon: TaskIconName }[] = [
-  { value: "state", label: "Estado", icon: "state" },
-  { value: "assignees", label: "Persona asignada", icon: "person" },
-  { value: "priority", label: "Prioridad", icon: "priority" },
-  { value: "labels", label: "Etiquetas", icon: "labels" },
-  { value: "due_date", label: "Fecha límite", icon: "date" },
-];
+const groupingOptions: {
+  value: TaskGroupingMode;
+  label: string;
+  icon: TaskIconName;
+}[] = [
+    { value: "state", label: "Estado", icon: "state" },
+    { value: "assignees", label: "Persona asignada", icon: "person" },
+    { value: "priority", label: "Prioridad", icon: "priority" },
+    { value: "labels", label: "Etiquetas", icon: "labels" },
+    { value: "due_date", label: "Fecha límite", icon: "date" },
+  ];
 
-export default function TaskGroupingControl({ preferences, onChange }: {
+export default function TaskGroupingControl({
+  preferences,
+  onChange,
+}: {
   preferences: TaskGroupingPreferences;
   onChange: (next: TaskGroupingPreferences) => void;
 }) {
   const id = useId();
-  const selected = groupingOptions.find((option) => option.value === preferences.mode) ?? groupingOptions[0];
-  const separateKey = preferences.mode === "assignees" ? "separatePeople" : "separateLabels";
-  const custom = preferences.mode === "assignees" || preferences.mode === "labels";
+  const selected =
+    groupingOptions.find((option) => option.value === preferences.mode) ??
+    groupingOptions[0];
+  const separateKey =
+    preferences.mode === "assignees" ? "separatePeople" : "separateLabels";
+  const custom =
+    preferences.mode === "assignees" || preferences.mode === "labels";
   return (
     <div className="min-w-0 max-w-full [&_[popover]]:shadow-none [&>div>[popover]]:w-[27rem] [&>div>[popover]]:rounded-xl [&>div>[popover]]:p-0">
-      <TaskProperty id="task-list-grouping" appearance="toolbar" compact label="Agrupar por" value={selected.label} icon={selected.icon} content={<span aria-hidden="true"><StackIcon className="size-4" /></span>}>
+      <TaskProperty id="task-list-grouping" label="Agrupar por" value={selected.label} icon={selected.icon}>
         {() => <>
           <div className="grid gap-2 p-3 text-xs text-neutral-800">
             <span className="font-medium text-neutral-600">Agrupar por</span>
@@ -66,8 +76,8 @@ export default function TaskGroupingControl({ preferences, onChange }: {
             </div>
           </div>
           {custom && <button type="button" role="switch" aria-checked={preferences[separateKey]}
-              onClick={() => onChange({ ...preferences, [separateKey]: !preferences[separateKey] })}
-              className="flex w-full cursor-pointer items-center justify-between gap-3 border-t border-neutral-100 px-3 py-3 text-left text-xs text-neutral-800 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700">
+            onClick={() => onChange({ ...preferences, [separateKey]: !preferences[separateKey] })}
+            className="flex w-full cursor-pointer items-center justify-between gap-3 border-t border-neutral-100 px-3 py-3 text-left text-xs text-neutral-800 hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700">
             <span>{preferences.mode === "assignees" ? "Una persona por grupo" : "Una etiqueta por grupo"}</span>
             <span aria-hidden="true" className={`inline-flex w-9 shrink-0 rounded-full border p-0.5 ${preferences[separateKey] ? "border-neutral-800 bg-neutral-800" : "border-neutral-300 bg-neutral-200"}`}>
               <span className={`size-3.5 rounded-full bg-white ${preferences[separateKey] ? "translate-x-4" : ""}`} />

@@ -121,7 +121,7 @@ function WorkersPage() {
           <button
             type="button"
             onClick={clearFilters}
-            className="text-xs font-medium text-neutral-700 hover:text-neutral-800 px-2 py-1.5 rounded-lg hover:bg-neutral-50 cursor-pointer"
+            className="text-xs font-medium text-neutral-700 hover:text-neutral-800 px-2 py-1.5 rounded-lg hover:bg-neutral-100 cursor-pointer"
           >
             Limpiar
           </button>
@@ -181,7 +181,7 @@ function WorkersPage() {
               {data.map((worker) => (
                 <tr
                   key={worker.id}
-                  className="border-b border-neutral-200 last:border-b-0 hover:bg-neutral-50"
+                  className="border-b border-neutral-200 last:border-b-0 hover:bg-neutral-100"
                 >
                   <td className="px-3 py-2.5 items-center">
                     <span className="flex items-center min-w-0 line-clamp-1">

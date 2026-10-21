@@ -22,7 +22,7 @@ const statusFillStyles: Record<string, string> = {
   blue: "bg-blue-500",
   yellow: "bg-yellow-500",
   red: "bg-red-500",
-  neutral: "bg-neutral-500",
+  neutral: "bg-neutral-1000",
 };
 
 function DashboardPage({

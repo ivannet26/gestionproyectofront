@@ -20,18 +20,18 @@ import type {
   TaskStatePayload,
 } from "../types";
 
+import PlusIcon from "../../../shared/icons/PlusIcon";
 import DependencyForm from "../DependencyForm/DependencyForm";
 import LabelList from "../LabelList/LabelList";
 import Modal from "../Modal/Modal";
+import TaskDetailDialog from "../TaskDetail/TaskDetailDialog";
+import { useTaskDetailNavigation } from "../TaskDetail/useTaskDetail";
 import TaskForm from "../TaskForm/TaskForm";
 import TaskList from "../TaskList/TaskList";
 import TaskStateForm from "../TaskStateForm/TaskStateForm";
+import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
 import ProjectHeader from "./ProjectHeader";
 import ProjectToolbar from "./ProjectToolbar";
-import PlusIcon from "../../../shared/icons/PlusIcon";
-import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
-import TaskDetailDialog from "../TaskDetail/TaskDetailDialog";
-import { useTaskDetailNavigation } from "../TaskDetail/useTaskDetail";
 
 const styles = {
   pending:
@@ -221,11 +221,11 @@ export default function ProjectWorkspace({
         current.map((task) =>
           task.id === activeTask.id
             ? {
-                ...task,
-                dependencies: remove
-                  ? task.dependencies.filter((item) => item !== id)
-                  : [...task.dependencies, id],
-              }
+              ...task,
+              dependencies: remove
+                ? task.dependencies.filter((item) => item !== id)
+                : [...task.dependencies, id],
+            }
             : task,
         ),
       );
@@ -339,7 +339,7 @@ export default function ProjectWorkspace({
   if (loading) {
     return (
       <main
-        className="min-h-screen bg-neutral-50 p-6 text-neutral-900"
+        className="min-h-screen bg-neutral-100 p-6 text-neutral-900"
         id="main-content"
       >
         <p role="status" className="text-sm text-neutral-600">
@@ -352,7 +352,7 @@ export default function ProjectWorkspace({
   if (error || !project) {
     return (
       <main
-        className="min-h-screen bg-neutral-50 p-6 text-neutral-900"
+        className="min-h-screen bg-neutral-100 p-6 text-neutral-900"
         id="main-content"
       >
         <p
@@ -376,7 +376,7 @@ export default function ProjectWorkspace({
 
   return (
     <main
-      className="min-h-screen min-w-0 bg-neutral-50 p-3 text-neutral-900 sm:p-6 sm:pt-3"
+      className="min-h-screen min-w-0 bg-neutral-100 p-3 text-neutral-900 sm:p-6 sm:pt-3"
       id="main-content"
     >
       <ProjectHeader
@@ -386,7 +386,14 @@ export default function ProjectWorkspace({
         taskCount={tasks.length}
       />
 
-      <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{message}</p>
+      <p
+        className="sr-only"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {message}
+      </p>
 
       {refreshError && (
         <p

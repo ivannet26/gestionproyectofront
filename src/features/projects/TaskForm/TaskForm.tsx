@@ -1,8 +1,12 @@
-import { useLayoutEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { errorText } from "../../auth/api";
-import { apiFieldErrors } from "../formErrors";
+import LabelList from "../LabelList/LabelList";
+import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
 import type { FieldErrors } from "../formErrors";
+import { apiFieldErrors } from "../formErrors";
+import { labelSelection } from "../labelSelection";
+import { taskAssignees } from "../taskAssignees";
 import type {
   EditTaskPayload,
   Label,
@@ -12,11 +16,7 @@ import type {
   Task,
   TaskFormPayload,
 } from "../types";
-import LabelList from "../LabelList/LabelList";
 import TaskProperties from "./TaskProperties";
-import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
-import { taskAssignees } from "../taskAssignees";
-import { labelSelection } from "../labelSelection";
 import { taskCreationStart } from "./taskDates";
 const styles = {
   form: "flex min-h-0 flex-col text-neutral-900 [&_[aria-invalid=true]]:border-red-700 [&_:focus-visible]:outline-2 [&_:focus-visible]:outline-offset-2 [&_:focus-visible]:outline-neutral-700",
@@ -40,7 +40,7 @@ const styles = {
   footerRow: "flex items-center justify-between gap-3 max-sm:flex-wrap",
   actions: "flex shrink-0 items-center gap-2 max-sm:ml-auto",
   cancel:
-    "min-h-9 rounded-lg border border-transparent bg-white px-3 py-2 text-[13px] text-neutral-600 hover:border-neutral-200 hover:bg-neutral-50 hover:text-neutral-900 cursor-pointer disabled:opacity-50",
+    "min-h-9 rounded-lg border border-transparent bg-white px-3 py-2 text-[13px] text-neutral-600 hover:border-neutral-200 hover:bg-neutral-100 hover:text-neutral-900 cursor-pointer disabled:opacity-50",
   generalError:
     "mb-2.5 mt-0 text-[13px] leading-relaxed text-red-700 [overflow-wrap:anywhere]",
   srOnly: "sr-only",
@@ -156,7 +156,10 @@ export default function TaskForm({
     ))
       invalid["task-due"] =
         "La fecha límite debe quedar dentro del periodo permitido.";
-    if (priority !== null && !catalogs.priorities.some((item) => item.code === priority))
+    if (
+      priority !== null &&
+      !catalogs.priorities.some((item) => item.code === priority)
+    )
       invalid["task-priority"] = "Selecciona una prioridad del catálogo.";
     if (
       !task &&
@@ -180,18 +183,17 @@ export default function TaskForm({
     };
     if (!task || project.permissions.manage)
       data.description = description.trim();
-    if (canAssign)
-      data.responsible_ids = responsible;
+    if (canAssign) data.responsible_ids = responsible;
     try {
       await onSubmit(
         task
           ? data
           : {
-              ...data,
-              state_code: stateCode,
-              parent_id: parent?.id ?? null,
-              reason: reason.trim(),
-            },
+            ...data,
+            state_code: stateCode,
+            parent_id: parent?.id ?? null,
+            reason: reason.trim(),
+          },
       );
     } catch (failure) {
       const fields = apiFieldErrors(failure, taskFields);
@@ -204,7 +206,13 @@ export default function TaskForm({
 
   function configured(configuration: ProjectTaskConfiguration) {
     if (!configuration.states.some((state) => state.code === stateCode))
-      setStateCode(configuration.states.find((state) => state.category === "not_started" || !state.category && state.code === "PENDIENTE")?.code ?? "");
+      setStateCode(
+        configuration.states.find(
+          (state) =>
+            state.category === "not_started" ||
+            (!state.category && state.code === "PENDIENTE"),
+        )?.code ?? "",
+      );
     onConfigured(configuration);
   }
 
