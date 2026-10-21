@@ -1,44 +1,20 @@
-import { useId, useState } from "react";
+import { useId } from "react";
 import type { Project } from "../types";
 import TaskProperty from "../TaskForm/TaskProperty";
 import TaskIcon from "../TaskForm/TaskIcon";
 import { propertyClasses as styles } from "../ProjectForm/formClasses";
+import AssigneeSelector from "./AssigneeSelector";
 
-interface ResponsiblePickerProps {
-  participants: Project["participants"];
-  value: number[];
-  onChange: (value: number[]) => void;
-  error?: string;
-  compact?: boolean;
-}
-
-export default function ResponsiblePicker({ participants, value, onChange, error, compact }: ResponsiblePickerProps) {
-  const instance = useId();
-  const id = compact ? `${instance}-responsible` : "task-responsible";
-  const [search, setSearch] = useState("");
+export default function ResponsiblePicker({ participants, teams, value, onChange, error, compact }: {
+  participants: Project["participants"]; teams?: Project["assignment_teams"]; value: number[];
+  onChange: (value: number[]) => void; error?: string; compact?: boolean;
+}) {
+  const instance = useId(), id = compact ? `${instance}-responsible` : "task-responsible";
   const selected = participants.filter((worker) => value.includes(worker.id));
-  const results = participants.filter((worker) => worker.name.toLocaleLowerCase("es").includes(search.trim().toLocaleLowerCase("es")));
-
   return <TaskProperty id={id} label="Responsables" icon="person" error={error}
     compact={compact} selected={value.length > 0} content={compact ? <TaskIcon name="person" /> : undefined}
-    value={value.length ? (selected.map((person) => person.name).join(", ") || "Responsables no disponibles") : "Sin persona asignada"}>
-    {(close) => <>
-        <label htmlFor={`${id}-search`}>Buscar integrante del proyecto</label>
-        <input id={`${id}-search`} name="responsible_search" type="search"
-          autoComplete="off" maxLength={100} placeholder="Buscar por nombre…" value={search}
-          onKeyDown={(event) => { if (event.key === "Enter") event.preventDefault(); }}
-          onChange={(event) => setSearch(event.target.value)} />
-        <div className={styles.options} role="group" aria-label="Integrantes elegibles">
-          <button type="button" className={styles.option} aria-pressed={!value.length}
-            onClick={() => onChange([])}><span>Sin persona asignada</span>{!value.length && <TaskIcon name="check" />}</button>
-          {results.map((worker) => <button type="button" className={styles.option} key={worker.id}
-            aria-pressed={value.includes(worker.id)} onClick={() => onChange(value.includes(worker.id) ? value.filter((id) => id !== worker.id) : [...value, worker.id])}>
-            <span>{worker.name}</span>{value.includes(worker.id) && <TaskIcon name="check" />}
-          </button>)}
-          {results.length === 0 && <p role="status">{participants.length === 0
-            ? "No hay participantes elegibles en este proyecto." : "No hay integrantes que coincidan con la búsqueda."}</p>}
-        </div>
-        <button type="button" className={styles.done} onClick={close}>Listo</button>
-    </>}
+    value={value.length ? selected.map((person) => person.name).join(", ") || "Responsables no disponibles" : "Sin persona asignada"}>
+    {(close) => <><AssigneeSelector project={{ participants, assignment_teams: teams }} value={value} onChange={onChange} />
+      <button type="button" className={styles.done} onClick={close}>Listo</button></>}
   </TaskProperty>;
 }

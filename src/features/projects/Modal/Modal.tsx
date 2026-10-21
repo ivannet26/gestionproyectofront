@@ -24,6 +24,7 @@ interface ModalProps {
   taskComposer?: boolean;
   projectComposer?: boolean;
   statusComposer?: boolean;
+  taskDetail?: boolean;
   children: ReactNode;
 }
 
@@ -35,6 +36,7 @@ export default function Modal({
   taskComposer = false,
   projectComposer = false,
   statusComposer = false,
+  taskDetail = false,
   children,
 }: ModalProps) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -55,11 +57,11 @@ export default function Modal({
   return (
     <dialog
       ref={dialog}
-      className={`${styles.modal}${wide ? ` ${styles.wide}` : ""}${taskComposer ? ` ${styles.taskComposer}` : ""}${projectComposer ? ` ${styles.projectComposer}` : ""}${statusComposer ? ` ${styles.statusComposer}` : ""}`}
+      className={`${styles.modal}${wide ? ` ${styles.wide}` : ""}${taskComposer ? ` ${styles.taskComposer}` : ""}${projectComposer ? ` ${styles.projectComposer}` : ""}${statusComposer ? ` ${styles.statusComposer}` : ""}${taskDetail ? " w-[min(1800px,calc(100vw-24px))]! h-[calc(100dvh-24px)] max-h-none! overflow-hidden! rounded-xl open:flex open:flex-col max-sm:w-[calc(100vw-12px)]! max-sm:h-[calc(100dvh-12px)]" : ""}`}
       aria-labelledby={titleId}
       onKeyDown={(event) => {
         if (
-          (taskComposer || projectComposer || statusComposer) &&
+          (taskComposer || projectComposer || statusComposer || taskDetail) &&
           event.key === "Tab" &&
           event.target instanceof HTMLElement &&
           event.target.closest("dialog") === event.currentTarget
@@ -102,7 +104,7 @@ export default function Modal({
         if (!busy) onClose();
       }}
     >
-      <header className={styles.header}>
+      {taskDetail ? <h2 id={titleId} className="sr-only">{title}</h2> : <header className={styles.header}>
         <h2 id={titleId}>{title}</h2>
         <button
           className={styles.close}
@@ -113,7 +115,7 @@ export default function Modal({
         >
           ×
         </button>
-      </header>
+      </header>}
       {children}
     </dialog>
   );

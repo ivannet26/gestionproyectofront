@@ -60,8 +60,8 @@ test("reorder is immutable, supports same-category movement and rejects cross-ca
   assert.equal(drafts.draftError([]), "");
 });
 
-async function harness() {
-  const values = [], effects = [], requests = [], configured = [];
+async function harness(draftMode = false) {
+  const values = [], effects = [], requests = [], configured = [], reads = [];
   let index = 0, effectIndex = 0, closed = 0, confirm = true;
   const react = {
     useState(initial) {
@@ -79,22 +79,47 @@ async function harness() {
     },
   };
   const services = {
-    getProjectTaskStates: async () => configuration,
-    getTaskStatusTemplates: async () => [preset],
+    getProjectTaskStates: async () => { reads.push("states"); return configuration; },
+    getTaskStatusTemplates: async () => { reads.push("templates"); return [preset]; },
     configureProjectTaskStates: (id, payload) => new Promise((resolve, reject) => requests.push({ kind: "apply", id, payload, resolve, reject })),
     saveTaskStatusTemplate: (id, payload, templateId) => new Promise((resolve, reject) => requests.push({ kind: "save", id, payload, templateId, resolve, reject })),
   };
   const { useTaskStatusConfiguration } = await load("../src/features/projects/TaskStatusConfiguration/useTaskStatusConfiguration.ts", {
-    react, "../../auth/api": { errorText: (error) => error.message }, "../services": services, "./stateDraft": drafts,
+    react, "../../auth/api": { errorText: (error) => error.message }, "../services": services, "./stateDraft": drafts, "../stateGroups": groups,
   }, { window: { confirm: () => confirm, addEventListener() {}, removeEventListener() {} } });
   const render = () => {
     index = 0; effectIndex = 0;
-    return useTaskStatusConfiguration({ id: 42, task_states: configuration, permissions: { manage: true } }, (result) => configured.push(result), () => closed++);
+    return useTaskStatusConfiguration(draftMode ? undefined : { id: 42, task_states: configuration, permissions: { manage: true } }, (result) => configured.push(result), () => closed++,
+      draftMode ? { states: initial, templates: [preset], onApply: (states, name) => configured.push({ states, name }) } : undefined);
   };
   render();
   await new Promise((resolve) => setImmediate(resolve));
-  return { render, requests, configured, get closed() { return closed; }, setConfirm(value) { confirm = value; } };
+  return { render, requests, configured, reads, get closed() { return closed; }, setConfirm(value) { confirm = value; } };
 }
+
+test("project creation flow is strictly local and never reads or mutates a provisional project", async () => {
+  const hook = await harness(true);
+  hook.render().select(preset);
+  assert.equal(await hook.render().saveTemplate("No guardar", false), false);
+  await hook.render().apply();
+  assert.equal(hook.reads.length, 0);
+  assert.equal(hook.requests.length, 0);
+  assert.equal(hook.configured.length, 1);
+  assert.equal(hook.configured[0].states[1].category, "active");
+  assert.equal(hook.closed, 1);
+  assert.equal(preset.states[1].name, "COMPLETADO");
+});
+
+test("canceling draft flow preserves outer draft and missing mandatory categories prevents confirmation", async () => {
+  const hook = await harness(true);
+  hook.render().setStates([initial[0]]);
+  await hook.render().apply();
+  assert.match(hook.render().error, /No iniciado|Activo|Cerrado/);
+  assert.equal(hook.configured.length, 0);
+  hook.render().close();
+  assert.equal(hook.closed, 1);
+  assert.equal(hook.requests.length, 0);
+});
 
 test("select and cancel never write; saving a template neither applies nor duplicates requests", async () => {
   const hook = await harness();

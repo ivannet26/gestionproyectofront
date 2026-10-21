@@ -22,6 +22,7 @@ async function load(path, dependencies = {}) {
 const avatar = await load("../src/shared/avatar.ts");
 const { stateInk } = await load("../src/features/projects/TaskList/stateInk.ts");
 const state = await load("../src/features/projects/TaskList/quickTaskState.ts");
+const labelSelection = await load("../src/features/projects/labelSelection.ts");
 const project = { id: 42, permissions: { manage: true, create_tasks: true }, task_states: { states: [
   { code: "CUSTOM_OPEN", category: "not_started", name: "Libre" },
   { code: "CUSTOM_ACTIVE", category: "active", name: "Activo" },
@@ -66,6 +67,7 @@ async function harness(context = project, onDetachedCreated) {
     react, "../../auth/api": { errorText: (error) => error.message },
     "../formErrors": { apiFieldErrors: () => ({ "task-due": "Fuera del periodo" }) },
     "./quickTaskState": state,
+    "../labelSelection": labelSelection,
     "../services": { createTask(id, payload) { return new Promise((resolve, reject) => requests.push({ id, payload, resolve, reject })); } },
   });
   return { requests, accepted, render() { index = 0; return useQuickTask(context, undefined, (task) => accepted.push(task), onDetachedCreated); }, unmount() { cleanup(); } };
@@ -93,7 +95,7 @@ test("name-only creation is trimmed, genuinely nullable and guarded against dupl
 test("optional choices and failed requests retain the draft and permit retry", async () => {
   const hook = await harness();
   hook.render().setName("Borrador"); hook.render().setPriority(2); hook.render().setDueDate("2026-10-20");
-  hook.render().setResponsible([7, 8]); hook.render().setLabels([{ name: "Ensayo", kind: "technical" }]);
+  hook.render().setResponsible([7, 8]); hook.render().setLabels([{ name: "Ensayo", kind: "specialty", specialty_id: 7 }]);
   const failed = hook.render().save();
   hook.requests[0].reject(new Error("Sin conexión"));
   assert.equal(await failed, false);
@@ -103,6 +105,7 @@ test("optional choices and failed requests retain the draft and permit retry", a
   assert.equal(hook.render().busy, false);
   const retry = hook.render().save();
   assert.deepEqual(JSON.parse(JSON.stringify(hook.requests[1].payload.responsible_ids)), [7, 8]);
+  assert.deepEqual(JSON.parse(JSON.stringify(hook.requests[1].payload.specialty_ids)), [7]);
   hook.requests[1].resolve({ id: 1 });
   assert.equal(await retry, true);
 });

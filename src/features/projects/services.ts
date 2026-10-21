@@ -1,4 +1,5 @@
 import { apiRequest } from "../auth/api";
+import type { TaskIdentity, TaskDetailData, SubtaskPage, TaskPage, TaskActivityGroup, TaskRelation, RelationKind } from "./types";
 import type {
   CreateProjectPayload,
   CreateTaskPayload,
@@ -13,10 +14,34 @@ import type {
   TaskStatePayload,
   WorkerCandidate,
   TaskStatusTemplate,
+  TeamOption,
 } from "./types";
 
 function projectRequest<T>(path = "", options: RequestInit = {}): Promise<T> {
   return apiRequest<T>(path, options, true, "projects");
+}
+
+function taskPath(target: TaskIdentity) { return `${target.projectId}/tasks/${target.taskId}/`; }
+export function getTaskDetail(target: TaskIdentity): Promise<TaskDetailData> {
+  return projectRequest<TaskDetailData>(taskPath(target));
+}
+export function getTaskSubtasks(target: TaskIdentity, cursor = 0): Promise<SubtaskPage> {
+  return projectRequest<SubtaskPage>(`${taskPath(target)}subtasks/?cursor=${cursor}`);
+}
+export function getTaskActivity(target: TaskIdentity, cursor = 0): Promise<TaskPage<TaskActivityGroup>> {
+  return projectRequest<TaskPage<TaskActivityGroup>>(`${taskPath(target)}activity/?cursor=${cursor}`);
+}
+export function getTaskRelations(target: TaskIdentity, cursor = 0): Promise<TaskPage<TaskRelation>> {
+  return projectRequest<TaskPage<TaskRelation>>(`${taskPath(target)}relations/?cursor=${cursor}`);
+}
+export function searchRelatedTasks(target: TaskIdentity, kind: RelationKind, query: string, cursor = 0): Promise<TaskPage<Task>> {
+  return projectRequest<TaskPage<Task>>(`${taskPath(target)}related-candidates/?${new URLSearchParams({ kind, q: query, cursor: String(cursor) })}`);
+}
+export function createTaskRelation(target: TaskIdentity, targetId: number, name: string): Promise<void> {
+  return projectRequest<void>(`${taskPath(target)}relations/`, { method: "POST", body: JSON.stringify({ target_id: targetId, name }) });
+}
+export function removeTaskRelation(target: TaskIdentity, relationId: number): Promise<void> {
+  return projectRequest<void>(`${taskPath(target)}relations/${relationId}/`, { method: "DELETE" });
 }
 
 export function getProjects(): Promise<ProjectSummary[]> {
@@ -80,6 +105,14 @@ export function getWorkerCandidates(
 
 export function createProject(payload: CreateProjectPayload): Promise<Project> {
   return projectRequest("", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function getProjectTeamCandidates(areaId: number): Promise<TeamOption[]> {
+  return projectRequest<TeamOption[]>(`teams/?area_id=${areaId}`);
+}
+
+export function moveTask(projectId: number, taskId: number, payload: TaskStatePayload & { before_id: number | null; expected_revision: string }): Promise<Task[]> {
+  return projectRequest<Task[]>(`${projectId}/tasks/${taskId}/move/`, { method: "POST", body: JSON.stringify(payload) });
 }
 
 export function createTask(

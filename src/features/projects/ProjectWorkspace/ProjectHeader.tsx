@@ -9,7 +9,7 @@ import { useProjectFavorite } from "../useProjectFavorite";
 const views = [["lista", "Lista"], ["tablero", "Tablero"], ["gantt", "Gantt"]] as const;
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700";
 
-export default function ProjectHeader({ project, view, busy, taskCount, onCreateTask }: ProjectHeaderProps) {
+export default function ProjectHeader({ project, view, taskCount }: Pick<ProjectHeaderProps, "project" | "view" | "taskCount">) {
   const { favorite, pending, error, toggle } = useProjectFavorite(project.id, project.is_favorite);
   const currentView = views.find(([key]) => key === view)?.[1] ?? "Vista no disponible";
   const area = project.areas[0];
@@ -17,6 +17,19 @@ export default function ProjectHeader({ project, view, busy, taskCount, onCreate
 
   return (
     <header className="mb-2 min-w-0 text-neutral-800">
+      <div className="mb-3 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 border-b border-neutral-200 pb-3 max-sm:grid-cols-1">
+        <h1 className="m-0 min-w-0 text-lg font-semibold [overflow-wrap:anywhere]">{project.name}</h1>
+        <div className="flex max-w-full flex-wrap items-center gap-1.5 text-xs font-medium text-neutral-700 tabular-nums sm:text-sm" aria-label="Periodo del proyecto">
+          <span aria-hidden="true"><TaskIcon name="date" /></span>
+          {project.start_date
+            ? <time dateTime={project.start_date} title="Inicio del proyecto" aria-label={`Inicio: ${formatTaskDate(project.start_date)}`}>{formatTaskDate(project.start_date)}</time>
+            : <span>Sin fecha de inicio</span>}
+          <span aria-hidden="true">→</span>
+          {project.end_date
+            ? <time dateTime={project.end_date} title="Fin del proyecto" aria-label={`Fin: ${formatTaskDate(project.end_date)}`}>{formatTaskDate(project.end_date)}</time>
+            : <span>Sin fecha de fin</span>}
+        </div>
+      </div>
       <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-4">
         <nav aria-label="Ruta de navegación" className="min-w-0 flex-1 text-xs sm:text-sm">
           <ol className="m-0 flex min-w-0 list-none items-center gap-1 p-0 sm:gap-2">
@@ -27,9 +40,9 @@ export default function ProjectHeader({ project, view, busy, taskCount, onCreate
             <li className="flex min-w-0 shrink items-center gap-1 sm:gap-1.5">
               <span aria-hidden="true" className="shrink-0 text-neutral-700"><TaskIcon name="next" /></span>
               <span aria-hidden="true" className="shrink-0"><FolderIcon className="size-4" fill={false} /></span>
-              <h1 className="m-0 min-w-0 text-xs font-semibold sm:text-sm">
+              <span className="m-0 min-w-0 text-xs font-semibold sm:text-sm">
                 <Link to={projectPath(project.id)} title={project.name} className={`block truncate rounded hover:underline ${focus}`}>{project.name}</Link>
-              </h1>
+              </span>
             </li>
             <li aria-current="page" className="flex shrink-0 items-center gap-1 font-medium sm:gap-1.5">
               <span aria-hidden="true" className="shrink-0 text-neutral-700"><TaskIcon name="next" /></span>
@@ -51,11 +64,6 @@ export default function ProjectHeader({ project, view, busy, taskCount, onCreate
             </li>
           </ol>
         </nav>
-        {project.permissions.create_tasks && (
-          <button type="button" disabled={busy} onClick={onCreateTask}
-            aria-label="Crear nueva tarea"
-            className={`shrink-0 cursor-pointer rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 ${focus}`}>+ Tarea</button>
-        )}
       </div>
       {error && <p role="alert" className="m-0 mt-1 text-xs text-red-700">No se pudo actualizar el favorito. {error}</p>}
       <div className="mt-1 flex min-w-0 flex-wrap items-center justify-between gap-x-4 gap-y-1">
@@ -69,16 +77,6 @@ export default function ProjectHeader({ project, view, busy, taskCount, onCreate
           <span className="text-xs text-neutral-700" title="Tareas y subtareas visibles" aria-label={`${taskCount} tareas y subtareas visibles`}>
             {taskCount} {taskCount === 1 ? "tarea" : "tareas"}
           </span>
-        </div>
-        <div className="flex max-w-full flex-wrap items-center gap-1.5 text-xs font-medium text-neutral-700 tabular-nums sm:text-sm" aria-label="Periodo del proyecto">
-          <span aria-hidden="true"><TaskIcon name="date" /></span>
-          {project.start_date
-            ? <time dateTime={project.start_date} title="Inicio del proyecto" aria-label={`Inicio: ${formatTaskDate(project.start_date)}`}>{formatTaskDate(project.start_date)}</time>
-            : <span>Sin fecha de inicio</span>}
-          <span aria-hidden="true">→</span>
-          {project.end_date
-            ? <time dateTime={project.end_date} title="Fin del proyecto" aria-label={`Fin: ${formatTaskDate(project.end_date)}`}>{formatTaskDate(project.end_date)}</time>
-            : <span>Sin fecha de fin</span>}
         </div>
       </div>
     </header>

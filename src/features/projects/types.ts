@@ -4,15 +4,25 @@ export interface ProjectArea {
 }
 
 export interface ProjectCatalogs {
+  specialties?: Specialty[];
+  task_templates?: TaskStatusTemplate[];
   creation_date?: string;
   areas: ProjectArea[];
-  states: { code: string; name: string }[];
+  states: ProjectTaskState[];
   priorities: { code: number; name: string }[];
 }
 
-export type LabelKind = "technical" | "nontechnical";
+export interface Specialty { id: number; name: string }
+export interface TeamOption {
+  id: number; name: string; eligible_count: number;
+  members: { id: number; name: string; eligible: boolean; reason: string }[];
+}
+export type LabelKind = "technical" | "nontechnical" | "specialty";
 
 export interface Label {
+  id?: number;
+  specialty_id?: number | null;
+  requirement_id?: number | null;
   name: string;
   kind: LabelKind;
 }
@@ -68,6 +78,8 @@ export interface ProjectsMenuProps
 }
 
 export interface Project extends ProjectSummary {
+  team_ids?: number[];
+  assignment_teams?: TeamOption[];
   is_favorite: boolean;
   participants: { id: number; name: string }[];
   requirements: ProjectRequirement[];
@@ -134,6 +146,9 @@ export interface WorkerCandidate {
 export type ProjectMode = "available" | "assigned";
 
 export interface ProjectDraft {
+  participantSource?: "workers" | "teams";
+  teamIds?: number[];
+  initialTaskStates?: ProjectTaskState[];
   name: string;
   description: string;
   endDate: string;
@@ -144,6 +159,9 @@ export interface ProjectDraft {
 }
 
 export interface CreateProjectPayload {
+  participant_source?: "workers" | "teams";
+  team_ids?: number[];
+  initial_task_states?: Pick<ProjectTaskState, "name" | "category" | "color">[];
   name: string;
   description: string;
   end_date: string | null;
@@ -154,6 +172,9 @@ export interface CreateProjectPayload {
 }
 
 export interface Task {
+  move_revision?: string;
+  move_targets?: string[];
+  manual_position?: string | null;
   id: number;
   parent_id: number | null;
   name: string;
@@ -166,6 +187,7 @@ export interface Task {
   created_at: string;
   start_date: string;
   due_date: string | null;
+  estimated_minutes?: number | null;
   responsible_id: number | null;
   responsible_name: string | null;
   assignees?: TaskAssignee[];
@@ -178,20 +200,39 @@ export interface Task {
     assign: boolean;
     create_child: boolean;
     dependencies: boolean;
+    relations?: boolean;
   };
 }
 
 export interface EditTaskPayload {
+  estimated_minutes?: number | null;
   start_date?: string;
   name: string;
   description?: string;
   priority?: number | null;
   due_date?: string | null;
-  requirement_ids: number[];
-  labels: Label[];
+  requirement_ids?: number[];
+  labels?: Label[];
+  specialty_ids?: number[];
+  retained_label_ids?: number[];
   responsible_id?: number | null;
   responsible_ids?: number[];
 }
+
+export interface TaskIdentity { projectId: number; taskId: number }
+export interface TaskDetailData { task: Task; parent: Task | null }
+export interface TaskPage<T> { items: T[]; next_cursor: number | null }
+export interface SubtaskPage extends TaskPage<Task> { total: number; completed: number }
+export type RelationKind = "blocks" | "blocked_by" | "custom";
+export interface TaskRelation {
+  id: string; kind: RelationKind; name: string; target_id: number; target_name: string;
+  relation_id?: number; predecessor_id?: number; successor_id?: number;
+}
+export interface TaskActivityEvent {
+  id: number; operation_id: string; actor_id: number; actor_name: string; action: string; field: string;
+  old_value: unknown; new_value: unknown; related_task_id: number | null; created_at: string;
+}
+export interface TaskActivityGroup { id: string; events: TaskActivityEvent[] }
 
 export interface TaskAssignee {
   id: number;

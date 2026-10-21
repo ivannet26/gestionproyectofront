@@ -34,6 +34,7 @@ const { default: QuickRow } = await load("../src/features/projects/TaskList/Quic
   "../TaskForm/TaskIcon": { default: () => React.createElement("svg", { "aria-hidden": true }) },
   "../../../shared/Tooltip": { default: ({ label, children }) => React.createElement("span", { title: label }, children("hint")) },
   "../TaskForm/TaskOptionalProperties": { default: () => React.createElement("span", null, "Propiedades opcionales") },
+  "../TaskForm/taskDates": { taskCreationStart: () => "2026-10-21" },
 });
 const renderQuick = (groupCode = "PENDIENTE") => renderToStaticMarkup(React.createElement(QuickRow, {
   project, catalogs: { priorities: [] }, groupCode, onClose() {}, onCreated() {},
@@ -83,7 +84,10 @@ test("Workspace success announcements occupy no visual space and refresh failure
     "./TaskBoard": { default: Empty },
     "../TaskList/taskHierarchy": { formatTaskDate: String }, "../TaskStateForm/TaskStateForm": { default: Empty },
     "./ProjectHeader": { default: Empty }, "../taskAssignees": { taskAssignees: () => [] },
+    "./ProjectToolbar": { default: Empty }, "../../../shared/icons/PlusIcon": { default: Empty },
     "../TaskStatusConfiguration/TaskStatusConfiguration": { default: Empty },
+    "../TaskDetail/TaskDetailDialog": { default: Empty },
+    "../TaskDetail/useTaskDetail": { useTaskDetailNavigation: () => ({ target: null, openTaskDetail() {}, closeTaskDetail() {} }) },
   });
   const render = () => { slot = 0; return renderToStaticMarkup(React.createElement(Workspace, { projectId:42, catalogs:{ priorities:[] } })); };
   assert.match(render(), /<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">Guardado: Tarea<\/p>/);

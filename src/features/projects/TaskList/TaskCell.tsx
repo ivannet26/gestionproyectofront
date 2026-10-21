@@ -1,25 +1,29 @@
 import { useId, useRef, useState } from "react";
+import { avatarFor } from "../../../shared/avatar";
 import { errorText } from "../../auth/api";
+import { Calendar } from "../CreateProjectModal/ProjectEndDateSelector";
+import LabelEditor from "../LabelEditor/LabelEditor";
+import { labelSelection } from "../labelSelection";
+import AssigneeSelector from "../ResponsiblePicker/AssigneeSelector";
+import { groupTaskStates } from "../stateGroups";
+import { taskAssignees } from "../taskAssignees";
+import PriorityOptions from "../TaskForm/PriorityOptions";
+import { isPastTaskDate } from "../TaskForm/taskDates";
+import TaskDateValue from "../TaskForm/TaskDateValue";
+import type { TaskIconName } from "../TaskForm/TaskIcon";
+import TaskIcon from "../TaskForm/TaskIcon";
+import TaskProperty from "../TaskForm/TaskProperty";
 import type {
   EditTaskPayload,
+  Label,
   Project,
   ProjectCatalogs,
+  ProjectTaskState,
   Task,
   TaskStatePayload,
-  ProjectTaskState,
 } from "../types";
-import TaskProperty from "../TaskForm/TaskProperty";
-import TaskIcon from "../TaskForm/TaskIcon";
-import type { TaskIconName } from "../TaskForm/TaskIcon";
-import { Calendar } from "../CreateProjectModal/ProjectEndDateSelector";
-import { groupTaskStates } from "../stateGroups";
-import { formatTaskDate } from "./taskHierarchy";
-import { avatarFor } from "../../../shared/avatar";
 import { stateInk } from "./stateInk";
-import PriorityOptions from "../TaskForm/PriorityOptions";
-import LabelEditor from "../LabelEditor/LabelEditor";
-import type { Label } from "../types";
-import { taskAssignees } from "../taskAssignees";
+import { formatTaskDate } from "./taskHierarchy";
 
 const styles = {
   // Keep the module's full-width badge override above TaskProperty's span limit.
@@ -52,6 +56,7 @@ export interface TaskChanges {
   onState: (task: Task, data: TaskStatePayload) => Promise<void>;
 }
 interface TaskCellProps extends TaskChanges {
+  appearance?: "detail";
   field: Field;
   task: Task;
   project: Project;
@@ -83,10 +88,10 @@ export function StateLabel({ code, name, category, color }: ProjectTaskState) {
       style={
         color
           ? {
-              backgroundColor: color,
-              color: stateInk(color),
-              borderColor: "#737373",
-            }
+            backgroundColor: color,
+            color: stateInk(color),
+            borderColor: "#737373",
+          }
           : undefined
       }
     >
@@ -94,9 +99,9 @@ export function StateLabel({ code, name, category, color }: ProjectTaskState) {
         <TaskIcon
           name={
             code !== "CANCELADA" &&
-            (category === "closed" ||
-              category === "done" ||
-              (!category && code === "COMPLETADA"))
+              (category === "closed" ||
+                category === "done" ||
+                (!category && code === "COMPLETADA"))
               ? "check"
               : "state"
           }
@@ -139,9 +144,7 @@ function Editor({
       : [],
   );
   const [search, setSearch] = useState("");
-  const [taskLabels, setTaskLabels] = useState<Label[]>(
-    task.labels.map(({ name, kind }) => ({ name, kind })),
-  );
+  const [taskLabels, setTaskLabels] = useState<Label[]>(task.labels);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -164,9 +167,6 @@ function Editor({
       (state.code === task.state_code ||
         task.transitions.some((item) => item.target === state.code)),
   );
-  const participants = project.participants.filter((person) =>
-    matches(person.name),
-  );
 
   async function save() {
     if (busy) return;
@@ -183,20 +183,9 @@ function Editor({
       else if (field === "responsible_id")
         await onPatch(task, { responsible_ids: responsibles });
       else if (field === "labels") {
-        const requirements = task.labels.filter(
-          (label) => label.requirement_id !== null,
-        );
-        const linked = (label: Label) =>
-          requirements.find(
-            (item) => item.name === label.name && item.kind === label.kind,
-          );
-        await onPatch(task, {
-          labels: taskLabels.filter((label) => !linked(label)),
-          requirement_ids: taskLabels.flatMap(
-            (label) => linked(label)?.requirement_id ?? [],
-          ),
-        });
-      } else
+        await onPatch(task, labelSelection(taskLabels));
+      }
+      else
         await onPatch(task, {
           [field]:
             field === "priority"
@@ -249,7 +238,7 @@ function Editor({
   return (
     <div className={styles.editor} aria-busy={busy}>
       <fieldset disabled={busy}>
-        {(field === "state_code" || field === "responsible_id") && (
+        {field === "state_code" && (
           <>
             <label htmlFor={`${id}-search`}>
               {field === "state_code" ? "Buscar estado" : "Buscar por nombre"}
@@ -265,15 +254,8 @@ function Editor({
             />
           </>
         )}
-        <div className={styles.options}>
-          {field === "labels" && (
-            <LabelEditor
-              title="Etiquetas de la tarea"
-              compact
-              labels={taskLabels}
-              onChange={setTaskLabels}
-            />
-          )}
+        <div className={field === "responsible_id" ? undefined : styles.options}>
+          {field === "labels" && <LabelEditor title="Etiquetas de la tarea" compact labels={taskLabels} onChange={setTaskLabels} specialties={catalogs.specialties} />}
           {field === "state_code" &&
             groupTaskStates(states).map((group) => (
               <section key={group.label}>
@@ -286,35 +268,9 @@ function Editor({
           {field === "state_code" && states.length === 0 && (
             <p role="status">No hay estados que coincidan.</p>
           )}
-          {field === "priority" && (
-            <PriorityOptions
-              priorities={catalogs.priorities}
-              value={value ? Number(value) : null}
-              onChange={(next) => setValue(next === null ? "" : String(next))}
-            />
-          )}
-          {field === "responsible_id" && (
-            <>
-              {option("", "Sin responsable")}
-              {participants.map((person) =>
-                option(
-                  String(person.id),
-                  person.name,
-                  <>
-                    <span className={styles.avatar} aria-hidden="true">
-                      {avatarFor(person.name)}
-                    </span>
-                    <span>{person.name}</span>
-                  </>,
-                ),
-              )}
-              {participants.length === 0 && (
-                <p role="status">
-                  No hay participantes elegibles que coincidan.
-                </p>
-              )}
-            </>
-          )}
+          {field === "priority" && <PriorityOptions priorities={catalogs.priorities} value={value ? Number(value) : null}
+            onChange={(next) => setValue(next === null ? "" : String(next))} />}
+          {field === "responsible_id" && <AssigneeSelector project={project} value={responsibles} onChange={setResponsibles} />}
         </div>
         {isDate && (
           <Calendar
@@ -379,18 +335,7 @@ function Editor({
         <button
           type="button"
           className="primary-button bg-neutral-800 font-medium text-white hover:bg-neutral-700"
-          disabled={
-            busy ||
-            (field === "labels"
-              ? JSON.stringify(taskLabels) ===
-                JSON.stringify(
-                  task.labels.map(({ name, kind }) => ({ name, kind })),
-                )
-              : field === "responsible_id"
-                ? JSON.stringify([...responsibles].sort((a, b) => a - b)) ===
-                  JSON.stringify(taskAssignees(task).map((person) => person.id))
-                : value === String(task[field] ?? ""))
-          }
+          disabled={busy || (field === "labels" ? JSON.stringify(labelSelection(taskLabels)) === JSON.stringify(labelSelection(task.labels)) : field === "responsible_id" ? JSON.stringify([...responsibles].sort((a, b) => a - b)) === JSON.stringify(taskAssignees(task).map((person) => person.id)) : value === String(task[field] ?? ""))}
           onClick={() => {
             void save();
           }}
@@ -417,12 +362,12 @@ export default function TaskCell(props: TaskCellProps) {
       ? task.state_name
       : field === "responsible_id"
         ? people.map((person) => person.name).join(", ") ||
-          "Sin persona asignada"
+        "Sin persona asignada"
         : field === "priority"
           ? task.priority == null
             ? "Sin prioridad"
             : (catalogs.priorities.find((item) => item.code === task.priority)
-                ?.name ?? String(task.priority))
+              ?.name ?? String(task.priority))
           : field === "labels"
             ? `${task.labels.length} etiquetas`
             : formatTaskDate(task[field]);
@@ -435,52 +380,36 @@ export default function TaskCell(props: TaskCellProps) {
         color={task.state_color}
       />
     ) : field === "responsible_id" && people.length > 0 ? (
-      <>
-        <span aria-hidden="true">{people.length} responsables</span>
-      </>
-    ) : field === "labels" ? (
-      <TaskIcon name="labels" />
-    ) : field === "priority" ? (
+      <span className="flex min-w-0 flex-wrap items-center gap-1">
+        {people.slice(0, 3).map((person) => <span key={person.id} title={person.name} className="inline-grid size-7 shrink-0 place-items-center rounded-full bg-sky-700 text-xs font-medium text-white" aria-hidden="true">{avatarFor(person.name)}</span>)}
+        {people.length > 3 && <span className="text-xs text-neutral-700">+{people.length - 3}</span>}
+      </span>
+    ) : field === "responsible_id" && props.appearance !== "detail" ? (
+      <TaskIcon name="person" />
+    ) : field === "labels" ? (props.appearance === "detail" ? <span>{task.labels.length ? "Editar etiquetas" : permitted ? "Añadir etiquetas" : "Sin etiquetas"}</span> : <TaskIcon name="labels" />) : field === "priority" ? (
       <PriorityLabel priority={task.priority} name={value} />
     ) : (
       <>
-        <TaskIcon name={icons[field]} />
-        <span>{value}</span>
+        {props.appearance !== "detail" && <TaskIcon name={icons[field]} />}
+        {field === "start_date" || field === "due_date" ? <TaskDateValue value={task[field]} /> : <span>{value}</span>}
       </>
     );
   return (
     <TaskProperty
+      appearance={props.appearance ?? "list"}
       cell
       id={`${instanceId}-task-${task.id}-${field}`}
-      label={`${labels[field]} · ${task.name}`}
+      label={`${props.appearance === "detail" ? labels[field] : `${labels[field]} · ${task.name}`}${(field === "start_date" || field === "due_date") && isPastTaskDate(task[field]) ? " · Fecha anterior a hoy" : ""}`}
       value={value}
       icon={icons[field]}
       disabled={!permitted}
       content={content}
-      triggers={
-        field === "responsible_id"
-          ? people.length
-            ? people.map((person) => ({
-                label: person.name,
-                content: (
-                  <span
-                    className="inline-grid size-7 shrink-0 place-items-center rounded-full bg-sky-700 text-xs font-medium text-white"
-                    aria-hidden="true"
-                  >
-                    {avatarFor(person.name)}
-                  </span>
-                ),
-              }))
-            : [
-                {
-                  label: "Asignar responsable",
-                  content: <TaskIcon name="person" />,
-                },
-              ]
-          : undefined
-      }
+      triggers={field === "responsible_id" && props.appearance === "detail" ? (people.length ? people.map((person) => ({
+        label: person.name,
+        content: <span className="inline-grid size-7 shrink-0 place-items-center rounded-full bg-sky-700 text-xs font-medium text-white" aria-hidden="true">{avatarFor(person.name)}</span>,
+      })) : [{ label: "Asignar responsable", content: props.appearance === "detail" ? <span className="px-1 text-sm">{permitted ? "Asignar responsable" : "Sin persona asignada"}</span> : <TaskIcon name="person" /> }]) : undefined}
     >
-      {(close) => <Editor {...props} close={close} />}
+      {(close) => <>{props.appearance === "detail" && !["start_date", "due_date", "labels"].includes(field) && <h3 className="m-0 mb-3 text-sm font-semibold">{labels[field]}</h3>}<Editor {...props} close={close} /></>}
     </TaskProperty>
   );
 }

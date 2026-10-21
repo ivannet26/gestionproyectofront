@@ -6,13 +6,15 @@ import ProjectForm from "../ProjectForm/ProjectForm";
 import { fieldClass, inputClass, labelClass, primaryButtonClass } from "../ProjectForm/formClasses";
 
 interface TaskStateFormProps {
+  initialState?: string;
+  fixedTarget?: boolean;
   task: Task;
   states: ProjectTaskState[];
   onSubmit: (data: TaskStatePayload) => Promise<void>;
 }
 
-export default function TaskStateForm({ task, states, onSubmit }: TaskStateFormProps) {
-  const [target, setTarget] = useState("");
+export default function TaskStateForm({ task, states, onSubmit, initialState = "", fixedTarget = false }: TaskStateFormProps) {
+  const [target, setTarget] = useState(initialState);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -35,7 +37,7 @@ export default function TaskStateForm({ task, states, onSubmit }: TaskStateFormP
     }>
       <div className={fieldClass}>
         <label htmlFor="task-target" className={labelClass}>Nuevo estado</label>
-        <select id="task-target" required value={target} onChange={(event) => setTarget(event.target.value)} className={inputClass}>
+        <select id="task-target" required disabled={fixedTarget} value={target} onChange={(event) => setTarget(event.target.value)} className={inputClass}>
           <option value="">Selecciona una transición</option>
           {task.transitions.map((item) => (
             <option value={item.target} key={item.target}>

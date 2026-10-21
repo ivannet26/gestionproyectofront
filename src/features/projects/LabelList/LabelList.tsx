@@ -15,8 +15,7 @@ export default function LabelList({ labels, onRemove }: LabelListProps) {
           className="flex items-center gap-2 px-2 py-1 border border-neutral-200 bg-neutral-100 text-xs text-neutral-900 shadow-none"
         >
           <span>
-            {label.name} ·{" "}
-            {label.kind === "technical" ? "Técnica" : "No técnica"}
+            {label.name}
           </span>
           {onRemove && (
             <button
