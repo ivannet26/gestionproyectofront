@@ -80,6 +80,7 @@ test("Workspace success announcements occupy no visual space and refresh failure
     "../services": Object.fromEntries(["changeDependency", "changeTaskState", "createTask", "getProject", "getTasks", "updateTask"].map((name) => [name, async () => {}])),
     "../DependencyForm/DependencyForm": { default: Empty }, "../LabelList/LabelList": { default: Empty },
     "../Modal/Modal": { default: Empty }, "../TaskForm/TaskForm": { default: Empty }, "../TaskList/TaskList": { default: Empty },
+    "./TaskBoard": { default: Empty },
     "../TaskList/taskHierarchy": { formatTaskDate: String }, "../TaskStateForm/TaskStateForm": { default: Empty },
     "./ProjectHeader": { default: Empty }, "../taskAssignees": { taskAssignees: () => [] },
     "../TaskStatusConfiguration/TaskStatusConfiguration": { default: Empty },

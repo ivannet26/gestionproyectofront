@@ -153,6 +153,7 @@ test("empty List renders configured states through Workspace without extra state
     "../TaskForm/TaskForm": { default: Empty },
     "../TaskStatusConfiguration/TaskStatusConfiguration": { default: Empty },
     "../TaskList/TaskList": { default: TaskList },
+    "./TaskBoard": { default: () => null },
     "../TaskList/taskHierarchy": hierarchy,
     "../TaskStateForm/TaskStateForm": { default: Empty },
     "./ProjectHeader": { default: Empty },

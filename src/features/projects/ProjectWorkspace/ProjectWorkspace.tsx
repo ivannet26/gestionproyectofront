@@ -25,6 +25,7 @@ import LabelList from "../LabelList/LabelList";
 import Modal from "../Modal/Modal";
 import TaskForm from "../TaskForm/TaskForm";
 import TaskList from "../TaskList/TaskList";
+import TaskBoard from "./TaskBoard";
 import { formatTaskDate } from "../TaskList/taskHierarchy";
 import TaskStateForm from "../TaskStateForm/TaskStateForm";
 import ProjectHeader from "./ProjectHeader";
@@ -440,10 +441,7 @@ export default function ProjectWorkspace({
   }
 
   return (
-    <main
-      className="min-h-screen min-w-0 bg-neutral-100 p-3 text-neutral-900 sm:p-6 sm:pt-3"
-      id="main-content"
-    >
+    <main className="flex min-h-screen min-w-0 flex-col text-neutral-900 " id="main-content">
       <ProjectHeader
         key={project.id}
         project={project}
@@ -503,14 +501,14 @@ export default function ProjectWorkspace({
         </section>
       )}
 
-      <section
-        className="mt-3 border border-neutral-200 bg-white"
-        aria-label="Lista de trabajo"
-      >
-        <h2 className="sr-only">Lista de trabajo</h2>
+      {view === "lista" && (
+        <section
+          className="mt-3 border border-neutral-200 bg-white"
+          aria-label="Lista de trabajo"
+        >
+          <h2 className="sr-only">Lista de trabajo</h2>
 
-        <div className="min-w-0">
-          {tasks.length > 0 || view === "lista" ? (
+          <div className="min-w-0">
             <TaskList
               key={project.id}
               project={project}
@@ -529,28 +527,34 @@ export default function ProjectWorkspace({
                 acceptTask(await changeTaskState(projectId, task.id, data));
               }}
             />
-          ) : (
-            <p className="m-0 p-3 text-sm text-neutral-600 sm:p-5">
-              No hay tareas disponibles para tu asignación.{" "}
-              {project.permissions.create_tasks &&
-                "Crea la primera tarea para comenzar."}
-            </p>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
-      {view !== "lista" && (
+      {view === "tablero" && (
+        <TaskBoard
+          project={project}
+          tasks={tasks}
+          catalogs={catalogs}
+          onAction={(kind, taskId) => {
+            setMessage("");
+            setAction({ kind, taskId });
+          }}
+          onPatch={async (task, data) => {
+            acceptTask(await updateTask(projectId, task.id, data));
+          }}
+          onState={async (task, data) => {
+            acceptTask(await changeTaskState(projectId, task.id, data));
+          }}
+        />
+      )}
+
+      {view === "gantt" && (
         <section
           className={styles.pending}
-          aria-label={view === "tablero" ? "Tablero" : "Gantt"}
+          aria-label="Gantt"
         >
-          <h2>
-            {view === "tablero"
-              ? "Tablero"
-              : view === "gantt"
-                ? "Gantt"
-                : "Vista no disponible"}
-          </h2>
+          <h2>Gantt</h2>
           <p>
             Esta vista está pendiente de implementación. Puedes gestionar las
             tareas en Lista.
