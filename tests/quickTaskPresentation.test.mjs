@@ -31,7 +31,6 @@ const { default: QuickRow } = await load("../src/features/projects/TaskList/Quic
   "./useQuickTask": { useQuickTask: () => draft },
   "./useQuickTaskAlignment": { useQuickTaskAlignment() {} },
   "./TaskCell": { StateLabel: ({ name }) => React.createElement("span", null, name) },
-  "../TaskForm/TaskIcon": { default: () => React.createElement("svg", { "aria-hidden": true }) },
   "../../../shared/Tooltip": { default: ({ label, children }) => React.createElement("span", { title: label }, children("hint")) },
   "../TaskForm/TaskOptionalProperties": { default: () => React.createElement("span", null, "Propiedades opcionales") },
   "../TaskForm/taskDates": { taskCreationStart: () => "2026-10-21" },

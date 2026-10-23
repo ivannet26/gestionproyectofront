@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import TaskProperty from "../TaskForm/TaskProperty";
-import TaskIcon from "../TaskForm/TaskIcon";
+import CalendarIcon from "../../../shared/icons/CalendarIcon";
+import ChevronLeftIcon from "../../../shared/icons/ChevronLeftIcon";
+import ChevronRightIcon from "../../../shared/icons/ChevronRightIcon";
 import { projectToday } from "../TaskList/taskGrouping";
 const styles = {
   calendar: "grid gap-2",
@@ -180,7 +182,7 @@ export function Calendar({
           disabled={Boolean(min && previousEnd < min)}
           onClick={() => changeMonth(-1)}
         >
-          <TaskIcon name="previous" />
+          <ChevronLeftIcon className="size-4" />
         </button>
         <strong aria-live="polite">{monthName.format(month)}</strong>
         <button
@@ -194,7 +196,7 @@ export function Calendar({
           )}
           onClick={() => changeMonth(1)}
         >
-          <TaskIcon name="next" />
+          <ChevronRightIcon className="size-4" />
         </button>
       </div>
       <div
@@ -285,7 +287,7 @@ export default function ProjectEndDateSelector(
       id="project-end-date"
       label="Fecha de fin estimada (opcional)"
       value={value}
-      icon="date"
+      icon={CalendarIcon}
       error={props.error}
     >
       {(close) => <Calendar {...props} close={close} />}

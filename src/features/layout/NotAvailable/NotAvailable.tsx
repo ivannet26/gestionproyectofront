@@ -2,7 +2,7 @@ import { Link } from "react-router";
 
 function NotAvailable() {
   return (
-    <main className="min-h-screen  text-neutral-900 p-6" id="main-content">
+    <main className="min-h-full  text-neutral-900 p-6" id="main-content">
       <h1 className="m-0 text-xl text-neutral-900">Acceso no disponible</h1>
       <p className="mt-2 text-sm text-neutral-600">
         No tienes permiso para ver esta página o la ruta no existe.

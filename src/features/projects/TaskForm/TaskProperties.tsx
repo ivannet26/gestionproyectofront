@@ -4,12 +4,16 @@ import { groupTaskStates } from "../stateGroups";
 import type { Label, Project, ProjectCatalogs, Task } from "../types";
 import TaskOptionalProperties from "./TaskOptionalProperties";
 import TaskProperty from "./TaskProperty";
-import TaskIcon from "./TaskIcon";
+import CheckIcon from "../../../shared/icons/CheckIcon";
+import SettingsIcon from "../../../shared/icons/SettingsIcon";
+import CalendarIcon from "../../../shared/icons/CalendarIcon";
+import StatusIcon from "../../../shared/icons/StatusIcon";
 import { propertyClasses as styles } from "../ProjectForm/formClasses";
 import { taskAssignees } from "../taskAssignees";
 import { Calendar } from "../CreateProjectModal/ProjectEndDateSelector";
 import TaskDateValue from "./TaskDateValue";
 import { formatTaskDate } from "../TaskList/taskHierarchy";
+import { StateIcon } from "../TaskList/TaskCell";
 
 interface TaskPropertiesProps {
   project: Project;
@@ -47,7 +51,7 @@ export default function TaskProperties({
 
   return <div className={styles.properties} aria-label="Propiedades de la tarea">
     <TaskProperty id="task-initial-state" label={task ? "Estado actual" : "Estado inicial"} value={stateName}
-      icon="state" error={errors["task-initial-state"]}>
+      icon={StatusIcon} error={errors["task-initial-state"]}>
       {(close) => <>
         <label htmlFor="task-state-search">Buscar estado</label>
         <input id="task-state-search" name="state_search" type="search" placeholder="Buscar estado…"
@@ -58,7 +62,7 @@ export default function TaskProperties({
             {group.states.map((state) => <button key={state.code} type="button" className={styles.option}
               aria-pressed={selectedState === state.code} disabled={Boolean(task) || !canAssign}
               onClick={() => { onState(state.code); close(); }}>
-              <span className="inline-flex" style={state.color ? { color: state.color } : undefined}><TaskIcon name={state.code !== "CANCELADA" && (state.category === "closed" || state.category === "done") ? "check" : "state"} /></span><span>{state.name}</span>{selectedState === state.code && <TaskIcon name="check" />}
+              <StateIcon code={state.code} name={state.name} category={state.category} color={state.color} /><span>{state.name}</span>{selectedState === state.code && <CheckIcon className="size-4" />}
             </button>)}
           </section>)}
           {groups.length === 0 && <p className={styles.hint} role="status">No hay estados que coincidan.</p>}
@@ -67,10 +71,10 @@ export default function TaskProperties({
           ? "Cambia el estado desde las acciones autorizadas de la tarea."
           : "Las tareas nuevas se crean pendientes."}</p>}
         {canConfigure && <button type="button" className={styles.configure}
-          onClick={() => { close(); onConfigure(); }}><TaskIcon name="settings" />Configurar estados</button>}
+          onClick={() => { close(); onConfigure(); }}><SettingsIcon className="size-4" />Configurar estados</button>}
       </>}
     </TaskProperty>
-    <TaskProperty id="task-start" label="Fecha de inicio" value={formatTaskDate(startDate)} icon="date" error={errors["task-start"]} content={<><TaskIcon name="date" /><TaskDateValue value={startDate} /></>}>
+    <TaskProperty id="task-start" label="Fecha de inicio" value={formatTaskDate(startDate)} icon={CalendarIcon} error={errors["task-start"]} content={<><CalendarIcon className="size-4" /><TaskDateValue value={startDate} /></>}>
       {(close) => <Calendar label="Fecha de inicio" optional={false} value={startDate} min={creationMin ?? parent?.start_date ?? project.start_date ?? undefined}
         max={dueDate || parent?.due_date || project.end_date || undefined} onChange={onStartDate} close={close} />}
     </TaskProperty>

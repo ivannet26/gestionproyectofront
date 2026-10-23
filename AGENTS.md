@@ -37,7 +37,7 @@
 
 - **Fondos:** `bg-white` (base, tarjetas, inputs). Hover de filas: `hover:bg-neutral-100`.
 - **Textos:** Primario `text-neutral-800` | Acciones `text-neutral-700` | Muted / Celdas `text-neutral-600`.
-- **Bordes:** `border border-neutral-200` (estructural y tablas); conserva `border-neutral-100` en los separadores de las vistas densas ya integradas, sin rediseñarlas durante una integración.
+- **Bordes:** `border border-neutral-200` (estructural y tablas); conserva `border-neutral-200` en los separadores de las vistas densas ya integradas, sin rediseñarlas durante una integración.
 - **Radios:** `rounded-lg` (controles, tags, inputs), `rounded-xl` (paneles, tarjetas, modales), `rounded-full` (botón cerrar).
 - **Tipografía:** Inter únicamente 400, 500 y 600. **Prohibido `bold`**.
   - Escala: `text-[10px]` (tags), `text-xs` (UI base, tablas, inputs), `text-sm` (subtítulos, nav), `text-lg` (títulos).
@@ -56,7 +56,7 @@
   - Secundaria: `bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-100`
   - Iconos de acción: `p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800`
 - **Inputs:** `bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 px-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none`.
-- **Tablas:** `<thead>` sin fondo con `border-b border-neutral-200 font-medium text-neutral-700`; filas nuevas con `border-b border-neutral-200 last:border-b-0 hover:bg-neutral-100`. Conserva los bordes `border-neutral-100` de las filas existentes en la vista Lista de tareas.
+- **Tablas:** `<thead>` sin fondo con `border-b border-neutral-200 font-medium text-neutral-700`; filas nuevas con `border-b border-neutral-200 last:border-b-0 hover:bg-neutral-100`. Conserva los bordes `border-neutral-200` de las filas existentes en la vista Lista de tareas.
 
 ## 3. Rendimiento y carga de la interfaz
 

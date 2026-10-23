@@ -38,7 +38,9 @@ const { default: ProjectHeader } = await load("../src/features/projects/ProjectW
   "react-router": { Link: ({ to, children, ...props }) => React.createElement("a", { href: to, ...props }, children) },
   "../../../routes": { projectPath: (id) => `/proyectos/${id}` },
   "../../../shared/icons/FolderIcon": { default: Icon },
-  "../TaskForm/TaskIcon": { default: Icon },
+  "../../../shared/icons/BuildingIcon": { default: Icon },
+  "../../../shared/icons/ChevronRightIcon": { default: Icon },
+  "../../../shared/icons/StarIcon": { default: Icon },
   "../TaskList/taskHierarchy": hierarchy,
   "../useProjectFavorite": { useProjectFavorite: (_id, initial) => ({ favorite: initial, pending: false, error: "", toggle() {}, ...favoriteState }) },
 });
@@ -46,7 +48,6 @@ const { default: TaskList } = await load("../src/features/projects/TaskList/Task
   "./QuickTaskRow": { default: () => null },
   "./stateInk": { stateInk: () => "#000000" },
   "../TaskForm/TaskProperty": { default: ({ id, value }) => React.createElement("button", { id }, value) },
-  "../TaskForm/TaskIcon": { default: Icon },
   "./TaskCell": { default: () => null, StateLabel: ({ name }) => React.createElement("span", null, name) },
   "./taskHierarchy": hierarchy,
   "./useTaskGrouping": groupingHook,

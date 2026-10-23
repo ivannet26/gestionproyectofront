@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import type { RelationKind, Task, TaskIdentity, TaskPage, TaskRelation } from "../types";
 import TaskProperty from "../TaskForm/TaskProperty";
-import TaskIcon from "../TaskForm/TaskIcon";
+import RelationIcon from "../../../shared/icons/RelationIcon";
 import { StateLabel } from "../TaskList/TaskCell";
 import { useRelationMutation, useRelationPicker } from "./useTaskRelations";
 
@@ -56,8 +56,8 @@ export default function TaskRelations({ target, task, page, loading, error, retr
   const mutation = useRelationMutation(target, onChanged);
   const id = useId();
   return <section aria-label="Relaciones" className="mt-6 min-w-0">
-    <TaskProperty appearance="detail" id={id} cell icon="relation" label="Relacionar elementos o añadir dependencias" value="" disabled={!task.permissions.relations}
-      content={<span className="flex min-w-0 max-w-full! items-center gap-2 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-800"><TaskIcon name="relation" /><span className="truncate">Relacionar elementos o añadir dependencias</span></span>}>
+    <TaskProperty appearance="detail" id={id} cell icon={RelationIcon} label="Relacionar elementos o añadir dependencias" value="" disabled={!task.permissions.relations}
+      content={<span className="flex min-w-0 max-w-full! items-center gap-2 rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-800"><RelationIcon className="size-4" /><span className="truncate">Relacionar elementos o añadir dependencias</span></span>}>
       {(close) => <RelationChooser target={target} task={task} mutation={mutation} close={close} />}
     </TaskProperty>
     {loading && <p role="status" className="text-xs text-neutral-600">Cargando relaciones…</p>}

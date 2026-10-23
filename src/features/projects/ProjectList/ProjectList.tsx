@@ -19,7 +19,7 @@ export default function ProjectList({
   creationDisabled,
 }: ProjectListProps) {
   return (
-    <main className="min-h-screen  text-neutral-900 p-6" id="main-content">
+    <main className="min-h-full  text-neutral-900 p-6" id="main-content">
       <header className="flex flex-wrap items-end justify-between gap-4 mb-6">
         <div className="max-w-2xl">
           <nav

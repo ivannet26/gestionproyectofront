@@ -52,8 +52,8 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const canCreateTasks =
     user.role === "ADMINISTRADOR" || user.role === "TRABAJADOR";
   const creationDisabled = projectsLoading || Boolean(projectError);
-  const needsCatalogs = creating || /^\/proyectos\/\d+$/.test(pathname);
-  const catalogLoading = !catalogsReady && !catalogError;
+  const projectWorkspace = /^\/proyectos\/\d+$/.test(pathname);
+  const needsCatalogs = creating || projectWorkspace;
 
   useEffect(() => {
     let current = true;
@@ -129,7 +129,11 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
 
   function openTaskCreation(projectId: number) {
     const project = projects.find((item) => item.id === projectId);
-    if (!canCreateTasks || projectsLoading || !project?.permissions.create_tasks)
+    if (
+      !canCreateTasks ||
+      projectsLoading ||
+      !project?.permissions.create_tasks
+    )
       return;
     taskCreationSequence.current += 1;
     setTaskCreationRequest({
@@ -165,9 +169,6 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
       return (
         <route.Component
           catalogs={catalogs}
-          catalogLoading={catalogLoading}
-          catalogError={catalogError}
-          onRetryCatalogs={retryCatalogs}
           taskCreationRequest={taskCreationRequest}
           onTaskCreationHandled={taskCreationHandled}
         />
@@ -177,7 +178,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-neutral-900 md:flex-row">
+    <div className="flex min-h-screen flex-col bg-white text-neutral-900 md:h-screen md:flex-row">
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
@@ -194,7 +195,9 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         canCreateTasks={canCreateTasks}
         onCreateTask={openTaskCreation}
       />
-      <div className="min-w-0 w-full flex-1 bg-white p-3 md:p-6">
+      <div
+        className={`min-w-0 w-full flex-1 bg-white pb-0! p-3 md:p-6 ${projectWorkspace ? "md:overflow-hidden" : "md:overflow-y-auto"}`}
+      >
         {logoutError && (
           <p role="alert" className="mb-4 text-sm text-neutral-800">
             {logoutError}
