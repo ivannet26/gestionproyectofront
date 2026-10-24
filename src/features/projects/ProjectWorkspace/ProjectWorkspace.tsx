@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { errorText } from "../../auth/api";
 import {
@@ -11,33 +11,39 @@ import {
   updateTask,
 } from "../services";
 import type {
+  EditTaskPayload,
   Project,
   ProjectCatalogs,
   ProjectTaskConfiguration,
   Task,
   TaskAction,
+  TaskActionKind,
   TaskFormPayload,
+  TaskGroupingPreferences,
   TaskStatePayload,
 } from "../types";
 
+import { useToast } from "../../../hooks/useToast";
 import PlusIcon from "../../../shared/icons/PlusIcon";
 import DependencyForm from "../DependencyForm/DependencyForm";
 import LabelList from "../LabelList/LabelList";
 import Modal from "../Modal/Modal";
 import TaskDetailDialog from "../TaskDetail/TaskDetailDialog";
 import { useTaskDetailNavigation } from "../TaskDetail/useTaskDetail";
+import TaskBoard from "../TaskBoard/TaskBoard";
 import TaskForm from "../TaskForm/TaskForm";
+import TaskGroupingControl from "../TaskList/TaskGroupingControl";
 import TaskList from "../TaskList/TaskList";
-import TaskBoard from "./TaskBoard";
+import type { TaskGroupControls } from "../TaskList/TaskList";
+import TaskGroupExpansionControl from "../TaskList/TaskGroupExpansionControl";
+import { reconcileTasks } from "../taskCollection";
+import TaskSearch from "../TaskList/TaskSearch";
+import TaskStatusSettingsControl from "../TaskList/TaskStatusSettingsControl";
+import { taskHierarchy } from "../TaskList/taskHierarchy";
 import TaskStateForm from "../TaskStateForm/TaskStateForm";
 import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
 import ProjectHeader from "./ProjectHeader";
-import { reconcileTasks } from "../taskCollection";
-
-const styles = {
-  pending:
-    "px-6 py-10 [&_h2]:text-[1.125rem] [&_p]:text-[0.875rem] [&_p]:[color:var(--color-text-muted)]",
-};
+import ProjectToolbar from "./ProjectToolbar";
 
 interface ProjectWorkspaceProps {
   projectId: number;
@@ -52,7 +58,6 @@ interface ProjectWorkspaceProps {
 export default function ProjectWorkspace({
   projectId,
   catalogs,
-
   catalogLoading,
   catalogError,
   onRetryCatalogs,
@@ -61,31 +66,48 @@ export default function ProjectWorkspace({
 }: ProjectWorkspaceProps) {
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const collectionVersion = useRef(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [refreshError, setRefreshError] = useState("");
-  const [creationError, setCreationError] = useState("");
   const [action, setAction] = useState<TaskAction | null>(null);
-  const [busy, setBusy] = useState(false);
   const [configuringStates, setConfiguringStates] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
+  const [refreshError, setRefreshError] = useState("");
   const [configurationVersion, setConfigurationVersion] = useState(0);
   const [filteredCount, setFilteredCount] = useState<number | null>(null);
+  const [groupControls, setGroupControls] = useState<TaskGroupControls | null>(null);
+  const collectionVersion = useRef(0);
+  const mounted = useRef(false);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const { addToast } = useToast();
   const taskDetail = useTaskDetailNavigation();
   const [searchParams] = useSearchParams();
 
   const view = searchParams.get("vista") ?? "lista";
+  const [search, setSearch] = useState("");
+  const [preferences, setPreferences] = useState<TaskGroupingPreferences>({
+    mode: "state",
+    order: "asc",
+    separatePeople: false,
+    separateLabels: false,
+  });
   const handledCreation = useRef<number | undefined>(undefined);
+  const boardTasks = useMemo(() => {
+    if (view !== "tablero" || !search.trim()) return tasks;
+    const visible = taskHierarchy(tasks, search).visible;
+    return tasks.filter((task) => visible.has(task.id));
+  }, [view, tasks, search]);
 
   const loadTasks = useCallback(async () => {
     const version = collectionVersion.current;
     const items = await getTasks(projectId);
-    if (version === collectionVersion.current) setTasks((current) => reconcileTasks(current, items, true));
+    if (mounted.current && version === collectionVersion.current) setTasks((current) => reconcileTasks(current, items, true));
   }, [projectId]);
 
   useEffect(() => {
     let current = true;
+    const collection = collectionVersion;
+    void Promise.resolve().then(() => { if (current) { setLoading(true); setError(""); } });
 
     void Promise.all([getProject(projectId), getTasks(projectId)])
       .then(([details, items]) => {
@@ -97,18 +119,22 @@ export default function ProjectWorkspace({
       .catch((failure: unknown) => {
         if (current) {
           setError(errorText(failure));
+          addToast({
+            icon: "error",
+            title: "No se pudo cargar el proyecto",
+            message: errorText(failure),
+          });
         }
       })
       .finally(() => {
-        if (current) {
-          setLoading(false);
-        }
+        if (current) setLoading(false);
       });
 
     return () => {
       current = false;
+      collection.current++;
     };
-  }, [projectId]);
+  }, [projectId, addToast, reload]);
 
   useEffect(() => {
     if (
@@ -129,13 +155,14 @@ export default function ProjectWorkspace({
       handledCreation.current = taskCreationSequence;
 
       if (project.permissions.create_tasks) {
-        setCreationError("");
-        setMessage("");
         setAction({ kind: "create" });
       } else {
-        setCreationError(
-          "No tienes permiso efectivo para crear tareas en este proyecto.",
-        );
+        addToast({
+          icon: "alert",
+          title: "Sin permiso",
+          message:
+            "No tienes permiso efectivo para crear tareas en este proyecto.",
+        });
       }
 
       onTaskCreationHandled?.(taskCreationSequence);
@@ -144,7 +171,7 @@ export default function ProjectWorkspace({
     return () => {
       current = false;
     };
-  }, [project, taskCreationSequence, onTaskCreationHandled]);
+  }, [project, taskCreationSequence, onTaskCreationHandled, addToast]);
 
   const activeTask =
     action && action.kind !== "create"
@@ -168,9 +195,10 @@ export default function ProjectWorkspace({
               : "Editar datos de tarea";
 
   function acceptTask(saved: Task) {
+    if (!mounted.current) return;
     collectionVersion.current++;
     setTasks((current) => reconcileTasks(current, [saved]));
-    setMessage(`Guardado: ${saved.name}`);
+    addToast({ icon: "success", title: "Guardado", message: saved.name });
   }
 
   async function save(data: TaskFormPayload) {
@@ -192,7 +220,7 @@ export default function ProjectWorkspace({
 
       setAction(null);
     } finally {
-      setBusy(false);
+      if (mounted.current) setBusy(false);
     }
   }
 
@@ -207,7 +235,7 @@ export default function ProjectWorkspace({
       acceptTask(await changeTaskState(projectId, activeTask.id, data));
       setAction(null);
     } finally {
-      setBusy(false);
+      if (mounted.current) setBusy(false);
     }
   }
 
@@ -233,55 +261,33 @@ export default function ProjectWorkspace({
         ),
       );
 
-      setMessage(remove ? "Dependencia retirada" : "Dependencia agregada");
+      addToast({
+        icon: "success",
+        title: "Dependencia actualizada",
+        message: remove ? "Dependencia retirada" : "Dependencia agregada",
+      });
     } finally {
-      setBusy(false);
+      if (mounted.current) setBusy(false);
     }
   }
 
   function configured(configuration: ProjectTaskConfiguration) {
+    if (!mounted.current) return;
     collectionVersion.current++;
     const { tasks: confirmed, ...flow } = configuration;
-    setProject((current) =>
-      current ? { ...current, task_states: flow } : current,
-    );
+    setProject((current) => current ? { ...current, task_states: flow } : current);
     if (confirmed) setTasks(confirmed);
     setConfigurationVersion((value) => value + 1);
-    setMessage("Estados del proyecto actualizados");
     setRefreshError("");
-
+    addToast({ icon: "success", title: "Estados actualizados", message: project?.name ?? "" });
     if (!confirmed) void loadTasks().catch((failure: unknown) => {
-      setRefreshError(
-        `Estados guardados. No se pudo actualizar la lista: ${errorText(failure)}`,
-      );
+      if (mounted.current) setRefreshError(`Estados guardados. No se pudo actualizar la lista: ${errorText(failure)}`);
     });
   }
 
   function actionForm(currentProject: Project): ReactNode {
-    if (!action) {
-      return null;
-    }
-
-    if (
-      action.kind === "create" ||
-      action.kind === "edit" ||
-      action.kind === "child"
-    ) {
-      if (catalogError) {
-        return (
-          <>
-            <p role="alert">{catalogError}</p>
-            <button type="button" onClick={onRetryCatalogs}>
-              Reintentar catálogos
-            </button>
-          </>
-        );
-      }
-
-      if (catalogLoading) {
-        return <p role="status">Cargando catálogos…</p>;
-      }
-    }
+    if (!action) return null;
+    if (catalogLoading || catalogError) return <p role="status" className="p-5 text-xs text-neutral-600">{catalogError ? "No se pudo cargar el catálogo. Reintenta antes de editar." : "Cargando catálogos…"}</p>;
 
     if (action.kind === "create") {
       return (
@@ -343,59 +349,41 @@ export default function ProjectWorkspace({
     }
   }
 
-  if (loading) {
-    return (
-      <main
-        className="min-h-screen bg-neutral-100 p-6 text-neutral-900"
-        id="main-content"
-      >
-        <p role="status" className="text-sm text-neutral-600">
-          Cargando proyecto…
-        </p>
-      </main>
-    );
+  if (!project) return <main id="main-content" className="p-5 text-sm text-neutral-800">
+    {loading ? <p role="status">Cargando proyecto…</p> : <div role="alert"><p>{error || "No se pudo cargar el proyecto."}</p><button type="button" onClick={() => setReload((value) => value + 1)} className="cursor-pointer rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs hover:bg-neutral-100">Reintentar</button></div>}
+  </main>;
+
+  function openTaskAction(kind: TaskActionKind, taskId: number) {
+    if (kind === "detail") taskDetail.openTaskDetail({ projectId, taskId });
+    else setAction({ kind, taskId });
   }
 
-  if (error || !project) {
-    return (
-      <main
-        className="min-h-screen bg-neutral-100 p-6 text-neutral-900"
-        id="main-content"
-      >
-        <p
-          className="border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900"
-          role="alert"
-        >
-          {error || "Proyecto no disponible"}
-        </p>
-        <Link to="/proyectos" className="text-sm text-neutral-600">
-          Volver a proyectos
-        </Link>
-      </main>
-    );
+  async function patchTask(task: Task, data: Partial<EditTaskPayload>) {
+    acceptTask(await updateTask(projectId, task.id, data));
+  }
+
+  async function changeState(task: Task, data: TaskStatePayload) {
+    acceptTask(await changeTaskState(projectId, task.id, data));
   }
 
   const primaryAction = project.permissions.create_tasks ? (
     <button
       type="button"
-      disabled={busy}
-      onClick={() => {
-        setMessage("");
-        setAction({ kind: "create" });
-      }}
+      disabled={busy || catalogLoading || Boolean(catalogError)}
+      onClick={() => setAction({ kind: "create" })}
       aria-label="Crear nueva tarea"
-      className="inline-flex cursor-pointer touch-manipulation items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"
+      className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"
     >
       <span aria-hidden="true">
         <PlusIcon className="size-4" />
       </span>
-      <span>Tarea</span>
+      <span>Agregar tarea</span>
     </button>
   ) : null;
 
   return (
     <main
-      className="flex min-h-screen min-w-0 flex-col text-neutral-900 "
+      className="flex min-h-full flex-col text-neutral-800 md:h-full md:min-h-0"
       id="main-content"
     >
       <ProjectHeader
@@ -406,112 +394,73 @@ export default function ProjectWorkspace({
         filteredCount={view === "lista" ? filteredCount : null}
       />
 
-      <p
-        className="sr-only"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        {message}
-      </p>
-
-      {refreshError && (
-        <p
-          className="border border-red-200 bg-white px-3 py-2 text-sm"
-          role="alert"
-        >
-          {refreshError}
-        </p>
-      )}
-
-      {catalogError && !activeAction && (
-        <div>
-          <p
-            className="border border-red-200 bg-white px-3 py-2 text-sm"
-            role="alert"
-          >
-            Catálogos: {catalogError}
-          </p>
-          <button type="button" onClick={onRetryCatalogs}>
-            Reintentar catálogos
-          </button>
-        </div>
-      )}
-
-      {creationError && (
-        <p
-          className="border border-red-200 bg-white px-3 py-2 text-sm"
-          role="alert"
-        >
-          {creationError}
-        </p>
-      )}
-
+      {catalogLoading && <p role="status" className="py-2 text-xs text-neutral-600">Cargando catálogos…</p>}
+      {catalogError && <div role="alert" className="flex flex-wrap items-center gap-2 py-2 text-xs text-red-700"><span>No se pudieron cargar los catálogos. {catalogError}</span><button type="button" onClick={onRetryCatalogs} className="cursor-pointer rounded-lg border border-neutral-200 px-3 py-1.5 text-neutral-800 hover:bg-neutral-100">Reintentar catálogos</button></div>}
+      {refreshError && <div role="alert" className="flex items-center gap-2 py-2 text-xs text-red-700"><span>{refreshError}</span><button type="button" className="cursor-pointer underline" onClick={() => { void loadTasks().then(() => setRefreshError("")).catch((failure: unknown) => setRefreshError(errorText(failure))); }}>Actualizar lista</button></div>}
       {project.requirements.length > 0 && (
-        <section aria-label="Requisitos existentes del proyecto">
+        <section
+          aria-label="Requisitos existentes del proyecto"
+          className="shrink-0"
+        >
           <LabelList labels={project.requirements} />
         </section>
       )}
 
-      {view === "lista" && (
+      {(view === "lista" || view === "tablero") && (
         <section
-          className="mt-3 border border-neutral-200 bg-white"
-          aria-label="Lista de trabajo"
+          className="flex min-h-0 flex-1 flex-col bg-white"
+          aria-label={view === "lista" ? "Lista de trabajo" : "Tablero"}
         >
-          <h2 className="sr-only">Lista de trabajo</h2>
-
-          <div className="min-w-0">
-            <TaskList
-              key={project.id}
+          {view === "lista" && <h2 className="sr-only">Lista de trabajo</h2>}
+          <ProjectToolbar action={primaryAction}>
+            {view === "lista" && <fieldset className="m-0 min-w-0 border-0 p-0">
+              <TaskGroupingControl
+                preferences={preferences}
+                onChange={setPreferences}
+              />
+            </fieldset>}
+            {project.permissions.manage &&
+              project.task_states.can_configure && (
+                <TaskStatusSettingsControl
+                  onClick={() => setConfiguringStates(true)}
+                />
+              )}
+            {view === "lista" && <TaskGroupExpansionControl expanded={groupControls?.expanded ?? false} disabled={groupControls?.disabled ?? true} controls={groupControls?.controls ?? ""} onToggle={() => groupControls?.toggle()} />}
+            <TaskSearch value={search} onChange={setSearch} />
+          </ProjectToolbar>
+          {view === "lista" ? (
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+              <TaskList
+                project={project}
+                tasks={tasks}
+                catalogs={catalogs}
+                search={search}
+                preferences={preferences}
+                onMoved={(items) => { collectionVersion.current++; setTasks((current) => reconcileTasks(current, items, true)); }}
+                onCountChange={setFilteredCount}
+                onGroupControls={setGroupControls}
+                onAction={openTaskAction}
+                onCreated={acceptTask}
+                onPatch={patchTask}
+                onState={changeState}
+              />
+            </div>
+          ) : (
+            <TaskBoard
               project={project}
-              tasks={tasks}
+              tasks={boardTasks}
               catalogs={catalogs}
-              primaryAction={primaryAction}
-              onCountChange={setFilteredCount}
-              onMoved={(items) => { collectionVersion.current++; setTasks((current) => reconcileTasks(current, items, true)); }}
-              onConfigure={() => setConfiguringStates(true)}
-              onAction={(kind, taskId) => {
-                setMessage("");
-                if (kind === "detail")
-                  taskDetail.openTaskDetail({ projectId, taskId });
-                else setAction({ kind, taskId });
-              }}
-              onCreated={acceptTask}
-              onPatch={async (task, data) => {
-                acceptTask(await updateTask(projectId, task.id, data));
-              }}
-              onState={async (task, data) => {
-                acceptTask(await changeTaskState(projectId, task.id, data));
-              }}
+              onAction={openTaskAction}
+              onState={changeState}
             />
-          </div>
+          )}
         </section>
       )}
 
-      {view === "tablero" && (
-        <TaskBoard
-          project={project}
-          tasks={tasks}
-          catalogs={catalogs}
-          onAction={(kind, taskId) => {
-            setMessage("");
-            if (kind === "detail")
-              taskDetail.openTaskDetail({ projectId, taskId });
-            else setAction({ kind, taskId });
-          }}
-          onPatch={async (task, data) => {
-            acceptTask(await updateTask(projectId, task.id, data));
-          }}
-          onState={async (task, data) => {
-            acceptTask(await changeTaskState(projectId, task.id, data));
-          }}
-        />
-      )}
-
       {view === "gantt" && (
-        <section className={styles.pending} aria-label="Gantt">
-          <h2>Gantt</h2>
-          <p>
+        <section className="px-6 py-10" aria-label="Gantt">
+          <h2 className="text-lg">Gantt</h2>
+          <p className="text-sm text-neutral-600">
             Esta vista está pendiente de implementación. Puedes gestionar las
             tareas en Lista.
           </p>

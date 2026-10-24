@@ -4,8 +4,10 @@ import DotsIcon from "../../../shared/icons/DotsIcon";
 import InfoIcon from "../../../shared/icons/InfoIcon";
 import PlusIcon from "../../../shared/icons/PlusIcon";
 import Modal from "../Modal/Modal";
+import CheckIcon from "../../../shared/icons/CheckIcon";
+import SettingsIcon from "../../../shared/icons/SettingsIcon";
 import { categoryValue, stateCategories } from "../stateGroups";
-import TaskIcon from "../TaskForm/TaskIcon";
+import { StateIcon } from "../TaskList/TaskCell";
 import type {
   Project,
   ProjectTaskConfiguration,
@@ -170,7 +172,7 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
                 {editor.templates.filter((item) => item.name.toLocaleLowerCase("es").includes(search.trim().toLocaleLowerCase("es"))).map((item) => <button key={item.id} type="button" aria-pressed={editor.selected?.id === item.id}
                   className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left hover:bg-neutral-50 aria-pressed:bg-neutral-100"
                   onClick={() => { if (editor.select(item)) { setTemplateOpen(false); setEditing(null); } }}>
-                  <span className="truncate">{item.name}</span>{editor.selected?.id === item.id && <TaskIcon name="check" />}
+                  <span className="truncate">{item.name}</span>{editor.selected?.id === item.id && <CheckIcon className="size-4" />}
                 </button>)}
                 {!editor.templates.some((item) => item.name.toLocaleLowerCase("es").includes(search.trim().toLocaleLowerCase("es"))) && <p role="status" className="px-3 py-2 text-neutral-600">No hay plantillas que coincidan.</p>}
               </div>
@@ -201,7 +203,7 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
                     onKeyDown={(event) => { if (event.altKey && (event.key === "ArrowUp" || event.key === "ArrowDown")) { event.preventDefault(); move(state.code, event.key === "ArrowUp" ? -1 : 1); } }}>
                     <span aria-hidden="true" className="relative block size-4"><DotsIcon className="absolute -left-0.5 size-4" /><DotsIcon className="absolute left-0.5 size-4" /></span>
                   </button>
-                  <span aria-hidden="true" className="inline-flex shrink-0" style={{ color: state.color ?? category.color }}><TaskIcon name={category.value === "closed" ? "check" : "state"} /></span>
+                  <span aria-hidden="true" className="inline-flex shrink-0"><StateIcon code={state.code} name={state.name} category={category.value} color={state.color ?? category.color} /></span>
                   {editing?.code === state.code ? <input id={`${id}-${state.code}`} aria-label="Nombre del estado" name="state_name" autoComplete="off" placeholder="Nombre del estado…" autoFocus maxLength={70} value={state.name}
                     className="min-w-0 flex-1 bg-white px-1 py-1.5 text-xs uppercase placeholder:normal-case" aria-invalid={!state.name.trim()}
                     onChange={(event) => update(state.code, { name: event.target.value })}
@@ -225,7 +227,7 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
                   }}>
                     <summary aria-label={`Opciones de ${state.name || "nuevo estado"}`} className={`${styles.icon} list-none cursor-pointer [&::-webkit-details-marker]:hidden`}><span aria-hidden="true"><DotsIcon className="size-4 rotate-90" /></span></summary>
                     <div data-state-menu className={`${styles.menu} right-0 top-full overflow-y-auto overscroll-contain`}>
-                      <button type="button" onClick={(event) => menuAction(event, () => setEditing({ code: state.code, original: state.name }))}><TaskIcon name="settings" />Cambiar nombre</button>
+                      <button type="button" onClick={(event) => menuAction(event, () => setEditing({ code: state.code, original: state.name }))}><SettingsIcon className="size-4" />Cambiar nombre</button>
                       <label className="flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 hover:bg-neutral-50">Cambiar color<input aria-label={`Color de ${state.name}`} name="state_color" type="color" value={state.color ?? category.color} className="w-8 cursor-pointer rounded border border-neutral-200 bg-white p-0.5" onChange={(event) => update(state.code, { color: event.target.value })} /></label>
                       {draft && <label className="grid gap-1 px-3 py-2">Categoría<select aria-label={`Categoría de ${state.name}`} value={categoryValue(state)} className={styles.input} onChange={(event) => update(state.code, { category: event.target.value as StateCategory })}>{stateCategories.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></label>}
                       <button type="button" disabled={index === 0} onClick={(event) => menuAction(event, () => move(state.code, -1))}>Subir estado</button>

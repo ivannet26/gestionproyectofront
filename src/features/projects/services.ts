@@ -1,4 +1,5 @@
-import { apiRequest } from "../auth/api";
+import type { AxiosRequestConfig } from "axios";
+import { httpClient } from "../../core/api/httpClient";
 import type { TaskIdentity, TaskDetailData, SubtaskPage, TaskPage, TaskActivityGroup, TaskRelation, RelationKind } from "./types";
 import type {
   CreateProjectPayload,
@@ -17,8 +18,10 @@ import type {
   TeamOption,
 } from "./types";
 
-function projectRequest<T>(path = "", options: RequestInit = {}): Promise<T> {
-  return apiRequest<T>(path, options, true, "projects");
+async function projectRequest<T>(path = "", options?: AxiosRequestConfig): Promise<T> {
+  const url = `projects/${path}`;
+  const response = options ? await httpClient.request<T>({ url, ...options }) : await httpClient.get<T>(url);
+  return response.data;
 }
 
 function taskPath(target: TaskIdentity) { return `${target.projectId}/tasks/${target.taskId}/`; }
@@ -38,7 +41,7 @@ export function searchRelatedTasks(target: TaskIdentity, kind: RelationKind, que
   return projectRequest<TaskPage<Task>>(`${taskPath(target)}related-candidates/?${new URLSearchParams({ kind, q: query, cursor: String(cursor) })}`);
 }
 export function createTaskRelation(target: TaskIdentity, targetId: number, name: string): Promise<void> {
-  return projectRequest<void>(`${taskPath(target)}relations/`, { method: "POST", body: JSON.stringify({ target_id: targetId, name }) });
+  return projectRequest<void>(`${taskPath(target)}relations/`, { method: "POST", data: { target_id: targetId, name } });
 }
 export function removeTaskRelation(target: TaskIdentity, relationId: number): Promise<void> {
   return projectRequest<void>(`${taskPath(target)}relations/${relationId}/`, { method: "DELETE" });
@@ -81,7 +84,7 @@ export function configureProjectTaskStates(
 ): Promise<ProjectTaskConfiguration> {
   return projectRequest(`${projectId}/task-states/`, {
     method: "PATCH",
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
@@ -91,7 +94,7 @@ export function getTaskStatusTemplates(projectId: number): Promise<TaskStatusTem
 
 export function saveTaskStatusTemplate(projectId: number, payload: Pick<TaskStatusTemplate, "name" | "states"> & { revision?: number }, templateId?: number): Promise<TaskStatusTemplate> {
   return projectRequest(`${projectId}/state-templates/${templateId === undefined ? "" : `${templateId}/`}`, {
-    method: templateId === undefined ? "POST" : "PUT", body: JSON.stringify(payload),
+    method: templateId === undefined ? "POST" : "PUT", data: payload,
   });
 }
 
@@ -104,7 +107,7 @@ export function getWorkerCandidates(
 }
 
 export function createProject(payload: CreateProjectPayload): Promise<Project> {
-  return projectRequest("", { method: "POST", body: JSON.stringify(payload) });
+  return projectRequest("", { method: "POST", data: payload });
 }
 
 export function getProjectTeamCandidates(areaId: number): Promise<TeamOption[]> {
@@ -112,7 +115,7 @@ export function getProjectTeamCandidates(areaId: number): Promise<TeamOption[]> 
 }
 
 export function moveTask(projectId: number, taskId: number, payload: TaskStatePayload & { before_id: number | null; expected_revision: string }): Promise<Task[]> {
-  return projectRequest<Task[]>(`${projectId}/tasks/${taskId}/move/`, { method: "POST", body: JSON.stringify(payload) });
+  return projectRequest<Task[]>(`${projectId}/tasks/${taskId}/move/`, { method: "POST", data: payload });
 }
 
 export function createTask(
@@ -121,7 +124,7 @@ export function createTask(
 ): Promise<Task> {
   return projectRequest(`${projectId}/tasks/`, {
     method: "POST",
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
@@ -132,7 +135,7 @@ export function updateTask(
 ): Promise<Task> {
   return projectRequest(`${projectId}/tasks/${taskId}/`, {
     method: "PATCH",
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
@@ -143,7 +146,7 @@ export function changeTaskState(
 ): Promise<Task> {
   return projectRequest(`${projectId}/tasks/${taskId}/state/`, {
     method: "POST",
-    body: JSON.stringify(payload),
+    data: payload,
   });
 }
 
@@ -155,6 +158,6 @@ export async function changeDependency(
 ): Promise<void> {
   await projectRequest(`${projectId}/tasks/${taskId}/dependencies/`, {
     method: remove ? "DELETE" : "POST",
-    body: JSON.stringify({ predecessor_id: predecessorId }),
+    data: { predecessor_id: predecessorId },
   });
 }

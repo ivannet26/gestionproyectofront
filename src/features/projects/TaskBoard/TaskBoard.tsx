@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -17,11 +17,12 @@ import type {
   TaskActionKind,
   Project,
   ProjectCatalogs,
-  EditTaskPayload,
   TaskStatePayload,
 } from "../types";
 import { formatTaskDate } from "../TaskList/taskHierarchy";
-import TaskIcon from "../TaskForm/TaskIcon";
+import FlagIcon from "../../../shared/icons/FlagIcon";
+import CalendarIcon from "../../../shared/icons/CalendarIcon";
+import ChevronRightIcon from "../../../shared/icons/ChevronRightIcon";
 import { taskAssignees } from "../taskAssignees";
 import { stateInk } from "../TaskList/stateInk";
 
@@ -30,7 +31,6 @@ interface TaskBoardProps {
   tasks: Task[];
   catalogs: ProjectCatalogs;
   onAction: (kind: TaskActionKind, id: number) => void;
-  onPatch: (task: Task, data: Partial<EditTaskPayload>) => Promise<void>;
   onState: (task: Task, data: TaskStatePayload) => Promise<void>;
 }
 
@@ -45,14 +45,32 @@ function Card({
   catalogs,
   onAction,
   draggable,
+  childCount,
+  expanded = false,
+  onToggleChildren,
+  childrenTasks,
+  childrenMap,
+  overlay = false,
 }: {
   task: Task;
   catalogs: ProjectCatalogs;
   onAction: (kind: TaskActionKind, id: number) => void;
   draggable?: boolean;
+  childCount?: number;
+  expanded?: boolean;
+  onToggleChildren?: (id: number) => void;
+  childrenTasks?: Task[];
+  childrenMap?: Map<number, Task[]>;
+  overlay?: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, isDragging } =
-    useDraggable({ id: task.id, data: { task }, disabled: !draggable });
+  const resolvedChildCount =
+    childCount ?? childrenMap?.get(task.id)?.length ?? 0;
+  const resolvedChildren = childrenTasks ?? childrenMap?.get(task.id) ?? [];
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: overlay ? `preview-${task.id}` : task.id,
+    data: { task },
+    disabled: !draggable,
+  });
   const style = {
     transform: undefined,
     opacity: isDragging ? 0 : 1,
@@ -66,26 +84,34 @@ function Card({
       onClick={() => onAction("detail", task.id)}
       {...(draggable ? listeners : {})}
       {...(draggable ? attributes : {})}
+      role="button"
+      tabIndex={0}
+      aria-label={task.name}
+      onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); onAction("detail", task.id); } else listeners?.onKeyDown?.(event); }}
     >
-      <div className="font-medium text-neutral-800 leading-snug">{task.name}</div>
+      <div className="font-medium text-neutral-800 leading-snug">
+        {task.name}
+      </div>
       {people.length > 0 && (
         <div className="mt-1.5 flex items-center gap-1.5 text-neutral-600 truncate">
           <span className="inline-grid place-items-center size-4 rounded-full bg-sky-700 text-white text-[9px] font-medium shrink-0">
             {people[0].name.charAt(0).toUpperCase()}
           </span>
-          <span className="truncate">{people.map((person) => person.name).join(", ")}</span>
+          <span className="truncate">
+            {people.map((person) => person.name).join(", ")}
+          </span>
         </div>
       )}
       <div className="mt-1.5 flex flex-wrap gap-1.5">
         {task.priority != null && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded bg-neutral-100 text-neutral-700">
-            <TaskIcon name="priority" />
+            <FlagIcon className="size-3.5" />
             {priorityName(catalogs, task.priority)}
           </span>
         )}
         {task.due_date && (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium rounded bg-neutral-100 text-neutral-700">
-            <TaskIcon name="date" />
+            <CalendarIcon className="size-3.5" />
             {formatTaskDate(task.due_date)}
           </span>
         )}
@@ -103,6 +129,39 @@ function Card({
           </span>
         )}
       </div>
+      {resolvedChildCount > 0 && (
+        <div className="mt-1.5">
+          <button
+            type="button"
+            className="inline-flex cursor-pointer items-center gap-1 rounded p-0.5 text-neutral-600 hover:bg-neutral-200 hover:text-neutral-800"
+            aria-expanded={expanded}
+            aria-label={`${expanded ? "Contraer" : "Expandir"} subtareas de ${task.name}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onToggleChildren?.(task.id);
+            }}
+          >
+            <span
+              className={expanded ? "[transform:rotate(90deg)]" : undefined}
+            >
+              <ChevronRightIcon className="size-4" />
+            </span>
+            <span className="text-[10px] font-medium">
+              {resolvedChildCount}
+            </span>
+          </button>
+          {expanded && resolvedChildren.length > 0 && (
+            <div className="mt-2 space-y-2 border-l border-neutral-200 pl-2">
+              {resolvedChildren.map((child) => (
+                <button key={child.id} type="button" className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100"
+                  onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onAction("detail", child.id); }}>
+                  <span className="truncate">{child.name}</span><span className="shrink-0 text-[10px] text-neutral-600">{child.state_name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -113,17 +172,22 @@ function Column({
   catalogs,
   onAction,
   isOver,
+  childrenMap,
+  expandedParents,
+  onToggleChildren,
 }: {
   state: { code: string; name: string; color?: string; category?: string };
   tasks: Task[];
   catalogs: ProjectCatalogs;
   onAction: (kind: TaskActionKind, id: number) => void;
   isOver: boolean;
+  childrenMap: Map<number, Task[]>;
+  expandedParents: Set<number>;
+  onToggleChildren: (id: number) => void;
 }) {
   const { setNodeRef } = useDroppable({ id: state.code });
   const headerColor = state.color;
   const softBg = headerColor ? `${headerColor}14` : "#f5f5f5";
-  const softBorder = headerColor ? `${headerColor}40` : "#e5e5e5";
   return (
     <section
       ref={setNodeRef}
@@ -133,7 +197,7 @@ function Column({
       }`}
       aria-label={state.name}
     >
-      <header className="flex items-center gap-2 px-2 py-1.5">
+      <header className="flex shrink-0 items-center gap-2 px-2 py-1.5">
         <div
           className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium"
           style={
@@ -155,7 +219,7 @@ function Column({
           {tasks.length}
         </span>
       </header>
-      <div className="flex flex-col gap-2 min-h-[60px]">
+      <div className="board-column-scroll flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
         {tasks.map((task) => (
           <Card
             key={task.id}
@@ -163,6 +227,11 @@ function Column({
             catalogs={catalogs}
             onAction={onAction}
             draggable={task.permissions.state}
+            childCount={childrenMap.get(task.id)?.length ?? 0}
+            expanded={expandedParents.has(task.id)}
+            onToggleChildren={onToggleChildren}
+            childrenTasks={childrenMap.get(task.id) ?? []}
+            childrenMap={childrenMap}
           />
         ))}
       </div>
@@ -177,8 +246,20 @@ export default function TaskBoard({
   onAction,
   onState,
 }: TaskBoardProps) {
+  const boardRef = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [expandedParents, setExpandedParents] = useState<Set<number>>(
+    new Set(),
+  );
+  const toggleParent = (id: number) =>
+    setExpandedParents((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -196,7 +277,23 @@ export default function TaskBoard({
     }
   }
 
-  const activeTask = activeId != null ? tasks.find((t) => t.id === activeId) : null;
+  const childrenMap = useMemo(() => {
+    const map = new Map<number, Task[]>();
+    for (const task of tasks) {
+      if (
+        task.parent_id !== null &&
+        tasks.some((item) => item.id === task.parent_id)
+      ) {
+        const branch = map.get(task.parent_id) ?? [];
+        branch.push(task);
+        map.set(task.parent_id, branch);
+      }
+    }
+    return map;
+  }, [tasks]);
+
+  const activeTask =
+    activeId != null ? tasks.find((t) => t.id === activeId) : null;
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(Number(event.active.id));
@@ -207,30 +304,43 @@ export default function TaskBoard({
     async (event: DragEndEvent) => {
       const { active, over } = event;
       setActiveId(null);
+      setOverId(null);
       if (!over) return;
       const taskId = Number(active.id);
       const target = String(over.id);
       const task = tasks.find((t) => t.id === taskId);
       if (!task || task.state_code === target) return;
       if (!task.permissions.state) return;
-      const transition = task.transitions.find((item) => item.target === target);
+      const transition = task.transitions.find(
+        (item) => item.target === target,
+      );
       if (!transition) return;
       try {
-        await onState(task, { state_code: target, reason: "" });
+        await onState(task, { state_code: target });
       } catch (failure) {
         setError(String(failure));
       }
     },
-    [tasks, onAction, onState],
+    [tasks, onState],
   );
 
-  const [overId, setOverId] = useState<string | null>(null);
+  const handleBoardWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    if (event.shiftKey || !boardRef.current) return;
+    const col = (event.target as HTMLElement).closest?.(".board-column-scroll");
+    if (col) {
+      const { scrollTop, scrollHeight, clientHeight } = col;
+      const canScrollDown =
+        event.deltaY > 0 && scrollTop + clientHeight < scrollHeight - 1;
+      const canScrollUp = event.deltaY < 0 && scrollTop > 1;
+      if (canScrollDown || canScrollUp) return;
+    }
+    if (event.deltaY !== 0) {
+      boardRef.current.scrollLeft += event.deltaY;
+    }
+  };
 
   return (
-    <section
-      className="mt-3 flex-1 min-h-0 flex flex-col"
-      aria-label="Tablero"
-    >
+    <div className="flex min-h-0 flex-1 flex-col">
       {error && (
         <p className="mb-2 text-xs text-red-700" role="alert">
           {error}
@@ -240,9 +350,14 @@ export default function TaskBoard({
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={(e) => void handleDragEnd(e)}
+        onDragCancel={() => { setActiveId(null); setOverId(null); }}
         onDragOver={(e) => setOverId(e.over ? String(e.over.id) : null)}
       >
-        <div className="flex gap-3 overflow-x-auto pb-2">
+        <div
+          ref={boardRef}
+          onWheel={handleBoardWheel}
+          className="flex min-h-0 flex-1 gap-3 overflow-x-auto"
+        >
           {states.map((state) => (
             <Column
               key={state.code}
@@ -251,6 +366,9 @@ export default function TaskBoard({
               catalogs={catalogs}
               onAction={onAction}
               isOver={overId === state.code}
+              childrenMap={childrenMap}
+              expandedParents={expandedParents}
+              onToggleChildren={toggleParent}
             />
           ))}
         </div>
@@ -262,11 +380,12 @@ export default function TaskBoard({
                 catalogs={catalogs}
                 onAction={onAction}
                 draggable={false}
+                overlay
               />
             </div>
           ) : null}
         </DragOverlay>
       </DndContext>
-    </section>
+    </div>
   );
 }

@@ -81,35 +81,32 @@ try {
   const list = async () => { await send('Page.navigate',{url:'http://localhost:5189/proyectos/'+context.project}); await wait('document.querySelector(".gm-task-list")'); };
   const moves = () => requests.filter(r=>r.method==='POST'&&r.path.endsWith('/move/')).length;
   const drag = async (id,target,shot,ratio=.5,cancel=false,edge=false) => {
-    dragPayload=undefined; await send('Input.setInterceptDrags',{enabled:true});
-    const from=await evaluate('(()=>{const e=document.querySelector('+JSON.stringify(row(id))+'+" td:first-child button:not([aria-label])");e.scrollIntoView({block:"center"});const r=e.getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2}})()');
+    const from=await evaluate('(()=>{const e=document.querySelector('+JSON.stringify(row(id))+'+" [data-task-drag-surface]");e.scrollIntoView({block:"center"});const r=e.getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2}})()');
     await send('Input.dispatchMouseEvent',{type:'mouseMoved',...from});
     await send('Input.dispatchMouseEvent',{type:'mousePressed',...from,button:'left',buttons:1,clickCount:1});
-    for(let n=1;n<=10&&!dragPayload;n++){await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:from.x+n*6,y:from.y+5,button:'left',buttons:1});await pause(40);}
-    assert.ok(dragPayload,'Arrastre real desde nombre');
+    await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:from.x+10,y:from.y+2,button:'left',buttons:1});
+    await wait('document.querySelector("[data-moving=true]")');
     const to=await evaluate('(()=>{const e=document.querySelector('+JSON.stringify(target)+');e.scrollIntoView({block:"center"});const r=e.getBoundingClientRect();return{x:r.x+150,y:r.y+r.height*'+ratio+'}})()');
-    await send('Input.dispatchDragEvent',{type:'dragEnter',...to,data:dragPayload});
-    await send('Input.dispatchDragEvent',{type:'dragOver',...to,data:dragPayload});
+    await send('Input.dispatchMouseEvent',{type:'mouseMoved',...to,button:'left',buttons:1});
     await wait('document.querySelector(".gm-task-insertion")');
     assert.equal(await evaluate('document.querySelectorAll(".gm-task-insertion").length'),1);
     assert.equal(await evaluate('Array.from(document.querySelectorAll(".gm-task-group")).some(e=>getComputedStyle(e).outlineStyle!=="none")'),false);
     assert.ok(await evaluate('Array.from(document.querySelectorAll(".gm-task-group table")).every(table=>Array.from(table.querySelectorAll("tr[data-task-id]")).every(row=>Array.from(row.cells).every((cell,index)=>Math.abs(cell.getBoundingClientRect().width-table.querySelectorAll("th")[index].getBoundingClientRect().width)<2)))'));
     if(edge){
       const near=await evaluate('(()=>{const n=document.querySelector(\'[aria-label="Tabla de tareas con desplazamiento horizontal"]\'),r=n.getBoundingClientRect();return{x:r.left+180,y:r.bottom-9,scroll:n.scrollTop}})()');
-      await send('Input.dispatchDragEvent',{type:'dragOver',x:near.x,y:near.y,data:dragPayload});await pause(250);
+      await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:near.x,y:near.y,button:'left',buttons:1});await pause(250);
       assert.ok(await evaluate('document.querySelector(\'[aria-label="Tabla de tareas con desplazamiento horizontal"]\').scrollTop')>near.scroll);
     }
     if(shot)await capture(shot);
     const before=moves();
-    if(cancel){await key('Escape');await send('Input.dispatchDragEvent',{type:'dragCancel',...to,data:dragPayload});}
-    else await send('Input.dispatchDragEvent',{type:'drop',...to,data:dragPayload});
-    await send('Input.dispatchMouseEvent',{type:'mouseReleased',...to,button:'left',clickCount:1});await send('Input.setInterceptDrags',{enabled:false});
+    if(cancel)await key('Escape');
+    await send('Input.dispatchMouseEvent',{type:'mouseReleased',...to,button:'left',clickCount:1});
     await wait('!document.querySelector("[data-moving=true],.gm-task-insertion")');
     if(!cancel){for(let n=0;n<100&&moves()===before;n++)await pause(50);await wait('!document.querySelector(".gm-task-list[aria-busy=true]")');}
     assert.equal(moves(),before+(cancel?0:1));assert.equal(await evaluate('Boolean(document.querySelector("dialog[open]"))'),false);
   };
   const manual = async (id,state) => {
-    await click(row(id)+' td:last-child button');await wait('document.querySelector(":popover-open")');
+    await click(row(id)+' button[aria-label^="Estado"]');await wait('document.querySelector(":popover-open")');
     await act('Array.from(document.querySelector(":popover-open").querySelectorAll("button")).find(e=>e.querySelector("[data-state='+state+']"))');
     await save();await wait('document.querySelector('+JSON.stringify(row(id)+' [data-state="'+state+'"]')+')');
     assert.equal((await detail(context.project,id)).state_code,state);
@@ -163,7 +160,7 @@ try {
   const grouping=async mode=>{
     await click('#task-list-grouping');
     await click('button[aria-label^="Opciones de agrupación"]');
-    await act('Array.from(document.querySelectorAll("[role=menuitemradio]")).find(e=>e.textContent.trim()==='+JSON.stringify(mode)+')');
+    await act('Array.from(document.querySelectorAll("[role=menuitemradio]")).find(e=>e.getClientRects().length&&e.textContent.trim()==='+JSON.stringify(mode)+')');
     await key('Escape');
     await wait('!document.querySelector(":popover-open")');
   };
@@ -175,7 +172,7 @@ try {
       await evaluate('document.querySelector(\'[aria-label="Tabla de tareas con desplazamiento horizontal"]\').scrollTop=0');
       await capture('04_agrupacion_responsable.png');
     }
-    if(mode!=='Estado')assert.equal(await evaluate('Boolean(document.querySelector(\'tr[draggable="true"]\'))'),false);
+    if(mode!=='Estado')assert.equal(await evaluate('Boolean(document.querySelector(\'tr[data-drag-enabled="true"]\'))'),false);
     assert.equal(await evaluate('document.querySelector("[data-task-count]").textContent'), '5 tareas');
   }
   checks.push('Cinco agrupaciones sin marcos ni drop implícito; botón de icono y contador único estable');

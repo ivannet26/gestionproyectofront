@@ -30,8 +30,7 @@ let draft;
 const { default: QuickRow } = await load("../src/features/projects/TaskList/QuickTaskRow.tsx", {
   "./useQuickTask": { useQuickTask: () => draft },
   "./useQuickTaskAlignment": { useQuickTaskAlignment() {} },
-  "./TaskCell": { StateLabel: ({ name }) => React.createElement("span", null, name) },
-  "../TaskForm/TaskIcon": { default: () => React.createElement("svg", { "aria-hidden": true }) },
+  "./TaskCell": { StateIcon: () => React.createElement("svg", { "aria-hidden": true }), StateLabel: ({ name }) => React.createElement("span", null, name) },
   "../../../shared/Tooltip": { default: ({ label, children }) => React.createElement("span", { title: label }, children("hint")) },
   "../TaskForm/TaskOptionalProperties": { default: () => React.createElement("span", null, "Propiedades opcionales") },
   "../TaskForm/taskDates": { taskCreationStart: () => "2026-10-21" },
@@ -68,21 +67,27 @@ test("inline errors and pending actions remain visible while preserving draft co
   assert.match(markup, /Guardando…/);
 });
 
-test("Workspace success announcements occupy no visual space and refresh failures remain alerts", async () => {
+test("Workspace saves announce through the shared overlay and refresh failures remain retryable alerts", async () => {
   const Empty = () => null;
-  let slot = 0, refreshError = "";
+  const effects = [], notifications = [];
+  let slot = 0, refreshError = "", list;
   const { default: Workspace } = await load("../src/features/projects/ProjectWorkspace/ProjectWorkspace.tsx", {
-    react: { ...React, useState(initial) {
+    react: { ...React, useEffect(effect) { effects.push(effect); }, useState(initial) {
       const index = slot++;
-      return React.useState(index === 0 ? project : index === 1 ? [] : index === 2 ? false : index === 4 ? "Guardado: Tarea" : index === 5 ? refreshError : initial);
+      return React.useState(index === 0 ? project : index === 1 ? [] : index === 4 ? false : index === 8 ? refreshError : initial);
     } },
     "react-router": { useSearchParams: () => [new URLSearchParams("vista=lista")], Link: Empty },
     "../../auth/api": { errorText: String },
     "../services": Object.fromEntries(["changeDependency", "changeTaskState", "createTask", "getProject", "getTasks", "updateTask"].map((name) => [name, async () => {}])),
     "../DependencyForm/DependencyForm": { default: Empty }, "../LabelList/LabelList": { default: Empty },
-    "../Modal/Modal": { default: Empty }, "../TaskForm/TaskForm": { default: Empty }, "../TaskList/TaskList": { default: Empty },
-    "./TaskBoard": { default: Empty },
-    "../TaskList/taskHierarchy": { formatTaskDate: String }, "../TaskStateForm/TaskStateForm": { default: Empty },
+    "../Modal/Modal": { default: Empty }, "../TaskForm/TaskForm": { default: Empty }, "../TaskList/TaskList": { default: (props) => { list = props; return null; } },
+    "../TaskBoard/TaskBoard": { default: Empty },
+    "../../../hooks/useToast": { useToast: () => ({ addToast(value) { notifications.push(value); } }) },
+    "../TaskList/TaskGroupingControl": { default: Empty },
+    "../TaskList/TaskGroupExpansionControl": { default: Empty },
+    "../TaskList/TaskSearch": { default: Empty },
+    "../TaskList/TaskStatusSettingsControl": { default: Empty },
+    "../TaskList/taskHierarchy": { taskHierarchy: () => ({ visible: new Set() }) }, "../TaskStateForm/TaskStateForm": { default: Empty },
     "./ProjectHeader": { default: Empty }, "../taskAssignees": { taskAssignees: () => [] },
     "./ProjectToolbar": { default: Empty }, "../../../shared/icons/PlusIcon": { default: Empty },
     "../TaskStatusConfiguration/TaskStatusConfiguration": { default: Empty },
@@ -90,8 +95,25 @@ test("Workspace success announcements occupy no visual space and refresh failure
     "../TaskDetail/useTaskDetail": { useTaskDetailNavigation: () => ({ target: null, openTaskDetail() {}, closeTaskDetail() {} }) },
     "../taskCollection": { reconcileTasks: (_current, incoming) => incoming },
   });
-  const render = () => { slot = 0; return renderToStaticMarkup(React.createElement(Workspace, { projectId:42, catalogs:{ priorities:[] } })); };
-  assert.match(render(), /<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">Guardado: Tarea<\/p>/);
+  const render = () => { slot = 0; effects.length = 0; return renderToStaticMarkup(React.createElement(Workspace, { projectId:42, catalogs:{ priorities:[] } })); };
+  const markup = render();
+  const unmount = effects[0]();
+  list.onCreated({ id: 9, name: "Tarea confirmada" });
+  assert.deepEqual(notifications, [{ icon: "success", title: "Guardado", message: "Tarea confirmada" }]);
+  assert.doesNotMatch(markup, /Guardado:|role="status"[^>]*>Guardado/);
+  const { Toast } = await load("../src/shared/Toast/Toast.tsx", {
+    "../../hooks/useToast": { useToast: () => ({ removeToast() {}, toasts: notifications.map((value, index) => ({ ...value, id: String(index) })) }) },
+    ...Object.fromEntries(["AlertIcon", "ErrorIcon", "InfoIcon", "SuccessIcon", "XIcon"].map(name => ["../icons/"+name, { default: Empty }])),
+  });
+  const overlay = renderToStaticMarkup(React.createElement(Toast));
+  assert.match(overlay, /class="fixed /);
+  assert.match(overlay, /role="status"/);
+  assert.match(overlay, /Guardado/); assert.match(overlay, /Tarea confirmada/);
+  unmount();
+  list.onCreated({ id: 10, name: "Respuesta tardía" });
+  assert.equal(notifications.length, 1);
   refreshError = "No se pudo actualizar la lista";
-  assert.match(render(), /role="alert">No se pudo actualizar la lista/);
+  const failed = render();
+  assert.match(failed, /role="alert"[^>]*><span>No se pudo actualizar la lista<\/span>/);
+  assert.match(failed, /Actualizar lista/);
 });

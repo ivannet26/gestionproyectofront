@@ -70,9 +70,7 @@ export function errorText(failure: unknown): string {
     : "No se pudo completar la solicitud";
 }
 
-const apiBase = (
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000"
-).replace(/\/$/, "");
+export const apiBase = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/+$/, "");
 
 let accessToken: string | null = null;
 let renewal: Promise<SessionUser> | null = null;
@@ -92,7 +90,9 @@ export function sessionKey(user: SessionUser): string {
   ]);
 }
 
-function checkSession(epoch: number): void {
+export function sessionVersion(): number { return sessionEpoch; }
+
+export function checkSession(epoch: number): void {
   if (epoch !== sessionEpoch) {
     throw new Error("La sesión cambió. Vuelve a cargar la información.");
   }
@@ -105,6 +105,27 @@ function csrfCookie(): string {
 
   const match = document.cookie.match(/(?:^|; )csrftoken=([^;]*)/);
   return match?.[1] ? decodeURIComponent(match[1]) : "";
+}
+
+export function getCsrfToken(): string { return csrfCookie(); }
+
+export function invalidateReads(): void { pendingReads.clear(); }
+
+export function expireSession(epoch: number): void {
+  if (epoch !== sessionEpoch) return;
+  clearAccess();
+  window.dispatchEvent(new Event("gm-session-expired"));
+}
+
+export function sharedRead<T>(scope: string, load: () => Promise<T>): Promise<T> {
+  const key = JSON.stringify([sessionEpoch, scope]);
+  const existing = pendingReads.get(key);
+  if (existing) return existing as Promise<T>;
+  const operation = load().finally(() => {
+    if (pendingReads.get(key) === operation) pendingReads.delete(key);
+  });
+  pendingReads.set(key, operation);
+  return operation;
 }
 
 async function parseResponse<T>(response: Response): Promise<T> {
@@ -182,7 +203,7 @@ export async function refreshSession(): Promise<SessionUser> {  if (!renewal) {
 
       if (principal && principal !== nextPrincipal) {
         sessionEpoch += 1;
-        pendingReads.clear();
+        invalidateReads();
       }
 
       principal = nextPrincipal;
@@ -253,7 +274,7 @@ export function clearAccess(): void {
   accessToken = null;
   principal = "";
   sessionEpoch += 1;
-  pendingReads.clear();
+  invalidateReads();
   renewal = null;
 }
 
@@ -283,8 +304,7 @@ async function executeRequest<T>(
       response = await rawRequest(path, options, namespace);
     } catch (failure) {
       if (epoch === sessionEpoch) {
-        clearAccess();
-        window.dispatchEvent(new Event("gm-session-expired"));
+        expireSession(epoch);
         throw failure;
       }
 
@@ -299,7 +319,7 @@ async function executeRequest<T>(
   checkSession(epoch);
 
   if ((options.method ?? "GET").toUpperCase() !== "GET") {
-    pendingReads.clear();
+    invalidateReads();
   }
 
   return payload;
@@ -315,21 +335,5 @@ export function apiRequest<T>(
     return executeRequest<T>(path, options, retry, namespace);
   }
 
-  const key = JSON.stringify([sessionEpoch, namespace, path, retry]);
-  const existing = pendingReads.get(key);
-
-  if (existing) {
-    return existing as Promise<T>;
-  }
-
-  const operation = executeRequest<T>(path, options, retry, namespace).finally(
-    () => {
-      if (pendingReads.get(key) === operation) {
-        pendingReads.delete(key);
-      }
-    },
-  );
-
-  pendingReads.set(key, operation);
-  return operation;
+  return sharedRead(JSON.stringify([namespace, path, retry]), () => executeRequest<T>(path, options, retry, namespace));
 }

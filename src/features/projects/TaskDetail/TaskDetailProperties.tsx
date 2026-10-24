@@ -1,12 +1,17 @@
 import { useEffect, useId, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { errorText } from "../../auth/api";
 import type { Project, ProjectCatalogs, Task } from "../types";
 import TaskCell from "../TaskList/TaskCell";
 import type { TaskChanges } from "../TaskList/TaskCell";
 import TaskProperty from "../TaskForm/TaskProperty";
-import TaskIcon from "../TaskForm/TaskIcon";
-import type { TaskIconName } from "../TaskForm/TaskIcon";
+import type { IconProps } from "../../../shared/icons/types";
+import StatusIcon from "../../../shared/icons/StatusIcon";
+import UserIcon from "../../../shared/icons/UserIcon";
+import CalendarIcon from "../../../shared/icons/CalendarIcon";
+import FlagIcon from "../../../shared/icons/FlagIcon";
+import HourglassIcon from "../../../shared/icons/HourglassIcon";
+import HashIcon from "../../../shared/icons/HashIcon";
 import { formatEstimate, parseEstimate } from "./detailFormat";
 import { taskAssignees } from "../taskAssignees";
 
@@ -41,9 +46,9 @@ export function TaskTitle({ task, onPatch, disabled }: Pick<TaskChanges, "onPatc
   </h1>;
 }
 
-function Property({ label, icon, children }: { label: string; icon: TaskIconName; children: ReactNode }) {
+function Property({ label, Icon, children }: { label: string; Icon: ComponentType<IconProps>; children: ReactNode }) {
   return <div className="detail-property grid min-w-0 grid-cols-[8rem_minmax(0,1fr)] items-start gap-2 max-sm:grid-cols-[6.5rem_minmax(0,1fr)]">
-    <div className="flex items-center gap-2 py-2 text-xs text-neutral-600"><TaskIcon name={icon} /><span>{label}</span></div>
+    <div className="flex items-center gap-2 py-2 text-xs text-neutral-600"><Icon className="size-4" /><span>{label}</span></div>
     <div className="min-w-0 [&_button]:max-w-full [&_button]:text-xs">{children}</div>
   </div>;
 }
@@ -77,12 +82,12 @@ function EstimateEditor({ task, onPatch, close }: Pick<TaskChanges, "onPatch"> &
 export default function TaskDetailProperties({ project, catalogs, task, parent, ...changes }: TaskChanges & { project: Project; catalogs: ProjectCatalogs; task: Task; parent?: Task }) {
   const cell = (field: "state_code" | "responsible_id" | "start_date" | "due_date" | "priority" | "labels") => <TaskCell {...changes} appearance="detail" field={field} project={project} catalogs={catalogs} task={task} parent={parent} />;
   return <section aria-label="Propiedades de la tarea" className="grid min-w-0 grid-cols-2 gap-x-6 gap-y-2 border-b border-neutral-300 pb-5 max-lg:grid-cols-1">
-    <Property label="Estado" icon="state">{cell("state_code")}</Property>
-    <Property label="Asignados" icon="person"><div className="flex min-w-0 flex-wrap items-center gap-2">{cell("responsible_id")}{taskAssignees(task).length > 0 && <span className="break-words text-sm text-neutral-800">{taskAssignees(task).map((person) => person.name).join(", ")}</span>}</div></Property>
-    <Property label="Fechas" icon="date"><div className="flex min-w-0 flex-wrap items-center gap-1 [&>div]:max-w-full! [&>div]:w-auto!">{cell("start_date")}<span aria-hidden="true" className="text-neutral-600">→</span>{cell("due_date")}</div></Property>
-    <Property label="Prioridad" icon="priority">{cell("priority")}</Property>
-    <Property label="Duración estimada" icon="estimate"><TaskProperty appearance="detail" cell id={`detail-${task.id}-estimate`} label="Duración estimada" icon="estimate" value={formatEstimate(task.estimated_minutes)} content={<span>{formatEstimate(task.estimated_minutes)}</span>} disabled={!task.permissions.edit}>
+    <Property label="Estado" Icon={StatusIcon}>{cell("state_code")}</Property>
+    <Property label="Asignados" Icon={UserIcon}><div className="flex min-w-0 flex-wrap items-center gap-2">{cell("responsible_id")}{taskAssignees(task).length > 0 && <span className="break-words text-sm text-neutral-800">{taskAssignees(task).map((person) => person.name).join(", ")}</span>}</div></Property>
+    <Property label="Fechas" Icon={CalendarIcon}><div className="flex min-w-0 flex-wrap items-center gap-1 [&>div]:max-w-full! [&>div]:w-auto!">{cell("start_date")}<span aria-hidden="true" className="text-neutral-600">→</span>{cell("due_date")}</div></Property>
+    <Property label="Prioridad" Icon={FlagIcon}>{cell("priority")}</Property>
+    <Property label="Duración estimada" Icon={HourglassIcon}><TaskProperty appearance="detail" cell id={`detail-${task.id}-estimate`} label="Duración estimada" icon={HourglassIcon} value={formatEstimate(task.estimated_minutes)} content={<span>{formatEstimate(task.estimated_minutes)}</span>} disabled={!task.permissions.edit}>
       {(close) => <EstimateEditor task={task} onPatch={changes.onPatch} close={close} />}</TaskProperty></Property>
-    <Property label="Etiquetas" icon="labels"><div className="flex min-w-0 flex-wrap items-center gap-1">{cell("labels")}{task.labels.map((label) => <span key={label.id} className="max-w-full break-words rounded-lg border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-xs text-neutral-800">{label.name}</span>)}</div></Property>
+    <Property label="Etiquetas" Icon={HashIcon}><div className="flex min-w-0 flex-wrap items-center gap-1">{cell("labels")}{task.labels.map((label) => <span key={label.id} className="max-w-full break-words rounded-lg border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-xs text-neutral-800">{label.name}</span>)}</div></Property>
   </section>;
 }

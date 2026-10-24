@@ -1,36 +1,44 @@
 import {
-  createContext,
   useCallback,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-
-export interface LoadingContextValue {
-  isLoading: boolean;
-  showLoading: () => void;
-  hideLoading: () => void;
-}
-export const LoadingContext = createContext<LoadingContextValue | null>(null);
+import { LoadingContext } from "./loadingState";
+import type { LoadingContextValue } from "./loadingState";
 
 export function LoadingProvider({ children }: { children: ReactNode }) {
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [legacyLoading, setLegacyLoading] = useState(true);
+  const [pending, setPending] = useState(0);
 
   const showLoading = useCallback(() => {
-    setIsLoading(true);
+    setLegacyLoading(true);
   }, []);
 
   const hideLoading = useCallback(() => {
-    setIsLoading(false);
+    setLegacyLoading(false);
   }, []);
+
+  const startLoading = useCallback(() => {
+    let active = true;
+    setPending((current) => current + 1);
+    return () => {
+      if (!active) return;
+      active = false;
+      setPending((current) => current - 1);
+    };
+  }, []);
+
+  const isLoading = legacyLoading || pending > 0;
 
   const value = useMemo<LoadingContextValue>(
     () => ({
       isLoading,
       showLoading,
       hideLoading,
+      startLoading,
     }),
-    [isLoading, showLoading, hideLoading],
+    [isLoading, showLoading, hideLoading, startLoading],
   );
 
   return (

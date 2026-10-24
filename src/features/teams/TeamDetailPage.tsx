@@ -38,7 +38,7 @@ export default function TeamDetailPage() {
   };
 
   return (
-    <main className="min-h-screen text-neutral-800">
+    <main className="min-h-full text-neutral-800">
       <header className="mb-8">
         <div className="flex items-center gap-2.5">
           <h1 className="text-lg font-medium text-neutral-800">{team.name}</h1>

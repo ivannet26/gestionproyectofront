@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { ProjectArea } from "../types";
 import TaskProperty from "../TaskForm/TaskProperty";
-import TaskIcon from "../TaskForm/TaskIcon";
+import BuildingIcon from "../../../shared/icons/BuildingIcon";
+import CheckIcon from "../../../shared/icons/CheckIcon";
 import { propertyClasses as styles } from "../ProjectForm/formClasses";
 interface AreaSelectorProps {
   options: ProjectArea[];
@@ -17,7 +18,7 @@ export default function AreaSelector({ options, selected, onChange, error = "" }
     .includes(search.trim().toLocaleLowerCase("es")));
 
   return (
-    <TaskProperty id="project-areas" label="Área obligatoria" icon="area" error={error}
+    <TaskProperty id="project-areas" label="Área obligatoria" icon={BuildingIcon} error={error}
       value={area?.name ?? "Área *"}>
       {(close) => <>
         <label htmlFor="project-area-search">Buscar área</label>
@@ -30,7 +31,7 @@ export default function AreaSelector({ options, selected, onChange, error = "" }
               if (selected[0] !== item.id) onChange([item.id]);
               close();
             }}>
-            <span>{item.name}</span>{selected[0] === item.id && <TaskIcon name="check" />}
+            <span>{item.name}</span>{selected[0] === item.id && <CheckIcon className="size-4" />}
           </button>)}
           {results.length === 0 && <p className={styles.hint} role="status">{options.length === 0
             ? "No hay áreas disponibles." : "No hay áreas que coincidan."}</p>}

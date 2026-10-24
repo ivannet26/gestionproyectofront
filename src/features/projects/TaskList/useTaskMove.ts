@@ -39,12 +39,12 @@ export function useTaskMove(project: Project, onConfirmed: ((tasks: Task[]) => v
     return Boolean(onConfirmed && !pending.current && task.move_revision && task.permissions.state && (task.state_code === state || (task.move_targets ? task.move_targets.includes(state) : task.transitions.some((item) => item.target === state))));
   }
   function end() { activeDrag.current = null; setDragging(null); setDrop(null); }
-  async function execute(movement: Movement, reason = "") {
+  async function execute(movement: Movement) {
     if (pending.current || !alive.current) return;
     pending.current = true; setBusy(true); setError("");
     const requestSession = session.current;
     try {
-      const result = await moveTask(project.id, movement.task.id, { state_code: movement.state, before_id: movement.before, expected_revision: movement.task.move_revision!, reason });
+      const result = await moveTask(project.id, movement.task.id, { state_code: movement.state, before_id: movement.before, expected_revision: movement.task.move_revision! });
       if (alive.current && requestSession === session.current) {
         onConfirmed?.(result);
         requestAnimationFrame(() => { if (alive.current && document.activeElement === document.body) document.querySelector<HTMLButtonElement>(`tr[data-task-id="${movement.task.id}"]:not([data-context]) button[aria-label^="Opciones"]`)?.focus({ preventScroll: true }); });

@@ -22,7 +22,7 @@ export default function TaskStateForm({ task, states, onSubmit, initialState = "
     event.preventDefault();
     setBusy(true);
     setError("");
-    try { await onSubmit({ state_code: target, reason: "" }); }
+    try { await onSubmit({ state_code: target }); }
     catch (failure) { setError(errorText(failure)); }
     finally { setBusy(false); }
   }

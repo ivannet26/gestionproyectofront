@@ -25,7 +25,7 @@ export default function RecoveryRequestsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white text-neutral-800" id="main-content">
+    <main className="min-h-full bg-white text-neutral-800" id="main-content">
       <header className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div className="max-w-2xl">
           <h1 className="m-0 text-lg font-medium text-neutral-800">

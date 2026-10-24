@@ -120,7 +120,7 @@ test("move applies immediately without a reason dialog while prohibited targets 
   assert.equal(hook.requests.length, 0);
   hook.render().propose(task, "BLOCKED", null);
   assert.equal(hook.requests.length, 1);
-  assert.equal(hook.requests[0].payload.reason, "");
+  assert.equal(hook.requests[0].payload.reason, undefined);
   assert.equal(hook.render().confirmation, undefined);
   assert.equal(hook.accepted.length, 0);
   hook.unmount(); hook.requests[0].resolve([]); await new Promise(resolve => setImmediate(resolve));

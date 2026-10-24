@@ -29,7 +29,9 @@ const { default: Control } = await load("../src/features/projects/TaskList/TaskG
   "../TaskForm/TaskProperty": { default: ({ value, children }) => React.createElement("div", null, React.createElement("button", null, value), children(() => {})) },
   "../TaskForm/TaskIcon": { default: ({ name }) => React.createElement("svg", { "data-icon": name, "aria-hidden": true }) },
   "../../../shared/icons/ChevronDownIcon": { default: () => React.createElement("svg", { "aria-hidden": true }) },
-  "../../../shared/icons/StackIcon": { default: () => React.createElement("svg", { "aria-hidden": true }) },
+  "../../../shared/icons/StackIcon": { default: () => React.createElement("svg", { "data-icon": "state", "aria-hidden": true }) },
+  ...Object.fromEntries(["AlertIcon", "ClockIcon", "HashIcon", "UserIcon"].map(name => ["../../../shared/icons/"+name, { default: () => React.createElement("svg", { "aria-hidden": true }) }])),
+  "../../../shared/icons/SuccessIcon": { default: () => React.createElement("svg", { "data-icon": "check", "aria-hidden": true }) },
 });
 const states = [{ code: "EN_CURSO", name: "En marcha" }, { code: "PENDIENTE", name: "Por hacer" }, { code: "COMPLETADA", name: "Revisada" }];
 const priorities = [{ code: 1, name: "Urgente" }, { code: 2, name: "Alta" }, { code: 3, name: "Normal" }, { code: 4, name: "Baja" }];
@@ -202,6 +204,7 @@ test("editing one shared record reclassifies all visual appearances", () => {
 test("grouping menu exposes exactly five modes, order, and only the relevant independent switch", () => {
   const render = (settings) => renderToStaticMarkup(React.createElement(Control, { preferences: { ...defaults, ...settings }, onChange() {} }));
   const state = render({});
+  assert.ok(state.includes("grid-cols-[minmax(0,5fr)_minmax(0,3fr)]"));
   assert.equal((state.match(/role="menuitemradio"/g) ?? []).length, 5);
   assert.equal((state.match(/aria-checked="true"/g) ?? []).length, 1);
   assert.match(state, /role="menuitemradio" aria-checked="true"[^>]*>[\s\S]*?data-icon="state"/);

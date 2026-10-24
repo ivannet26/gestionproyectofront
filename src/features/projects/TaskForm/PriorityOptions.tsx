@@ -1,5 +1,7 @@
+import FlagIcon from "../../../shared/icons/FlagIcon";
+import SuccessIcon from "../../../shared/icons/SuccessIcon";
 import type { ProjectCatalogs } from "../types";
-import TaskIcon from "./TaskIcon";
+import { priorityTones } from "./priorityTones";
 
 export default function PriorityOptions({
   priorities,
@@ -23,9 +25,12 @@ export default function PriorityOptions({
           aria-pressed={value === item.code}
           onClick={() => onChange(item.code)}
         >
-          <TaskIcon name="priority" />
+          <FlagIcon
+            className={`size-4 shrink-0 ${priorityTones[item.code ?? 0] ?? "text-neutral-500"}`}
+            fill
+          />
           <span>{item.name}</span>
-          {value === item.code && <TaskIcon name="check" />}
+          {value === item.code && <SuccessIcon className="size-4 shrink-0" />}
         </button>
       ))}
     </div>

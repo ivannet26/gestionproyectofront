@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-23T05:36:07.798Z",
+  "date": "2026-10-24T13:58:46.275Z",
   "checks": [
     "Cuatro categorías, un botón de guardar sin menú; guardar una plantilla y Escape por capas no aplican el flujo",
     "Scrum COMPLETADO se conserva en Activo por posición; un PATCH, búsqueda intacta e historial único sin motivos",
@@ -124,43 +124,43 @@
       "method": "PATCH",
       "payload": {
         "template": "custom",
-        "revision": "74665e12f805745e0aba04d0ff8cffe63ce946262584e21d54a9e980a8ccfee9",
+        "revision": "dd4a79a49bdaba01ce90cc7ce9ee57366a16c62542603bfce609ee1e8182f243",
         "states": [
           {
             "name": "ABIERTO",
             "category": "not_started",
             "color": "#737373",
-            "code": "draft_3193235804eb43"
+            "code": "draft_7d14e97861194e"
           },
           {
             "name": "CONCEPTO",
             "category": "active",
             "color": "#d97706",
-            "code": "draft_1e3f2cf39b9a48"
+            "code": "draft_a0411ff1012949"
           },
           {
             "name": "EN PROGRESO",
             "category": "active",
             "color": "#db2777",
-            "code": "draft_13677cc2ae6148"
+            "code": "draft_9a6f45a4a65a46"
           },
           {
             "name": "EN EJECUCIÓN",
             "category": "active",
             "color": "#9333ea",
-            "code": "draft_06a856a1c3e341"
+            "code": "draft_a1e0c3577a124a"
           },
           {
             "name": "EN REVISIÓN",
             "category": "active",
             "color": "#6747e8",
-            "code": "draft_beef65b9b3f343"
+            "code": "draft_396fd52b2ee24c"
           },
           {
             "name": "CERRADO",
             "category": "closed",
             "color": "#26834a",
-            "code": "draft_c46bc48d7e924a"
+            "code": "draft_f6a2b2dba7c948"
           }
         ]
       },
@@ -213,6 +213,11 @@
     },
     {
       "path": "/api/auth/refresh/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/refresh/",
       "method": "POST",
       "status": 200
     },
@@ -258,11 +263,16 @@
     },
     {
       "path": "/api/projects/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/catalogs/",
       "method": "GET",
       "status": 200
     },
     {
-      "path": "/api/projects/catalogs/",
+      "path": "/api/projects/",
       "method": "GET",
       "status": 200
     },
@@ -281,43 +291,43 @@
       "method": "PATCH",
       "payload": {
         "template": "custom",
-        "revision": "86a15d92983bedfe2201efaaf62cb83e1712a9a0e25f0bf19bbb5b5a444066b7",
+        "revision": "76ee3f6dbc9116333c2e96d8c946db82f7f35c1b58c539e80b870a66007571d6",
         "states": [
           {
             "name": "ABIERTO",
             "category": "not_started",
             "color": "#737373",
-            "code": "draft_e494136470dc48"
+            "code": "draft_6cb27092d89347"
           },
           {
             "name": "CONCEPTO",
             "category": "active",
             "color": "#d97706",
-            "code": "draft_35ae39b50ae841"
+            "code": "draft_9ed7e28d313a48"
           },
           {
             "name": "EN PROGRESO",
             "category": "active",
             "color": "#db2777",
-            "code": "draft_8239c72278c74e"
+            "code": "draft_ca7132c50e2248"
           },
           {
             "name": "EN EJECUCIÓN",
             "category": "active",
             "color": "#9333ea",
-            "code": "draft_27aa050d1e1a4c"
+            "code": "draft_6d7ec46d09624e"
           },
           {
             "name": "EN REVISIÓN",
             "category": "active",
             "color": "#6747e8",
-            "code": "draft_2e8a5ccbbaae4e"
+            "code": "draft_b23ded1f898540"
           },
           {
             "name": "CERRADO",
             "category": "closed",
             "color": "#26834a",
-            "code": "draft_6f54e192262446"
+            "code": "draft_510a2952865d4c"
           }
         ]
       },
@@ -325,43 +335,48 @@
     },
     {
       "path": "/api/projects/3/task-states/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/3/task-states/",
       "method": "PATCH",
       "payload": {
         "template": "custom",
-        "revision": "86a15d92983bedfe2201efaaf62cb83e1712a9a0e25f0bf19bbb5b5a444066b7",
+        "revision": "76ee3f6dbc9116333c2e96d8c946db82f7f35c1b58c539e80b870a66007571d6",
         "states": [
           {
             "name": "ABIERTO",
             "category": "not_started",
             "color": "#737373",
-            "code": "draft_e494136470dc48"
+            "code": "draft_6cb27092d89347"
           },
           {
             "name": "CONCEPTO",
             "category": "active",
             "color": "#d97706",
-            "code": "draft_35ae39b50ae841"
+            "code": "draft_9ed7e28d313a48"
           },
           {
             "name": "EN PROGRESO",
             "category": "active",
             "color": "#db2777",
-            "code": "draft_8239c72278c74e"
+            "code": "draft_ca7132c50e2248"
           },
           {
             "name": "EN EJECUCIÓN",
             "category": "active",
             "color": "#9333ea",
-            "code": "draft_27aa050d1e1a4c"
+            "code": "draft_6d7ec46d09624e"
           },
           {
             "name": "EN REVISIÓN",
             "category": "active",
             "color": "#6747e8",
-            "code": "draft_2e8a5ccbbaae4e"
+            "code": "draft_b23ded1f898540"
           },
           {
-            "code": "draft_b43dfa664a9249",
+            "code": "draft_e57adc6beb5b4a",
             "name": "VALIDADO NUEVO",
             "category": "done",
             "color": "#0d9488"
@@ -370,11 +385,16 @@
             "name": "CERRADO",
             "category": "closed",
             "color": "#26834a",
-            "code": "draft_6f54e192262446"
+            "code": "draft_510a2952865d4c"
           }
         ]
       },
       "status": 200
+    },
+    {
+      "path": "/api/projects/3/state-templates/",
+      "method": "OPTIONS",
+      "status": 204
     },
     {
       "path": "/api/projects/3/task-states/",

@@ -23,6 +23,16 @@ async function load(file, dependencies = {}) {
 const formatting = await load('../src/features/projects/TaskDetail/detailFormat.ts');
 const hierarchy = await load('../src/features/projects/TaskList/taskHierarchy.ts');
 const Empty = () => null;
+const stateGroups = await load('../src/features/projects/stateGroups.ts');
+const { StateIcon } = await load('../src/features/projects/TaskList/TaskCell.tsx', {
+  ...Object.fromEntries(['CalendarIcon', 'CheckIcon', 'CircleDashedIcon', 'CircleDotIcon', 'CircleHalfIcon', 'CircleMinusIcon', 'FlagIcon', 'HashIcon', 'SuccessIcon', 'UserIcon', 'XIcon', 'StatusIcon'].map(name => ['../../../shared/icons/'+name, { default: () => React.createElement('i', { 'data-icon': ['CheckIcon', 'SuccessIcon'].includes(name) ? 'check' : 'state' }) }])),
+  '../../../shared/InitialsAvatar': { default: Empty }, '../../auth/api': { errorText: String },
+  '../CreateProjectModal/ProjectEndDateSelector': { Calendar: Empty }, '../LabelEditor/LabelEditor': { default: Empty },
+  '../labelSelection': { labelSelection() {} }, '../ResponsiblePicker/AssigneeSelector': { default: Empty },
+  '../stateGroups': stateGroups, '../taskAssignees': { taskAssignees: () => [] },
+  '../TaskForm/PriorityOptions': { default: Empty }, '../TaskForm/priorityTones': { priorityTones: {} }, '../TaskForm/taskDates': { isPastTaskDate: () => false },
+  '../TaskForm/TaskDateValue': { default: Empty }, '../TaskForm/TaskProperty': { default: Empty }, './taskHierarchy': hierarchy,
+});
 
 test('duration is integer minutes with readable hours and Lima activity times', () => {
   assert.equal(formatting.formatEstimate(95), '1 h 35 min');
@@ -72,7 +82,8 @@ test('empty activity explicitly identifies missing historical events without inv
 
 test('subtask finished indicator uses category, not a Scrum display name; global counts survive paging', async () => {
   const { default: Subtasks } = await load('../src/features/projects/TaskDetail/TaskSubtasks.tsx', {
-    '../TaskList/TaskCell': { PriorityLabel: ({ name }) => name },
+    '../TaskList/TaskCell': { PriorityLabel: ({ name }) => name, StateIcon },
+    '../../../shared/icons/ChevronRightIcon': { default: Empty },
     '../TaskForm/TaskIcon': { default: ({ name }) => React.createElement('i', { 'data-icon': name }) },
     '../TaskList/QuickTaskRow': { default: Empty }, '../../../shared/Tooltip': { default: Empty },
     '../../../shared/avatar': { avatarFor: String }, '../taskAssignees': { taskAssignees: () => [] },

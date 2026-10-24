@@ -275,7 +275,7 @@ export type TaskFormPayload = CreateTaskPayload | EditTaskPayload;
 
 export interface TaskStatePayload {
   state_code: string;
-  reason: string;
+  reason?: string;
 }
 
 export type TaskActionKind = "edit" | "state" | "child" | "dependencies" | "detail";

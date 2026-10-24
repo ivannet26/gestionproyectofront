@@ -217,6 +217,8 @@ test("dialog retains all four categories and actions without inheritance control
     "../TaskForm/TaskIcon": { default: Icon },
     "../../../shared/icons/ChevronDownIcon": { default: Icon }, "../../../shared/icons/DotsIcon": { default: Icon },
     "../../../shared/icons/InfoIcon": { default: Icon }, "../../../shared/icons/PlusIcon": { default: Icon },
+    "../../../shared/icons/CheckIcon": { default: Icon }, "../../../shared/icons/SettingsIcon": { default: Icon },
+    "../TaskList/TaskCell": { StateIcon: Icon },
     "../stateGroups": groups, "./stateDraft": drafts,
     "./useTaskStatusConfiguration": { useTaskStatusConfiguration: () => ({ configuration, states: initial, templates: [preset], categoryErrors: {}, loading: false, selected: null, error: "" }) },
   });

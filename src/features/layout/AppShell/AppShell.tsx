@@ -44,22 +44,26 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const [taskCreationRequest, setTaskCreationRequest] =
     useState<TaskCreationRequest | null>(null);
   const taskCreationSequence = useRef(0);
+  const hasLoadedProjects = useRef(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { hideLoading } = useLoading();
+  const { hideLoading, startLoading } = useLoading();
   const canViewAdmin = user.permissions.manage_accounts;
   const canCreateProject = user.role === "ADMINISTRADOR";
   const canCreateTasks =
     user.role === "ADMINISTRADOR" || user.role === "TRABAJADOR";
   const creationDisabled = projectsLoading || Boolean(projectError);
-  const needsCatalogs = creating || /^\/proyectos\/\d+$/.test(pathname);
-  const catalogLoading = !catalogsReady && !catalogError;
+  const projectWorkspace = /^\/proyectos\/\d+$/.test(pathname);
+  const needsCatalogs = creating || projectWorkspace;
+  const catalogLoading = needsCatalogs && !catalogsReady && !catalogError;
 
   useEffect(() => {
     let current = true;
+    const finishLoading = hasLoadedProjects.current ? () => {} : startLoading();
     void getProjects()
       .then((items) => {
         if (current) {
+          hasLoadedProjects.current = true;
           setProjects(items);
           setProjectError("");
         }
@@ -68,6 +72,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         if (current) setProjectError(errorText(failure));
       })
       .finally(() => {
+        finishLoading();
         if (current) {
           setProjectsLoading(false);
           hideLoading();
@@ -75,8 +80,9 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
       });
     return () => {
       current = false;
+      finishLoading();
     };
-  }, [projectReload, hideLoading]);
+  }, [projectReload, hideLoading, startLoading]);
 
   useEffect(() => {
     if (!needsCatalogs || catalogsReady) return;
@@ -129,7 +135,11 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
 
   function openTaskCreation(projectId: number) {
     const project = projects.find((item) => item.id === projectId);
-    if (!canCreateTasks || projectsLoading || !project?.permissions.create_tasks)
+    if (
+      !canCreateTasks ||
+      projectsLoading ||
+      !project?.permissions.create_tasks
+    )
       return;
     taskCreationSequence.current += 1;
     setTaskCreationRequest({
@@ -177,7 +187,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-neutral-900 md:flex-row">
+    <div className="flex min-h-screen flex-col bg-white text-neutral-900 md:h-screen md:flex-row">
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
@@ -194,7 +204,9 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         canCreateTasks={canCreateTasks}
         onCreateTask={openTaskCreation}
       />
-      <div className="min-w-0 w-full flex-1 bg-white p-3 md:p-6">
+      <div
+        className={`min-w-0 w-full flex-1 bg-white pb-0! p-3 md:p-6 ${projectWorkspace ? "md:overflow-hidden" : "md:overflow-y-auto"}`}
+      >
         {logoutError && (
           <p role="alert" className="mb-4 text-sm text-neutral-800">
             {logoutError}
