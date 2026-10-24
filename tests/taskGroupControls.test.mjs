@@ -80,6 +80,7 @@ test("global action handles open, closed and mixed groups without changing subtr
     "../TaskStateForm/TaskStateForm": { default: Marker },
     "../Modal/Modal": { default: Marker },
     "./taskListInteractions.css": {},
+    "./taskDropPosition": { taskDropPosition() {} },
     "./useTaskGrouping": { useTaskGrouping: () => ({
       hierarchy: { roots: [], visible: new Set() }, groups: groups(), preferences: { mode }, setPreferences() {},
     }) },

@@ -29,11 +29,10 @@ import { useTaskDetailNavigation } from "../TaskDetail/useTaskDetail";
 import TaskForm from "../TaskForm/TaskForm";
 import TaskList from "../TaskList/TaskList";
 import TaskBoard from "./TaskBoard";
-import { formatTaskDate } from "../TaskList/taskHierarchy";
 import TaskStateForm from "../TaskStateForm/TaskStateForm";
 import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
 import ProjectHeader from "./ProjectHeader";
-import ProjectToolbar from "./ProjectToolbar";
+import { reconcileTasks } from "../taskCollection";
 
 const styles = {
   pending:
@@ -62,6 +61,7 @@ export default function ProjectWorkspace({
 }: ProjectWorkspaceProps) {
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const collectionVersion = useRef(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -70,6 +70,8 @@ export default function ProjectWorkspace({
   const [action, setAction] = useState<TaskAction | null>(null);
   const [busy, setBusy] = useState(false);
   const [configuringStates, setConfiguringStates] = useState(false);
+  const [configurationVersion, setConfigurationVersion] = useState(0);
+  const [filteredCount, setFilteredCount] = useState<number | null>(null);
   const taskDetail = useTaskDetailNavigation();
   const [searchParams] = useSearchParams();
 
@@ -77,7 +79,9 @@ export default function ProjectWorkspace({
   const handledCreation = useRef<number | undefined>(undefined);
 
   const loadTasks = useCallback(async () => {
-    setTasks(await getTasks(projectId));
+    const version = collectionVersion.current;
+    const items = await getTasks(projectId);
+    if (version === collectionVersion.current) setTasks((current) => reconcileTasks(current, items, true));
   }, [projectId]);
 
   useEffect(() => {
@@ -164,24 +168,8 @@ export default function ProjectWorkspace({
               : "Editar datos de tarea";
 
   function acceptTask(saved: Task) {
-    setTasks((current) =>
-      current.some((task) => task.id === saved.id)
-        ? current.map((task) =>
-            task.id === saved.id
-              ? saved
-              : {
-                  ...task,
-                  move_revision: saved.move_revision ?? task.move_revision,
-                },
-          )
-        : [
-            ...current.map((task) => ({
-              ...task,
-              move_revision: saved.move_revision ?? task.move_revision,
-            })),
-            saved,
-          ],
-    );
+    collectionVersion.current++;
+    setTasks((current) => reconcileTasks(current, [saved]));
     setMessage(`Guardado: ${saved.name}`);
   }
 
@@ -252,13 +240,17 @@ export default function ProjectWorkspace({
   }
 
   function configured(configuration: ProjectTaskConfiguration) {
+    collectionVersion.current++;
+    const { tasks: confirmed, ...flow } = configuration;
     setProject((current) =>
-      current ? { ...current, task_states: configuration } : current,
+      current ? { ...current, task_states: flow } : current,
     );
+    if (confirmed) setTasks(confirmed);
+    setConfigurationVersion((value) => value + 1);
     setMessage("Estados del proyecto actualizados");
     setRefreshError("");
 
-    void loadTasks().catch((failure: unknown) => {
+    if (!confirmed) void loadTasks().catch((failure: unknown) => {
       setRefreshError(
         `Estados guardados. No se pudo actualizar la lista: ${errorText(failure)}`,
       );
@@ -410,7 +402,8 @@ export default function ProjectWorkspace({
         key={project.id}
         project={project}
         view={view}
-        taskCount={tasks.length}
+        taskCount={new Set(tasks.map((task) => task.id)).size}
+        filteredCount={view === "lista" ? filteredCount : null}
       />
 
       <p
@@ -474,7 +467,8 @@ export default function ProjectWorkspace({
               tasks={tasks}
               catalogs={catalogs}
               primaryAction={primaryAction}
-              onMoved={setTasks}
+              onCountChange={setFilteredCount}
+              onMoved={(items) => { collectionVersion.current++; setTasks((current) => reconcileTasks(current, items, true)); }}
               onConfigure={() => setConfiguringStates(true)}
               onAction={(kind, taskId) => {
                 setMessage("");
@@ -501,7 +495,9 @@ export default function ProjectWorkspace({
           catalogs={catalogs}
           onAction={(kind, taskId) => {
             setMessage("");
-            setAction({ kind, taskId });
+            if (kind === "detail")
+              taskDetail.openTaskDetail({ projectId, taskId });
+            else setAction({ kind, taskId });
           }}
           onPatch={async (task, data) => {
             acceptTask(await updateTask(projectId, task.id, data));
@@ -542,6 +538,7 @@ export default function ProjectWorkspace({
       )}
       {taskDetail.target && (
         <TaskDetailDialog
+          version={configurationVersion}
           project={project}
           catalogs={catalogs}
           target={taskDetail.target}

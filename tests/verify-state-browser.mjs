@@ -81,11 +81,15 @@ try {
     else if (url.pathname.endsWith("/task-states/")) {
       if (request.method === "PATCH") {
         const data = JSON.parse(request.postData);
-        configuration = { ...configuration, template: "custom", states: data.states, revision: "b".repeat(64) };
-        for (const mapping of data.reassignments) tasks = tasks.map((task) => {
-          const target = data.states.find((state) => state.code === mapping.target);
-          return task.state_code === mapping.source ? { ...task, state_code: target.code, state_name: target.name, state_category: target.category, state_color: target.color } : task;
+        assert.equal(data.reassignments, undefined);
+        tasks = tasks.map((task) => {
+          const previous = configuration.states.find(state => state.code === task.state_code);
+          const origins = configuration.states.filter(state => state.category === previous.category);
+          const targets = data.states.filter(state => state.category === previous.category);
+          const target = targets.find(state => state.code === task.state_code) ?? targets[Math.min(origins.indexOf(previous), targets.length-1)];
+          return { ...task, state_code: target.code, state_name: target.name, state_category: target.category, state_color: target.color };
         });
+        configuration = { ...configuration, template: "custom", states: data.states, tasks, revision: "b".repeat(64) };
       }
       payload = configuration;
     } else if (url.pathname.includes("/state-templates/")) {
@@ -194,8 +198,7 @@ try {
   await waitFor(`document.querySelector('dialog[open] [aria-label="Añadir estado a Activo"]')`);
   await evaluate(`document.querySelector('button[aria-haspopup="dialog"][aria-controls$="-templates"]').click()`);
   await clickText("Plantilla sintética de navegador");
-  await waitFor(`document.querySelector('section[aria-label="Reasignación de tareas"]')`);
-  await evaluate(`(()=>{const e=document.querySelector('select[id*="-target-"]');e.value=Array.from(e.options).find(o=>o.text==='ABIERTO').value;e.dispatchEvent(new Event('change',{bubbles:true}))})()`);
+  assert.equal(await evaluate(`Boolean(document.querySelector('section[aria-label="Reasignación de tareas"]'))`), false);
   const detailReads = requests.filter((item) => item.path === "/api/projects/42/" && item.method === "GET").length;
   await clickText("Aplicar cambios");
   await waitFor(`!document.querySelector('dialog[open]')`);
@@ -204,7 +207,7 @@ try {
   assert.equal(await evaluate(`document.querySelectorAll('[data-group-key]').length`), templates.find((item) => item.id === 91).states.length);
   assert.equal(requests.filter((item) => item.path === "/api/projects/42/" && item.method === "GET").length, detailReads);
   assert.equal(requests.filter((item) => item.method === "PATCH").length, 1);
-  checks.push("explicit reassignment applies once, preserves search and empty groups without a project reload");
+  checks.push("automatic same-category reassignment applies once, preserves search and empty groups without a project reload");
   assert.equal(errors.length, 0, JSON.stringify(errors));
   await writeFile(path.join(output, "task-status-browser-report.json"), JSON.stringify({ checks, desktop, mobile, requests, exceptions: errors, syntheticApi: true }, null, 2));
   console.log(JSON.stringify({ checks, exceptions: errors, syntheticApi: true }));

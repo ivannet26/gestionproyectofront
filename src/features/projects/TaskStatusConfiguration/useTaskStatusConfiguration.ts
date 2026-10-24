@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { errorText } from "../../auth/api";
+import { ApiError, errorText } from "../../auth/api";
 import { configureProjectTaskStates, getProjectTaskStates, getTaskStatusTemplates, saveTaskStatusTemplate } from "../services";
-import type { Project, ProjectTaskConfiguration, ProjectTaskState, StateReassignment, TaskStatusTemplate } from "../types";
+import type { Project, ProjectTaskConfiguration, ProjectTaskState, StateCategory, TaskStatusTemplate } from "../types";
+import type { SetStateAction } from "react";
 import { draftError, orderedDraft, templateDraft, templateStates } from "./stateDraft";
 import { categoryValue } from "../stateGroups";
 
@@ -14,7 +15,7 @@ export interface TaskFlowDraft {
 export function useTaskStatusConfiguration(project: Project | undefined, onConfigured: (value: ProjectTaskConfiguration) => void, onClose: () => void, draft?: TaskFlowDraft) {
   const initial = project?.task_states ?? { template: "custom", states: draft?.states ?? [], available_states: [], revision: "", can_configure: true } as ProjectTaskConfiguration;
   const [configuration, setConfiguration] = useState(initial);
-  const [states, setStates] = useState<ProjectTaskState[]>(() => orderedDraft(initial.states));
+  const [states, updateStates] = useState<ProjectTaskState[]>(() => orderedDraft(initial.states));
   const [templates, setTemplates] = useState<TaskStatusTemplate[]>([]);
   const [selected, setSelected] = useState<TaskStatusTemplate | null>(null);
   const [baseline, setBaseline] = useState(() => JSON.stringify(orderedDraft(initial.states)));
@@ -22,12 +23,13 @@ export function useTaskStatusConfiguration(project: Project | undefined, onConfi
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [reload, setReload] = useState(0);
-  const [reassignments, setReassignments] = useState<Record<string, StateReassignment>>({});
+  const [categoryErrors, setCategoryErrors] = useState<Partial<Record<StateCategory, string>>>({});
   const source = useRef({ initial, draft });
   const projectId = project?.id;
   const inFlight = useRef(false);
   const alive = useRef(true);
   const dirty = JSON.stringify(states) !== baseline;
+  function setStates(next: SetStateAction<ProjectTaskState[]>) { updateStates(next); setCategoryErrors({}); }
 
   useEffect(() => {
     if (!dirty) return;
@@ -58,7 +60,6 @@ export function useTaskStatusConfiguration(project: Project | undefined, onConfi
     if (dirty && !window.confirm("Se descartará la edición pendiente. ¿Continuar?")) return false;
     setSelected(template);
     setStates(template ? templateDraft(template) : []);
-    setReassignments({});
     setError("");
     return true;
   }
@@ -67,21 +68,20 @@ export function useTaskStatusConfiguration(project: Project | undefined, onConfi
     if (!inFlight.current && (!dirty || window.confirm("Se descartará la edición pendiente. ¿Cerrar?"))) onClose();
   }
 
-  async function saveTemplate(name: string, update: boolean) {
+  async function saveTemplate(name: string) {
     if (!project || draft) return false;
     if (inFlight.current) return false;
     const validation = draftError(states);
     if (validation) { setError(validation); return false; }
     if (!name.trim() || name.trim().length > 70) { setError("Escribe un nombre de 1 a 70 caracteres para la plantilla."); return false; }
-    if (templates.some((item) => item.name.toLocaleLowerCase("es") === name.trim().toLocaleLowerCase("es") && (!update || item.id !== selected?.id))) {
+    if (templates.some((item) => item.name.toLocaleLowerCase("es") === name.trim().toLocaleLowerCase("es"))) {
       setError("Ya existe una plantilla con ese nombre."); return false;
     }
-    if (update && (!selected || selected.preset || typeof selected.id !== "number")) return false;
     inFlight.current = true;
     setBusy(true);
     setError("");
     try {
-      const saved = await saveTaskStatusTemplate(project.id, { name: name.trim(), states: templateStates(states), ...(update ? { revision: selected!.revision } : {}) }, update ? selected!.id as number : undefined);
+      const saved = await saveTaskStatusTemplate(project.id, { name: name.trim(), states: templateStates(states) });
       if (!alive.current) return false;
       setTemplates((items) => [...items.filter((item) => item.id !== saved.id), saved]);
       setSelected(saved);
@@ -103,9 +103,6 @@ export function useTaskStatusConfiguration(project: Project | undefined, onConfi
       onClose();
       return;
     }
-    if (removed.some((state) => !states.some((item) => item.code === reassignments[state.code]?.target))) {
-      setError("Elige un destino para cada estado con tareas o subtareas."); return;
-    }
     inFlight.current = true;
     setBusy(true);
     setError("");
@@ -113,17 +110,20 @@ export function useTaskStatusConfiguration(project: Project | undefined, onConfi
       const result = await configureProjectTaskStates(project!.id, {
         template: "custom", revision: configuration.revision,
         states: orderedDraft(states).map((state) => ({ ...state, name: state.name.trim().toLocaleUpperCase("es") })),
-        reassignments: Object.values(reassignments).filter((item) => !states.some((state) => state.code === item.source)),
       });
       if (alive.current) { onConfigured(result); onClose(); }
-    } catch (failure) { if (alive.current) setError(errorText(failure)); }
+    } catch (failure) {
+      if (!alive.current) return;
+      const categories = failure instanceof ApiError ? failure.payload?.categories : undefined;
+      if (categories && typeof categories === "object") {
+        setCategoryErrors(Object.fromEntries(Object.entries(categories).map(([key, value]) => [key, Array.isArray(value) ? value.join(" ") : String(value)]))); setError("");
+      } else setError(errorText(failure));
+    }
     finally { inFlight.current = false; if (alive.current) setBusy(false); }
   }
 
-  const removed = Object.entries(configuration.usage ?? {}).filter(([code, count]) => count > 0 && !states.some((state) => state.code === code))
-    .map(([code]) => configuration.states.find((state) => state.code === code) ?? configuration.available_states.find((state) => state.code === code) ?? { code, name: code });
   return { configuration, states, setStates, templates, selected, loading, busy, error, setError, dirty,
-    reassignments, setReassignments, removed, select, close, saveTemplate, apply,
+    categoryErrors, select, close, saveTemplate, apply,
     retry: () => { if (!dirty || window.confirm("Se descartará la edición pendiente. ¿Recargar?")) { setLoading(true); setReload((value) => value + 1); } },
   };
 }

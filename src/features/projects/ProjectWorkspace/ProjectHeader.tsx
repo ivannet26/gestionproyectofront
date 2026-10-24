@@ -9,7 +9,7 @@ import { useProjectFavorite } from "../useProjectFavorite";
 const views = [["lista", "Lista"], ["tablero", "Tablero"], ["gantt", "Gantt"]] as const;
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700";
 
-export default function ProjectHeader({ project, view, taskCount }: Pick<ProjectHeaderProps, "project" | "view" | "taskCount">) {
+export default function ProjectHeader({ project, view, taskCount, filteredCount }: Pick<ProjectHeaderProps, "project" | "view" | "taskCount"> & { filteredCount?: number | null }) {
   const { favorite, pending, error, toggle } = useProjectFavorite(project.id, project.is_favorite);
   const currentView = views.find(([key]) => key === view)?.[1] ?? "Vista no disponible";
   const area = project.areas[0];
@@ -18,7 +18,9 @@ export default function ProjectHeader({ project, view, taskCount }: Pick<Project
   return (
     <header className="mb-2 min-w-0 text-neutral-800">
       <div className="mb-3 grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 border-b border-neutral-200 pb-3 max-sm:grid-cols-1">
-        <h1 className="m-0 min-w-0 text-lg font-semibold [overflow-wrap:anywhere]">{project.name}</h1>
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1"><h1 className="m-0 min-w-0 text-lg font-semibold [overflow-wrap:anywhere]">{project.name}</h1>
+          <span data-task-count className="text-xs text-neutral-700" role="status">{filteredCount != null && filteredCount !== taskCount ? `${filteredCount} de ${taskCount}` : taskCount} {taskCount === 1 ? "tarea" : "tareas"}</span>
+        </div>
         <div className="flex max-w-full flex-wrap items-center gap-1.5 text-xs font-medium text-neutral-700 tabular-nums sm:text-sm" aria-label="Periodo del proyecto">
           <span aria-hidden="true"><TaskIcon name="date" /></span>
           {project.start_date
@@ -74,9 +76,6 @@ export default function ProjectHeader({ project, view, taskCount }: Pick<Project
                 className={`border-b-2 border-transparent px-1 py-1.5 hover:bg-neutral-100 hover:text-neutral-800 aria-[current=page]:border-neutral-800 aria-[current=page]:text-neutral-800 ${focus}`}>{label}</Link>
             ))}
           </nav>
-          <span className="text-xs text-neutral-700" title="Tareas y subtareas visibles" aria-label={`${taskCount} tareas y subtareas visibles`}>
-            {taskCount} {taskCount === 1 ? "tarea" : "tareas"}
-          </span>
         </div>
       </div>
     </header>

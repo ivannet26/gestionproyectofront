@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import ProjectToolbar from "../ProjectWorkspace/ProjectToolbar";
 import TaskIcon from "../TaskForm/TaskIcon";
@@ -17,13 +17,12 @@ import TaskSearch from "./TaskSearch";
 import TaskStatusSettingsControl from "./TaskStatusSettingsControl";
 import { useTaskGrouping } from "./useTaskGrouping";
 import { useTaskMove } from "./useTaskMove";
+import { taskDropPosition } from "./taskDropPosition";
 
 const styles = {
   list: "gm-task-list min-w-0 [&_:where(button,input):focus-visible]:outline-2 outline-neutral-700 [&_:where(button,input):focus-visible]:outline-offset-2",
-  legend:
-    "mx-3 mt-2 mb-2.5 text-xs text-neutral-600 sm:mx-5",
   scroller:
-    "max-h-[calc(100dvh-18rem)] overflow-auto overscroll-contain px-3 pt-0 pb-6 focus-visible:outline-2 outline-neutral-700 focus-visible:outline-offset-2 sm:px-5 [container-type:inline-size]",
+    "relative max-h-[calc(100dvh-18rem)] overflow-auto overscroll-contain px-3 pt-0 pb-6 focus-visible:outline-2 outline-neutral-700 focus-visible:outline-offset-2 sm:px-5 [container-type:inline-size]",
   group: "gm-task-group relative min-w-[1120px] mb-6",
   // Preserve literal underscores in Tailwind attribute selectors.
   groupHeading: String.raw`mt-0 mx-0 mb-[5px] text-[0.8125rem] [&_[data-state=EN\_CURSO]]:bg-[#1678bd] [&_[data-state=EN\_CURSO]]:text-white [&_[data-state=COMPLETADA]]:bg-[#248054] [&_[data-state=COMPLETADA]]:text-white`,
@@ -32,7 +31,7 @@ const styles = {
   rotated: "[transform:rotate(90deg)]",
   groupCount: "text-neutral-600 text-[0.75rem] font-normal",
   table:
-    "w-full table-fixed border-collapse text-[0.8125rem] text-neutral-800 [&_th]:text-left [&_th]:text-neutral-700 [&_th]:font-medium [&_th]:py-2 [&_th]:px-1.5 [&_th]:border-b [&_th]:border-neutral-200 [&_th]:text-xs [&_th:first-child]:pl-[91px] [&_td]:py-[3px] [&_td]:px-0 [&_td]:border-b [&_td]:border-neutral-200 [&_td]:h-14 [&_tr:hover_td]:bg-neutral-50 [&_tr:focus-within_td]:bg-neutral-50",
+    "w-full table-fixed border-collapse text-[0.8125rem] text-neutral-800 [&_th]:text-left [&_th]:text-neutral-700 [&_th]:font-medium [&_th]:py-2 [&_th]:px-1.5 [&_th]:border-b [&_th]:border-neutral-200 [&_th]:text-xs [&_th:first-child]:pl-[63px] [&_td]:py-[3px] [&_td]:px-0 [&_td]:border-b [&_td]:border-neutral-200 [&_td]:h-14 [&_tr:hover_td]:bg-neutral-50 [&_tr:focus-within_td]:bg-neutral-50",
   nameColumn: "w-auto",
   personColumn: "w-[170px]",
   dateColumn: "w-[140px]",
@@ -73,6 +72,7 @@ interface TaskListProps extends TaskChanges {
   onConfigure?: () => void;
   primaryAction?: ReactNode;
   onMoved?: (tasks: Task[]) => void;
+  onCountChange?: (count: number) => void;
 }
 
 export default function TaskList({
@@ -86,6 +86,7 @@ export default function TaskList({
   onConfigure,
   primaryAction,
   onMoved,
+  onCountChange,
 }: TaskListProps) {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
@@ -96,6 +97,8 @@ export default function TaskList({
   const [draftGroup, setDraftGroup] = useState<string | null>(null);
   const pendingQuickTask = useRef(false);
   const dragClick = useRef(false);
+  const touch = useRef(false);
+  const dragPoint = useRef({ x: 0, y: 0 });
   const listActive = useRef(false);
   useEffect(() => {
     listActive.current = true;
@@ -112,6 +115,32 @@ export default function TaskList({
     [tasks],
   );
   const states = project.task_states.states;
+  useEffect(() => { onCountChange?.(hierarchy.visible.size); }, [hierarchy.visible.size, onCountChange]);
+
+  function updateDrop(x: number, y: number) {
+    const node = region.current, task = movement.dragging;
+    if (!node || !task || preferences.mode !== "state") { movement.over(null); return false; }
+    const bounds = node.getBoundingClientRect();
+    if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) { movement.over(null); return false; }
+    const sections = Array.from(node.querySelectorAll<HTMLElement>("[data-group-key]"));
+    const section = sections.find((section, index) => {
+      const r = section.getBoundingClientRect(), next = sections[index + 1]?.getBoundingClientRect();
+      return y >= r.top && y < (next?.top ?? bounds.bottom);
+    }) ?? sections[0];
+    const group = groups.find((group) => group.key === section?.dataset.groupKey);
+    if (!section || !group?.stateCode || !movement.permitted(task, group.stateCode)) { movement.over(null); return false; }
+    const table = section.querySelector("table")!, tableBounds = table.getBoundingClientRect();
+    const heading = section.querySelector("h2")!.getBoundingClientRect();
+    const collapsed = table.getClientRects().length === 0;
+    const rows = Array.from(section.querySelectorAll<HTMLTableRowElement>("tbody tr")).filter((row) => row.getClientRects().length).map((row) => {
+      const r = row.getBoundingClientRect();
+      return { id: row.dataset.taskId ? Number(row.dataset.taskId) : undefined, reference: row.dataset.parentReference ? Number(row.dataset.parentReference) : undefined, top: r.top, bottom: r.bottom };
+    });
+    const position = collapsed ? { before: null, y: heading.bottom } : taskDropPosition(task, group.stateCode, tasks, rows, y, tableBounds.bottom);
+    movement.over({ state: group.stateCode, before: position.before, top: Math.max(position.y, Math.min(heading.bottom, tableBounds.bottom || heading.bottom)) - bounds.top + node.scrollTop,
+      left: (collapsed ? section.getBoundingClientRect().left : tableBounds.left) - bounds.left + node.scrollLeft, width: collapsed ? section.offsetWidth : tableBounds.width });
+    return true;
+  }
   const allGroupsExpanded =
     groups.length > 0 && groups.every((group) => !collapsed.has(group.key));
   const canCreateIn = (code: string) =>
@@ -130,7 +159,7 @@ export default function TaskList({
     group: TaskListGroup,
     depth = 0,
     ancestors = new Set<number>(),
-  ): ReactNode {
+  ): ReactNode[] {
     return items
       .filter((task) => group.visible.has(task.id) && !ancestors.has(task.id))
       .flatMap((task) => {
@@ -146,18 +175,24 @@ export default function TaskList({
         const actions =
           task.permissions.edit ||
           task.permissions.create_child ||
-          task.permissions.dependencies;
+          task.permissions.dependencies || task.permissions.state;
+        if (context && preferences.mode === "state") return [
+          <tr key={`reference-${task.id}`} data-parent-reference={task.id} className="gm-parent-reference">
+            <td colSpan={6}><button type="button" title={`Subtareas de ${task.name}`} className="inline-flex max-w-full cursor-pointer items-center gap-2 px-7 py-1.5 text-left text-xs text-neutral-600 hover:text-neutral-800 hover:underline"
+              onClick={() => onAction("detail", task.id)}><TaskIcon name="relation" /><span className="min-w-0 truncate">Subtareas de {task.name}</span></button></td>
+          </tr>, ...rows(children, group, depth, next),
+        ];
         return [
           <tr
             key={task.id}
             data-task-id={task.id}
             data-context={context || undefined}
             data-dragging={movement.dragging?.id === task.id || undefined}
-            data-drop={movement.drop?.row === task.id && movement.drop.state === group.stateCode ? movement.drop.side : undefined}
             className={`gm-task-row${context ? " bg-neutral-50" : ""}`}
             draggable={preferences.mode === "state" && !context && !search.trim() && !movement.busy && task.permissions.state && Boolean(task.move_revision && onMoved)}
+            onPointerDown={(event) => { touch.current = event.pointerType === "touch"; }}
             onDragStart={(event) => {
-              if (!event.currentTarget.draggable || event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable=true], [popover], a")) { event.preventDefault(); return; }
+              if (touch.current || !event.currentTarget.draggable || event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable=true], [popover], a")) { event.preventDefault(); return; }
               event.dataTransfer.effectAllowed = "move";
               event.dataTransfer.setData("text/plain", String(task.id));
               const preview = document.createElement("div");
@@ -170,21 +205,6 @@ export default function TaskList({
             }}
             onDragEnd={() => { movement.end(); requestAnimationFrame(() => { dragClick.current = false; }); }}
             onClickCapture={(event) => { if (dragClick.current) { event.preventDefault(); event.stopPropagation(); } }}
-            onDragOver={(event) => {
-              const dragged = movement.dragging;
-              if (!dragged || context || !group.stateCode || dragged.id === task.id || dragged.parent_id !== task.parent_id || !movement.permitted(dragged, group.stateCode)) { movement.over(null); event.dataTransfer.dropEffect = "none"; return; }
-              event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = "move";
-              movement.track(event.clientX, event.clientY);
-              const bounds = event.currentTarget.getBoundingClientRect(), after = event.clientY > bounds.top + bounds.height / 2;
-              const siblings = tasks.filter((item) => item.parent_id === task.parent_id && item.state_code === group.stateCode && item.id !== dragged.id);
-              const next = siblings[siblings.findIndex((item) => item.id === task.id) + 1]?.id ?? null;
-              movement.over({ state: group.stateCode, before: after ? next : task.id, row: task.id, side: after ? "after" : "before" });
-            }}
-            onDrop={(event) => {
-              event.preventDefault(); event.stopPropagation();
-              if (movement.dragging && movement.drop?.row === task.id) movement.propose(movement.dragging, movement.drop.state, movement.drop.before);
-              movement.end();
-            }}
             onClick={(event) => {
               if (
                 event.target instanceof Element &&
@@ -198,10 +218,6 @@ export default function TaskList({
                 className={styles.taskName}
                 style={{ paddingInlineStart: `${Math.min(depth, 8) * 22}px` }}
               >
-                <span className="inline-flex w-7 shrink-0 items-center justify-center">
-                  {preferences.mode === "state" && !context && task.permissions.state && task.move_revision && onMoved && <TaskMoveControl key={`${task.id}:${task.state_code}`} task={task} states={states} tasks={tasks}
-                    disabled={movement.busy || Boolean(search.trim())} onMove={movement.propose} />}
-                </span>
                 {children.length > 0 ? (
                   <button
                     className={styles.chevron}
@@ -328,6 +344,8 @@ export default function TaskList({
                     >
                       {(close) => (
                         <div className={styles.options}>
+                          {preferences.mode === "state" && !context && task.permissions.state && task.move_revision && onMoved && <TaskMoveControl key={`${task.id}:${task.state_code}`} task={task} states={states} tasks={tasks}
+                            disabled={movement.busy || Boolean(search.trim())} onMove={movement.propose} onClose={close} />}
                           {task.permissions.edit && (
                             <button
                               className={styles.option}
@@ -403,7 +421,7 @@ export default function TaskList({
   }
 
   return (
-    <section aria-label="Lista de tareas" className={styles.list} data-moving={Boolean(movement.dragging) || undefined}>
+    <section aria-label="Lista de tareas" className={styles.list} data-moving={Boolean(movement.dragging) || undefined} aria-busy={movement.busy}>
       <ProjectToolbar action={primaryAction}>
         <fieldset className="m-0 min-w-0 border-0 p-0">
           <TaskGroupingControl
@@ -423,14 +441,6 @@ export default function TaskList({
           })} />
         <TaskSearch value={search} onChange={setSearch} />
       </ProjectToolbar>
-      <p className={styles.legend}>
-        {hierarchy.visible.size} tareas únicas visibles. Los contadores incluyen
-        subtareas contraídas, no padres de contexto.
-        {(preferences.mode === "assignees" && preferences.separatePeople) ||
-          (preferences.mode === "labels" && preferences.separateLabels)
-          ? " Una tarea puede aparecer en varios grupos sin duplicarse en el total."
-          : ""}
-      </p>
       {movement.error && <p role="alert" className="mx-5 text-xs text-red-700">{movement.error} <button type="button" className="cursor-pointer rounded px-2 py-1 underline" disabled={movement.busy} onClick={() => { void movement.refresh(); }}>Actualizar lista</button></p>}
       {search.trim() && preferences.mode === "state" && <p className="mx-5 text-xs text-neutral-600">Limpia la búsqueda para mover posiciones. Puedes seguir usando el selector de estado.</p>}
       {hierarchy.roots.length === 0 && (
@@ -446,7 +456,19 @@ export default function TaskList({
         tabIndex={0}
         role="region"
         aria-label="Tabla de tareas con desplazamiento horizontal"
-        onDragOverCapture={(event) => movement.track(event.clientX, event.clientY)}
+        onDragOver={(event) => {
+          dragPoint.current = { x: event.clientX, y: event.clientY };
+          movement.track(event.clientX, event.clientY);
+          if (updateDrop(event.clientX, event.clientY)) { event.preventDefault(); event.dataTransfer.dropEffect = "move"; }
+          else event.dataTransfer.dropEffect = "none";
+        }}
+        onScroll={() => { if (movement.dragging) updateDrop(dragPoint.current.x, dragPoint.current.y); }}
+        onDrop={(event) => {
+          if (!movement.dragging) return;
+          event.preventDefault();
+          if (movement.drop) movement.propose(movement.dragging, movement.drop.state, movement.drop.before);
+          movement.end();
+        }}
         onDragLeave={(event) => { if (!(event.relatedTarget instanceof Node) || !event.currentTarget.contains(event.relatedTarget)) movement.over(null); }}
       >
         {groups.map((group, index) => {
@@ -461,16 +483,6 @@ export default function TaskList({
               key={group.key}
               aria-label={group.name}
               data-group-key={group.key}
-              style={{ "--gm-drop-color": states.find((state) => state.code === group.stateCode)?.color ?? "#525252" } as CSSProperties}
-              data-can-drop={movement.dragging ? Boolean(group.stateCode && movement.permitted(movement.dragging, group.stateCode)) : undefined}
-              data-drop-group={movement.drop?.state === group.stateCode && movement.drop?.row === undefined || undefined}
-              onDragOver={(event) => {
-                if (event.target instanceof Element && event.target.closest("tr[data-task-id]")) return;
-                if (!movement.dragging || !group.stateCode || !movement.permitted(movement.dragging, group.stateCode)) { movement.over(null); event.dataTransfer.dropEffect = "none"; return; }
-                event.preventDefault(); event.dataTransfer.dropEffect = "move"; movement.track(event.clientX, event.clientY);
-                movement.over({ state: group.stateCode, before: null });
-              }}
-              onDrop={(event) => { event.preventDefault(); if (movement.dragging && group.stateCode && movement.permitted(movement.dragging, group.stateCode)) movement.propose(movement.dragging, group.stateCode, null); movement.end(); }}
             >
               <h2 className={`gm-group-heading ${styles.groupHeading}`}>
                 <button
@@ -573,6 +585,8 @@ export default function TaskList({
             </section>
           );
         })}
+        {movement.dragging && movement.drop && <div className="gm-task-insertion" aria-hidden="true"
+          style={{ top: movement.drop.top, left: movement.drop.left, width: movement.drop.width }} />}
       </div>
       {movement.dragging && <div role="status" className="pointer-events-none fixed bottom-4 left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-800">
         <span className="block max-w-80 truncate font-medium">{movement.dragging.name}</span>

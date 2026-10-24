@@ -34,7 +34,8 @@ export default function TaskGroupingControl({
     preferences.mode === "assignees" || preferences.mode === "labels";
   return (
     <div className="min-w-0 max-w-full [&_[popover]]:shadow-none [&>div>[popover]]:w-[27rem] [&>div>[popover]]:rounded-xl [&>div>[popover]]:p-0">
-      <TaskProperty id="task-list-grouping" label="Agrupar por" value={selected.label} icon={selected.icon}>
+      <TaskProperty id="task-list-grouping" compact appearance="toolbar" label="Agrupar por" value={selected.label} icon={selected.icon}
+        content={<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z" /><path d="m3 12 9 5 9-5M3 16l9 5 9-5" /></svg>}>
         {() => <>
           <div className="grid gap-2 p-3 text-xs text-neutral-800">
             <span className="font-medium text-neutral-600">Agrupar por</span>

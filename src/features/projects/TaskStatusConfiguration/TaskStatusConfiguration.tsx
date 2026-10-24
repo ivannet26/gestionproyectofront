@@ -1,16 +1,12 @@
 import { lazy, Suspense } from "react";
-import type { Project, ProjectTaskConfiguration } from "../types";
+import type { ComponentProps } from "react";
 import Modal from "../Modal/Modal";
 
 const ConfigurationDialog = lazy(
   () => import("./TaskStatusConfigurationDialog"),
 );
 
-export default function TaskStatusConfiguration(props: {
-  project: Project;
-  onConfigured: (value: ProjectTaskConfiguration) => void;
-  onClose: () => void;
-}) {
+export default function TaskStatusConfiguration(props: ComponentProps<typeof ConfigurationDialog>) {
   return (
     <Suspense
       fallback={

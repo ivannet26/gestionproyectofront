@@ -115,13 +115,8 @@ export interface TaskStatusTemplate {
   states: { name: string; category: StateCategory; color: string }[];
 }
 
-export interface StateReassignment {
-  source: string;
-  target: string;
-  reason: string;
-}
-
 export interface ProjectTaskConfiguration {
+  tasks?: Task[];
   template: "standard" | "custom";
   states: ProjectTaskState[];
   available_states: ProjectTaskState[];
@@ -134,7 +129,6 @@ export interface ProjectTaskConfigurationPayload {
   template: "standard" | "custom";
   revision: string;
   states: ProjectTaskState[];
-  reassignments?: StateReassignment[];
 }
 
 export interface WorkerCandidate {
@@ -172,6 +166,7 @@ export interface CreateProjectPayload {
 }
 
 export interface Task {
+  updated_at?: string;
   move_revision?: string;
   move_targets?: string[];
   manual_position?: string | null;

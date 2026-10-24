@@ -88,6 +88,7 @@ test("Workspace success announcements occupy no visual space and refresh failure
     "../TaskStatusConfiguration/TaskStatusConfiguration": { default: Empty },
     "../TaskDetail/TaskDetailDialog": { default: Empty },
     "../TaskDetail/useTaskDetail": { useTaskDetailNavigation: () => ({ target: null, openTaskDetail() {}, closeTaskDetail() {} }) },
+    "../taskCollection": { reconcileTasks: (_current, incoming) => incoming },
   });
   const render = () => { slot = 0; return renderToStaticMarkup(React.createElement(Workspace, { projectId:42, catalogs:{ priorities:[] } })); };
   assert.match(render(), /<p class="sr-only" role="status" aria-live="polite" aria-atomic="true">Guardado: Tarea<\/p>/);

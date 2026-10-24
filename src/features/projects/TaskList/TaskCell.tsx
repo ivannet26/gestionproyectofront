@@ -158,7 +158,7 @@ function Editor({
     (state) =>
       matches(state.name) &&
       (state.code === task.state_code ||
-        task.transitions.some((item) => item.target === state.code)),
+        (task.move_targets ?? task.transitions.map((item) => item.target)).includes(state.code)),
   );
 
   async function save() {

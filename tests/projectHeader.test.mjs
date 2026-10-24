@@ -61,6 +61,7 @@ const { default: TaskList } = await load("../src/features/projects/TaskList/Task
   "../TaskStateForm/TaskStateForm": { default: () => null },
   "../Modal/Modal": { default: () => null },
   "./taskListInteractions.css": {},
+  "./taskDropPosition": { taskDropPosition() {} },
 });
 const project = (changes = {}) => ({
   id: 42, name: "Proyecto sintético", areas: [{ id: 7, name: "Sistemas y Software" }],
@@ -101,7 +102,7 @@ test("dates preserve date-only values and missing dates are never invented", () 
   assert.match(missing, /Sin fecha de inicio/);
   assert.match(missing, /Sin fecha de fin/);
   assert.doesNotMatch(missing, /<time/);
-  assert.match(missing, /aria-label="2 tareas y subtareas visibles"/);
+  assert.match(missing, /data-task-count="true"[^>]*>2 tareas<\/span>/);
 });
 
 test("shared title and period precede breadcrumbs; primary action is no longer duplicated in Header", () => {
@@ -172,6 +173,7 @@ test("empty List renders configured states through Workspace without extra state
     "./ProjectToolbar": { default: Toolbar },
     "../../../shared/icons/PlusIcon": { default: Icon },
     "../taskAssignees": assignees,
+    "../taskCollection": await load("../src/features/projects/taskCollection.ts"),
   });
   const render = () => { hookIndex = 0; return renderToStaticMarkup(React.createElement(Workspace, {
     projectId: 42, catalogs: { priorities: [] }, catalogLoading: false, catalogError: "", onRetryCatalogs() {},

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { errorText } from "../../auth/api";
 import { changeTaskState, getTaskActivity, getTaskDetail, getTaskRelations, getTaskSubtasks, updateTask } from "../services";
 import type { EditTaskPayload, Task, TaskIdentity, TaskStatePayload, TaskPage } from "../types";
@@ -27,6 +27,7 @@ export function useTaskResource<T>(load: () => Promise<T>) {
     return () => { active = false; sequence.current++; };
   }, [refresh]);
   function setValue(next: T | null | ((current: T | null) => T | null)) {
+    version.current++;
     setState((current) => ({ source: load,
       value: typeof next === "function" ? (next as (value: T | null) => T | null)(current?.source === load ? current.value : null) : next,
       error: current?.source === load ? current.error : "" }));
@@ -56,18 +57,21 @@ export function useTaskPage<T, P extends TaskPage<T>>(load: (cursor: number) => 
   return { ...resource, moreBusy, loadMore };
 }
 
-export function useTaskDetail(target: TaskIdentity, onUpdated: (task: Task) => void) {
+export function useTaskDetail(target: TaskIdentity, onUpdated: (task: Task) => void, version = 0) {
   const { projectId, taskId } = target;
-  const detail = useTaskResource(useCallback(() => getTaskDetail({ projectId, taskId }), [projectId, taskId]));
-  const children = useTaskPage(useCallback((cursor: number) => getTaskSubtasks({ projectId, taskId }, cursor), [projectId, taskId]));
-  const activity = useTaskPage(useCallback((cursor: number) => getTaskActivity({ projectId, taskId }, cursor), [projectId, taskId]));
-  const relations = useTaskPage(useCallback((cursor: number) => getTaskRelations({ projectId, taskId }, cursor), [projectId, taskId]));
+  const identity = useMemo(() => ({ projectId, taskId, version }), [projectId, taskId, version]);
+  const activeIdentity = useRef(identity);
+  useEffect(() => { activeIdentity.current = identity; }, [identity]);
+  const detail = useTaskResource(useCallback(() => getTaskDetail(identity), [identity]));
+  const children = useTaskPage(useCallback((cursor: number) => getTaskSubtasks(identity, cursor), [identity]));
+  const activity = useTaskPage(useCallback((cursor: number) => getTaskActivity(identity, cursor), [identity]));
+  const relations = useTaskPage(useCallback((cursor: number) => getTaskRelations(identity, cursor), [identity]));
   const [busy, setBusy] = useState(false);
   const pending = useRef(false), mounted = useRef(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   async function accept(saved: Task) {
     onUpdated(saved);
-    if (!mounted.current) return;
+    if (!mounted.current || activeIdentity.current !== identity) return;
     if (saved.id === taskId) detail.setValue((current) => current ? { ...current, task: saved } : current);
     void children.refresh(); void activity.refresh();
   }
@@ -87,9 +91,9 @@ export function useTaskDetail(target: TaskIdentity, onUpdated: (task: Task) => v
     try {
       const saved = await Promise.all([taskId, otherTaskId].map((id) => getTaskDetail({ projectId, taskId: id })));
       for (const result of saved) onUpdated(result.task);
-      if (mounted.current) detail.setValue(saved[0]);
+      if (mounted.current && activeIdentity.current === identity) detail.setValue(saved[0]);
     } catch (failure) {
-      if (mounted.current) detail.setError(`El vínculo se guardó. No se pudo actualizar la tarea: ${errorText(failure)}`);
+      if (mounted.current && activeIdentity.current === identity) detail.setError(`El vínculo se guardó. No se pudo actualizar la tarea: ${errorText(failure)}`);
     }
   }
   return { detail, children, activity, relations, busy, accept, relationsChanged,
