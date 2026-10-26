@@ -1,3 +1,11 @@
+# Desarrollo local y API
+
+Con Django en `127.0.0.1:8000`, ejecuta `npm run dev` y abre `http://localhost:5173`. Sin `VITE_API_BASE_URL`, autenticación y Axios usan `/api/` del mismo origen; Vite reenvía esas solicitudes a Django conservando ruta, método, cookies y Origin. No hace falta crear un `.env` para esta configuración.
+
+Si Django usa otra dirección, configura `API_PROXY_TARGET` con su origen completo (por ejemplo, `http://127.0.0.1:8001`) y reinicia Vite (`npm run dev`). Esta variable solo configura el proxy de desarrollo; no se incluye en el cliente. Para el origen local predeterminado, su valor es `http://127.0.0.1:8000`.
+
+`VITE_API_BASE_URL` sigue siendo opcional: si se define, autenticación y Axios llaman directamente a ese origen, sin el proxy. En despliegue, usa el origen HTTPS de la API o deja la variable vacía y configura el servidor web para reenviar `/api/` a Django antes del fallback de la SPA. Las variables `VITE_*` se incorporan al compilar: cambiarlas requiere reconstruir y publicar el frontend. Mantén los orígenes autorizados y las protecciones CSRF/CORS del backend.
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

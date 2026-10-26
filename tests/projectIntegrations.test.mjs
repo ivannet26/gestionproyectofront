@@ -32,6 +32,33 @@ const { default: AssigneeSelector } = await load("../src/features/projects/Respo
 const assignees = await load("../src/features/projects/taskAssignees.ts");
 const grouping = await load("../src/features/projects/TaskList/taskGrouping.ts", { "../taskAssignees": assignees });
 const dates = await load("../src/features/projects/TaskForm/taskDates.ts", { "../TaskList/taskGrouping": grouping });
+const { taskDropPosition } = await load("../src/features/projects/TaskList/taskDropPosition.ts");
+const { reconcileTasks } = await load("../src/features/projects/taskCollection.ts");
+
+test("drop resolution uses sibling anchors only, includes descendant blocks and handles first/last/empty positions", () => {
+  const tasks = [{ id: 1, parent_id: null, state_code: "OPEN" }, { id: 2, parent_id: 1, state_code: "ACTIVE" }, { id: 3, parent_id: 1, state_code: "ACTIVE" }, { id: 4, parent_id: null, state_code: "ACTIVE" }, { id: 5, parent_id: 2, state_code: "ACTIVE" }];
+  const moving = { id: 6, parent_id: 1, state_code: "OPEN" };
+  const rows = [{ reference: 1, top: 0, bottom: 20 }, { id: 2, top: 20, bottom: 60 }, { id: 5, top: 60, bottom: 90 }, { id: 3, top: 90, bottom: 130 }, { id: 4, top: 130, bottom: 170 }];
+  assert.equal(taskDropPosition(moving, "ACTIVE", tasks, rows, 10, 170).before, 2);
+  assert.equal(taskDropPosition(moving, "ACTIVE", tasks, rows, 75, 170).before, 3);
+  assert.equal(taskDropPosition(moving, "ACTIVE", tasks, rows, 160, 170).y, 130);
+  assert.equal(taskDropPosition(moving, "ACTIVE", tasks, rows, 160, 170).before, null);
+  assert.equal(taskDropPosition(moving, "OTHER", tasks, [{ id: 1, top: 0, bottom: 40 }], 5, 40).y, 40);
+  assert.equal(taskDropPosition(moving, "OTHER", tasks, [], 5, 40).before, null);
+});
+
+test("confirmed collection replaces each identity once and refuses stale state metadata without mutating attributes", () => {
+  const base = { id: 1, name: "Original", parent_id: 9, start_date: "2026-10-07", state_code: "OPEN", updated_at: "2026-10-22T13:00:00.000001Z" };
+  const newer = { ...base, state_code: "ACTIVE", state_name: "En marcha", state_category: "active", state_color: "#1678bd", updated_at: "2026-10-22T13:00:00.000003Z" };
+  let current = reconcileTasks([base], [newer, newer]);
+  assert.equal(current.length, 1);
+  current = reconcileTasks(current, [{ ...base, updated_at: "2026-10-22T13:00:00.000002Z" }], true);
+  assert.equal(current[0].state_code, "ACTIVE");
+  assert.equal(current[0].state_name, "En marcha");
+  assert.equal(current[0].start_date, base.start_date);
+  assert.equal(current[0].parent_id, 9);
+  assert.equal(base.state_code, "OPEN");
+});
 
 test("label payload preserves catalog identity and retained historical rows, never name matching", () => {
   const value = labels.labelSelection([{ id: 4, name: "Antigua", kind: "technical" }, { name: "Renombrada", specialty_id: 7, kind: "specialty" }, { name: "Otra copia", specialty_id: 7, kind: "specialty" }]);
@@ -93,7 +120,7 @@ test("move applies immediately without a reason dialog while prohibited targets 
   assert.equal(hook.requests.length, 0);
   hook.render().propose(task, "BLOCKED", null);
   assert.equal(hook.requests.length, 1);
-  assert.equal(hook.requests[0].payload.reason, "");
+  assert.equal(hook.requests[0].payload.reason, undefined);
   assert.equal(hook.render().confirmation, undefined);
   assert.equal(hook.accepted.length, 0);
   hook.unmount(); hook.requests[0].resolve([]); await new Promise(resolve => setImmediate(resolve));

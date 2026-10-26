@@ -111,15 +111,15 @@ test("preference state is not shared between user or project mounts", async () =
   assert.equal(second.render().favorite, false);
 });
 
-test("favorite service uses existing authenticated transport and idempotent methods", async () => {
+test("favorite service uses central Axios transport and idempotent methods", async () => {
   const calls = [];
   const { setProjectFavorite } = await loadModule("../src/features/projects/services.ts", {
-    "../auth/api": { apiRequest: (...args) => { calls.push(args); return Promise.resolve({ is_favorite: true }); } },
+    "../../core/api/httpClient": { httpClient: { request: async (options) => { calls.push(options); return { data: { is_favorite: true } }; } } },
   });
-  await setProjectFavorite(42, true);
-  await setProjectFavorite(42, false);
-  assert.deepEqual(calls.map(([path, options, retry, namespace]) => [path, options.method, retry, namespace]), [
-    ["42/favorite/", "PUT", true, "projects"],
-    ["42/favorite/", "DELETE", true, "projects"],
+  assert.equal((await setProjectFavorite(42, true)).is_favorite, true);
+  assert.equal((await setProjectFavorite(42, false)).is_favorite, true);
+  assert.deepEqual(calls.map(({ url, method }) => [url, method]), [
+    ["projects/42/favorite/", "PUT"],
+    ["projects/42/favorite/", "DELETE"],
   ]);
 });

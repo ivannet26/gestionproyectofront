@@ -23,7 +23,6 @@ import type {
   TaskStatePayload,
 } from "../types";
 
-import { useLoading } from "../../../hooks/useLoading";
 import { useToast } from "../../../hooks/useToast";
 import PlusIcon from "../../../shared/icons/PlusIcon";
 import DependencyForm from "../DependencyForm/DependencyForm";
@@ -35,6 +34,9 @@ import TaskBoard from "../TaskBoard/TaskBoard";
 import TaskForm from "../TaskForm/TaskForm";
 import TaskGroupingControl from "../TaskList/TaskGroupingControl";
 import TaskList from "../TaskList/TaskList";
+import type { TaskGroupControls } from "../TaskList/TaskList";
+import TaskGroupExpansionControl from "../TaskList/TaskGroupExpansionControl";
+import { reconcileTasks } from "../taskCollection";
 import TaskSearch from "../TaskList/TaskSearch";
 import TaskStatusSettingsControl from "../TaskList/TaskStatusSettingsControl";
 import { taskHierarchy } from "../TaskList/taskHierarchy";
@@ -46,6 +48,9 @@ import ProjectToolbar from "./ProjectToolbar";
 interface ProjectWorkspaceProps {
   projectId: number;
   catalogs: ProjectCatalogs;
+  catalogLoading: boolean;
+  catalogError: string;
+  onRetryCatalogs: () => void;
   taskCreationSequence?: number;
   onTaskCreationHandled?: (sequence: number) => void;
 }
@@ -53,6 +58,9 @@ interface ProjectWorkspaceProps {
 export default function ProjectWorkspace({
   projectId,
   catalogs,
+  catalogLoading,
+  catalogError,
+  onRetryCatalogs,
   taskCreationSequence,
   onTaskCreationHandled,
 }: ProjectWorkspaceProps) {
@@ -60,7 +68,17 @@ export default function ProjectWorkspace({
   const [tasks, setTasks] = useState<Task[]>([]);
   const [action, setAction] = useState<TaskAction | null>(null);
   const [configuringStates, setConfiguringStates] = useState(false);
-  const { showLoading, hideLoading } = useLoading();
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
+  const [refreshError, setRefreshError] = useState("");
+  const [configurationVersion, setConfigurationVersion] = useState(0);
+  const [filteredCount, setFilteredCount] = useState<number | null>(null);
+  const [groupControls, setGroupControls] = useState<TaskGroupControls | null>(null);
+  const collectionVersion = useRef(0);
+  const mounted = useRef(false);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const { addToast } = useToast();
   const taskDetail = useTaskDetailNavigation();
   const [searchParams] = useSearchParams();
@@ -81,12 +99,15 @@ export default function ProjectWorkspace({
   }, [view, tasks, search]);
 
   const loadTasks = useCallback(async () => {
-    setTasks(await getTasks(projectId));
+    const version = collectionVersion.current;
+    const items = await getTasks(projectId);
+    if (mounted.current && version === collectionVersion.current) setTasks((current) => reconcileTasks(current, items, true));
   }, [projectId]);
 
   useEffect(() => {
     let current = true;
-    showLoading();
+    const collection = collectionVersion;
+    void Promise.resolve().then(() => { if (current) { setLoading(true); setError(""); } });
 
     void Promise.all([getProject(projectId), getTasks(projectId)])
       .then(([details, items]) => {
@@ -97,6 +118,7 @@ export default function ProjectWorkspace({
       })
       .catch((failure: unknown) => {
         if (current) {
+          setError(errorText(failure));
           addToast({
             icon: "error",
             title: "No se pudo cargar el proyecto",
@@ -105,14 +127,14 @@ export default function ProjectWorkspace({
         }
       })
       .finally(() => {
-        if (current) hideLoading();
+        if (current) setLoading(false);
       });
 
     return () => {
       current = false;
-      hideLoading();
+      collection.current++;
     };
-  }, [projectId, addToast, showLoading, hideLoading]);
+  }, [projectId, addToast, reload]);
 
   useEffect(() => {
     if (
@@ -173,29 +195,14 @@ export default function ProjectWorkspace({
               : "Editar datos de tarea";
 
   function acceptTask(saved: Task) {
-    setTasks((current) =>
-      current.some((task) => task.id === saved.id)
-        ? current.map((task) =>
-            task.id === saved.id
-              ? saved
-              : {
-                  ...task,
-                  move_revision: saved.move_revision ?? task.move_revision,
-                },
-          )
-        : [
-            ...current.map((task) => ({
-              ...task,
-              move_revision: saved.move_revision ?? task.move_revision,
-            })),
-            saved,
-          ],
-    );
+    if (!mounted.current) return;
+    collectionVersion.current++;
+    setTasks((current) => reconcileTasks(current, [saved]));
     addToast({ icon: "success", title: "Guardado", message: saved.name });
   }
 
   async function save(data: TaskFormPayload) {
-    showLoading();
+    setBusy(true);
 
     try {
       if (action?.kind === "edit" && activeTask && !("state_code" in data)) {
@@ -213,7 +220,7 @@ export default function ProjectWorkspace({
 
       setAction(null);
     } finally {
-      hideLoading();
+      if (mounted.current) setBusy(false);
     }
   }
 
@@ -222,13 +229,13 @@ export default function ProjectWorkspace({
       throw new Error("La tarea ya no está disponible.");
     }
 
-    showLoading();
+    setBusy(true);
 
     try {
       acceptTask(await changeTaskState(projectId, activeTask.id, data));
       setAction(null);
     } finally {
-      hideLoading();
+      if (mounted.current) setBusy(false);
     }
   }
 
@@ -236,7 +243,7 @@ export default function ProjectWorkspace({
     if (!activeTask || action?.kind !== "dependencies") {
       throw new Error("La tarea ya no está disponible.");
     }
-    showLoading();
+    setBusy(true);
 
     try {
       await changeDependency(projectId, activeTask.id, id, remove);
@@ -260,33 +267,27 @@ export default function ProjectWorkspace({
         message: remove ? "Dependencia retirada" : "Dependencia agregada",
       });
     } finally {
-      hideLoading();
+      if (mounted.current) setBusy(false);
     }
   }
 
   function configured(configuration: ProjectTaskConfiguration) {
-    setProject((current) =>
-      current ? { ...current, task_states: configuration } : current,
-    );
-    addToast({
-      icon: "success",
-      title: "Estados actualizados",
-      message: project?.name ?? "",
-    });
-
-    void loadTasks().catch((failure: unknown) => {
-      addToast({
-        icon: "error",
-        title: "No se pudo actualizar la lista",
-        message: errorText(failure),
-      });
+    if (!mounted.current) return;
+    collectionVersion.current++;
+    const { tasks: confirmed, ...flow } = configuration;
+    setProject((current) => current ? { ...current, task_states: flow } : current);
+    if (confirmed) setTasks(confirmed);
+    setConfigurationVersion((value) => value + 1);
+    setRefreshError("");
+    addToast({ icon: "success", title: "Estados actualizados", message: project?.name ?? "" });
+    if (!confirmed) void loadTasks().catch((failure: unknown) => {
+      if (mounted.current) setRefreshError(`Estados guardados. No se pudo actualizar la lista: ${errorText(failure)}`);
     });
   }
 
   function actionForm(currentProject: Project): ReactNode {
-    if (!action) {
-      return null;
-    }
+    if (!action) return null;
+    if (catalogLoading || catalogError) return <p role="status" className="p-5 text-xs text-neutral-600">{catalogError ? "No se pudo cargar el catálogo. Reintenta antes de editar." : "Cargando catálogos…"}</p>;
 
     if (action.kind === "create") {
       return (
@@ -348,7 +349,9 @@ export default function ProjectWorkspace({
     }
   }
 
-  if (!project) return null;
+  if (!project) return <main id="main-content" className="p-5 text-sm text-neutral-800">
+    {loading ? <p role="status">Cargando proyecto…</p> : <div role="alert"><p>{error || "No se pudo cargar el proyecto."}</p><button type="button" onClick={() => setReload((value) => value + 1)} className="cursor-pointer rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs hover:bg-neutral-100">Reintentar</button></div>}
+  </main>;
 
   function openTaskAction(kind: TaskActionKind, taskId: number) {
     if (kind === "detail") taskDetail.openTaskDetail({ projectId, taskId });
@@ -366,6 +369,7 @@ export default function ProjectWorkspace({
   const primaryAction = project.permissions.create_tasks ? (
     <button
       type="button"
+      disabled={busy || catalogLoading || Boolean(catalogError)}
       onClick={() => setAction({ kind: "create" })}
       aria-label="Crear nueva tarea"
       className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"
@@ -386,9 +390,13 @@ export default function ProjectWorkspace({
         key={project.id}
         project={project}
         view={view}
-        taskCount={tasks.length}
+        taskCount={new Set(tasks.map((task) => task.id)).size}
+        filteredCount={view === "lista" ? filteredCount : null}
       />
 
+      {catalogLoading && <p role="status" className="py-2 text-xs text-neutral-600">Cargando catálogos…</p>}
+      {catalogError && <div role="alert" className="flex flex-wrap items-center gap-2 py-2 text-xs text-red-700"><span>No se pudieron cargar los catálogos. {catalogError}</span><button type="button" onClick={onRetryCatalogs} className="cursor-pointer rounded-lg border border-neutral-200 px-3 py-1.5 text-neutral-800 hover:bg-neutral-100">Reintentar catálogos</button></div>}
+      {refreshError && <div role="alert" className="flex items-center gap-2 py-2 text-xs text-red-700"><span>{refreshError}</span><button type="button" className="cursor-pointer underline" onClick={() => { void loadTasks().then(() => setRefreshError("")).catch((failure: unknown) => setRefreshError(errorText(failure))); }}>Actualizar lista</button></div>}
       {project.requirements.length > 0 && (
         <section
           aria-label="Requisitos existentes del proyecto"
@@ -405,18 +413,19 @@ export default function ProjectWorkspace({
         >
           {view === "lista" && <h2 className="sr-only">Lista de trabajo</h2>}
           <ProjectToolbar action={primaryAction}>
-            <fieldset className="m-0 min-w-0 border-0 p-0">
+            {view === "lista" && <fieldset className="m-0 min-w-0 border-0 p-0">
               <TaskGroupingControl
                 preferences={preferences}
                 onChange={setPreferences}
               />
-            </fieldset>
+            </fieldset>}
             {project.permissions.manage &&
               project.task_states.can_configure && (
                 <TaskStatusSettingsControl
                   onClick={() => setConfiguringStates(true)}
                 />
               )}
+            {view === "lista" && <TaskGroupExpansionControl expanded={groupControls?.expanded ?? false} disabled={groupControls?.disabled ?? true} controls={groupControls?.controls ?? ""} onToggle={() => groupControls?.toggle()} />}
             <TaskSearch value={search} onChange={setSearch} />
           </ProjectToolbar>
           {view === "lista" ? (
@@ -427,7 +436,9 @@ export default function ProjectWorkspace({
                 catalogs={catalogs}
                 search={search}
                 preferences={preferences}
-                onMoved={setTasks}
+                onMoved={(items) => { collectionVersion.current++; setTasks((current) => reconcileTasks(current, items, true)); }}
+                onCountChange={setFilteredCount}
+                onGroupControls={setGroupControls}
                 onAction={openTaskAction}
                 onCreated={acceptTask}
                 onPatch={patchTask}
@@ -476,6 +487,7 @@ export default function ProjectWorkspace({
       )}
       {taskDetail.target && (
         <TaskDetailDialog
+          version={configurationVersion}
           project={project}
           catalogs={catalogs}
           target={taskDetail.target}
@@ -486,6 +498,7 @@ export default function ProjectWorkspace({
       )}
       {activeAction && (
         <Modal
+          busy={busy}
           title={title}
           taskComposer={
             action?.kind === "create" ||

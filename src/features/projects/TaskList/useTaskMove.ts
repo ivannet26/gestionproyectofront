@@ -5,13 +5,21 @@ import { getTasks, moveTask } from "../services";
 import type { Project, Task } from "../types";
 
 interface Movement { task: Task; state: string; before: number | null }
-export interface DropPosition { state: string; before: number | null; row?: number; side?: "before" | "after" }
+export interface DropPosition { state: string; before: number | null; top: number; left: number; width: number }
 
 export function useTaskMove(project: Project, onConfirmed: ((tasks: Task[]) => void) | undefined, region: RefObject<HTMLDivElement | null>) {
   const [dragging, setDragging] = useState<Task | null>(null), [drop, setDrop] = useState<DropPosition | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
   const pending = useRef(false), alive = useRef(true), activeDrag = useRef<Task | null>(null), point = useRef({ x: 0, y: 0 });
-  useEffect(() => { alive.current = true; return () => { alive.current = false; activeDrag.current = null; }; }, [project.id]);
+  const session = useRef(0);
+  useEffect(() => { alive.current = true; const generation = ++session.current; return () => { alive.current = false; session.current = generation + 1; activeDrag.current = null; }; }, [project.id]);
+  useEffect(() => {
+    if (!dragging) return;
+    const cancel = (event: KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); end(); } };
+    const outside = (event: DragEvent) => { if (!(event.target instanceof Node) || !region.current?.contains(event.target)) end(); };
+    document.addEventListener("keydown", cancel, true); document.addEventListener("drop", outside); window.addEventListener("blur", end);
+    return () => { document.removeEventListener("keydown", cancel, true); document.removeEventListener("drop", outside); window.removeEventListener("blur", end); };
+  }, [dragging, region]);
   useEffect(() => {
     if (!dragging) return;
     let frame = 0;
@@ -31,16 +39,17 @@ export function useTaskMove(project: Project, onConfirmed: ((tasks: Task[]) => v
     return Boolean(onConfirmed && !pending.current && task.move_revision && task.permissions.state && (task.state_code === state || (task.move_targets ? task.move_targets.includes(state) : task.transitions.some((item) => item.target === state))));
   }
   function end() { activeDrag.current = null; setDragging(null); setDrop(null); }
-  async function execute(movement: Movement, reason = "") {
+  async function execute(movement: Movement) {
     if (pending.current || !alive.current) return;
     pending.current = true; setBusy(true); setError("");
+    const requestSession = session.current;
     try {
-      const result = await moveTask(project.id, movement.task.id, { state_code: movement.state, before_id: movement.before, expected_revision: movement.task.move_revision!, reason });
-      if (alive.current) {
+      const result = await moveTask(project.id, movement.task.id, { state_code: movement.state, before_id: movement.before, expected_revision: movement.task.move_revision! });
+      if (alive.current && requestSession === session.current) {
         onConfirmed?.(result);
-        requestAnimationFrame(() => { if (alive.current && document.activeElement === document.body) document.querySelector<HTMLButtonElement>(`tr[data-task-id="${movement.task.id}"]:not([data-context]) button[aria-label^="Reubicar"]`)?.focus({ preventScroll: true }); });
+        requestAnimationFrame(() => { if (alive.current && document.activeElement === document.body) document.querySelector<HTMLButtonElement>(`tr[data-task-id="${movement.task.id}"]:not([data-context]) button[aria-label^="Opciones"]`)?.focus({ preventScroll: true }); });
       }
-    } catch (failure) { if (alive.current) { setError(errorText(failure)); throw failure; } }
+    } catch (failure) { if (alive.current && requestSession === session.current) { end(); setError(errorText(failure)); throw failure; } }
     finally { pending.current = false; if (alive.current) setBusy(false); }
   }
   function propose(task: Task, state: string, before: number | null) {
@@ -52,6 +61,6 @@ export function useTaskMove(project: Project, onConfirmed: ((tasks: Task[]) => v
     start: (task: Task, x: number, y: number) => { activeDrag.current = task; point.current = { x, y }; setDragging(task); setError(""); },
     track: (x: number, y: number) => { point.current = { x, y }; },
     over: setDrop,
-    refresh: async () => { if (pending.current) return; try { const result = await getTasks(project.id); if (alive.current) { onConfirmed?.(result); setError(""); } } catch (failure) { if (alive.current) setError(errorText(failure)); } },
+    refresh: async () => { if (pending.current) return; const generation = session.current; try { const result = await getTasks(project.id); if (alive.current && generation === session.current) { onConfirmed?.(result); setError(""); } } catch (failure) { if (alive.current && generation === session.current) setError(errorText(failure)); } },
   };
 }

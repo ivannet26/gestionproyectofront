@@ -45,12 +45,12 @@ test("global expansion is icon-only, labeled, stateful and disabled with no grou
 });
 
 test("global action handles open, closed and mixed groups without changing subtree or other-mode expansion", async () => {
-  let state = [], index = 0, mode = "state";
+  let state = [], index = 0, mode = "state", controls;
   const hooks = {
     useId: () => "list",
     useMemo: (calculate) => calculate(),
     useRef: (initial) => ({ current: initial }),
-    useEffect() {},
+    useEffect(effect) { effect(); },
     useState(initial) {
       const slot = index++;
       if (!(slot in state)) state[slot] = initial;
@@ -65,8 +65,12 @@ test("global action handles open, closed and mixed groups without changing subtr
   const { default: List } = await load("../src/features/projects/TaskList/TaskList.tsx", {
     react: hooks,
     "../TaskForm/TaskProperty": { default: Marker },
+    "../../../shared/icons/ChevronDownIcon": { default: Icon },
+    "../../../shared/icons/DotsIcon": { default: Icon },
+    "../../../shared/icons/PlusIcon": { default: Icon },
+    "../../../shared/icons/RelationIcon": { default: Icon },
     "../TaskForm/TaskIcon": { default: Icon },
-    "./TaskCell": { default: Marker },
+    "./TaskCell": { default: Marker, StateIcon: Icon },
     "./QuickTaskRow": { default: Marker },
     "./stateInk": { stateInk: () => "#000000" },
     "./TaskGroupingControl": { default: Marker },
@@ -77,14 +81,20 @@ test("global action handles open, closed and mixed groups without changing subtr
     "./TaskSearch": { default: Marker },
     "./TaskMoveControl": { default: Marker },
     "./useTaskMove": { useTaskMove: () => ({ permitted: () => false }) },
+    "./useTaskPointerDrag": { useTaskPointerDrag: () => ({ onPointerDown() {}, onClickCapture() {}, onDragStart() {} }) },
     "../TaskStateForm/TaskStateForm": { default: Marker },
     "../Modal/Modal": { default: Marker },
     "./taskListInteractions.css": {},
-    "./useTaskGrouping": { useTaskGrouping: () => ({
-      hierarchy: { roots: [], visible: new Set() }, groups: groups(), preferences: { mode }, setPreferences() {},
-    }) },
+    "./taskDropPosition": { taskDropPosition() {} },
+    "./useTaskGrouping": { useTaskGrouping: (_tasks, search, _states, _priorities, preferences) => {
+      assert.equal(search, ""); assert.equal(preferences.mode, mode);
+      return { hierarchy: { roots: [], visible: new Set() }, groups: groups() };
+    } },
   });
-  const props = { project: { task_states: { states: [] }, permissions: {} }, tasks: [], catalogs: { priorities: [] } };
+  const props = { project: { task_states: { states: [] }, permissions: {} }, tasks: [], catalogs: { priorities: [] }, search: "",
+    get preferences() { return { mode, order: "asc", separatePeople: false, separateLabels: false }; },
+    onGroupControls(value) { controls = value; },
+  };
   function find(element, predicate) {
     if (!element || typeof element !== "object") return;
     if (Array.isArray(element)) return element.map((child) => find(child, predicate)).find(Boolean);
@@ -92,29 +102,32 @@ test("global action handles open, closed and mixed groups without changing subtr
     return find(element.props?.children, predicate);
   }
   function render() { index = 0; return List(props); }
-  const global = () => find(render(), (element) => element.type === Expansion).props;
+  const global = () => { render(); return { ...controls, onToggle: controls.toggle }; };
   assert.equal(global().expanded, true);
-  const initialSubtasks = state[1], initialContext = state[3];
+  assert.equal(controls.controls, "list-group-0 list-group-1");
+  assert.equal(controls.disabled, false);
+  assert.equal(find(render(), (element) => element.type === Expansion), undefined);
+  const initialSubtasks = state[0], initialContext = state[2];
   global().onToggle();
   assert.equal(global().expanded, false);
-  assert.deepEqual([...state[2]], ["state:1", "state:2"]);
+  assert.deepEqual([...state[1]], ["state:1", "state:2"]);
   const firstHeading = find(render(), (element) => element.type === "h2");
   firstHeading.props.children.props.onClick();
   assert.equal(global().expanded, false);
   global().onToggle();
   assert.equal(global().expanded, true);
-  assert.equal(state[2].size, 0);
+  assert.equal(state[1].size, 0);
   global().onToggle();
   mode = "labels";
   assert.equal(global().expanded, true);
   global().onToggle();
   global().onToggle();
-  assert.deepEqual([...state[2]], ["state:1", "state:2"]);
+  assert.deepEqual([...state[1]], ["state:1", "state:2"]);
   mode = "state";
   assert.equal(global().expanded, false);
   global().onToggle();
   assert.equal(global().expanded, true);
-  assert.equal(state[1], initialSubtasks);
-  assert.equal(state[3], initialContext);
+  assert.equal(state[0], initialSubtasks);
+  assert.equal(state[2], initialContext);
   state = [];
 });

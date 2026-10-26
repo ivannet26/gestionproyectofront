@@ -32,6 +32,9 @@ const initial = [
   { code: "COMPLETADA", name: "CERRADO", category: "closed", color: "#26834a" },
 ];
 const configuration = { states: initial, usage: {}, template: "standard", revision: "a".repeat(64), can_configure: true };
+class ApiError extends Error {
+  constructor(message, payload) { super(message); this.payload = payload; }
+}
 const preset = { id: "scrum", name: "Scrum", preset: true, revision: 1, states: [
   { name: "ABIERTO", category: "not_started", color: "#737373" },
   { name: "COMPLETADO", category: "active", color: "#2563eb" },
@@ -85,7 +88,7 @@ async function harness(draftMode = false) {
     saveTaskStatusTemplate: (id, payload, templateId) => new Promise((resolve, reject) => requests.push({ kind: "save", id, payload, templateId, resolve, reject })),
   };
   const { useTaskStatusConfiguration } = await load("../src/features/projects/TaskStatusConfiguration/useTaskStatusConfiguration.ts", {
-    react, "../../auth/api": { errorText: (error) => error.message }, "../services": services, "./stateDraft": drafts, "../stateGroups": groups,
+    react, "../../auth/api": { ApiError, errorText: (error) => error.message }, "../services": services, "./stateDraft": drafts, "../stateGroups": groups,
   }, { window: { confirm: () => confirm, addEventListener() {}, removeEventListener() {} } });
   const render = () => {
     index = 0; effectIndex = 0;
@@ -100,7 +103,7 @@ async function harness(draftMode = false) {
 test("project creation flow is strictly local and never reads or mutates a provisional project", async () => {
   const hook = await harness(true);
   hook.render().select(preset);
-  assert.equal(await hook.render().saveTemplate("No guardar", false), false);
+  assert.equal(await hook.render().saveTemplate("No guardar"), false);
   await hook.render().apply();
   assert.equal(hook.reads.length, 0);
   assert.equal(hook.requests.length, 0);
@@ -129,8 +132,8 @@ test("select and cancel never write; saving a template neither applies nor dupli
   hook.setConfirm(false);
   hook.render().close();
   assert.equal(hook.closed, 0);
-  const action = hook.render().saveTemplate("Copia", false);
-  await hook.render().saveTemplate("Copia", false);
+  const action = hook.render().saveTemplate("Copia");
+  await hook.render().saveTemplate("Copia");
   assert.equal(hook.requests.length, 1);
   const request = hook.requests[0];
   assert.equal(request.kind, "save");
@@ -143,19 +146,21 @@ test("select and cancel never write; saving a template neither applies nor dupli
   assert.equal(hook.render().selected.id, 91);
 });
 
-test("new templates allow empty drafts; update uses its revision and never overwrites a preset", async () => {
+test("save-as allows empty drafts and creates a separate template without overwriting the selection", async () => {
   const hook = await harness();
   hook.render().select(null);
   assert.equal(hook.render().states.length, 0);
-  const saving = hook.render().saveTemplate("Vacía", false);
+  const saving = hook.render().saveTemplate("Vacía");
   assert.equal(hook.requests[0].payload.states.length, 0);
   hook.requests[0].resolve({ id: 4, name: "Vacía", states: [], preset: false, revision: 3 });
   await saving;
-  const updating = hook.render().saveTemplate("Vacía", true);
-  assert.equal(hook.requests[1].templateId, 4);
-  assert.equal(hook.requests[1].payload.revision, 3);
-  hook.requests[1].resolve({ id: 4, name: "Vacía", states: [], preset: false, revision: 4 });
-  await updating;
+  assert.equal(await hook.render().saveTemplate("Vacía"), false);
+  assert.equal(hook.requests.length, 1);
+  const copying = hook.render().saveTemplate("Copia vacía");
+  assert.equal(hook.requests[1].templateId, undefined);
+  assert.equal(hook.requests[1].payload.revision, undefined);
+  hook.requests[1].resolve({ id: 5, name: "Copia vacía", states: [], preset: false, revision: 1 });
+  await copying;
   assert.equal(hook.configured.length, 0);
 });
 
@@ -165,10 +170,11 @@ test("apply uses the project revision, does not save templates and retains draft
   const draft = hook.render().states;
   const failing = hook.render().apply();
   assert.equal(hook.requests[0].payload.revision, configuration.revision);
-  hook.requests[0].reject(new Error("Elige un destino"));
+  assert.deepEqual(Object.keys(hook.requests[0].payload).sort(), ["revision", "states", "template"]);
+  hook.requests[0].reject(new Error("La configuración cambió"));
   await failing;
   assert.equal(hook.render().states, draft);
-  assert.equal(hook.render().error, "Elige un destino");
+  assert.equal(hook.render().error, "La configuración cambió");
   assert.equal(hook.configured.length, 0);
   const applying = hook.render().apply();
   hook.requests[1].resolve({ ...configuration, states: draft });
@@ -176,6 +182,22 @@ test("apply uses the project revision, does not save templates and retains draft
   assert.equal(hook.requests.every((request) => request.kind === "apply"), true);
   assert.equal(hook.configured.length, 1);
   assert.equal(hook.closed, 1);
+});
+
+test("backend category errors retain the draft and clear when edited without inventing states", async () => {
+  const hook = await harness();
+  hook.render().select(preset);
+  const before = hook.render().states;
+  const applying = hook.render().apply();
+  hook.requests[0].reject(new ApiError("Inválido", { categories: { done: ["Añade un estado en Completado para conservar las tareas de esta categoría"] } }));
+  await applying;
+  assert.equal(hook.render().states, before);
+  assert.equal(hook.render().error, "");
+  assert.match(hook.render().categoryErrors.done, /Añade un estado en Completado/);
+  assert.equal(hook.configured.length, 0);
+  assert.equal(hook.closed, 0);
+  hook.render().setStates(states => [...states, { code: "draft_done", category: "done", name: "VALIDADO" }]);
+  assert.equal(Object.keys(hook.render().categoryErrors).length, 0);
 });
 
 test("Scrum COMPLETADO remains overdue when active; Done and Closed follow explicit metadata", async () => {
@@ -195,13 +217,16 @@ test("dialog retains all four categories and actions without inheritance control
     "../TaskForm/TaskIcon": { default: Icon },
     "../../../shared/icons/ChevronDownIcon": { default: Icon }, "../../../shared/icons/DotsIcon": { default: Icon },
     "../../../shared/icons/InfoIcon": { default: Icon }, "../../../shared/icons/PlusIcon": { default: Icon },
+    "../../../shared/icons/CheckIcon": { default: Icon }, "../../../shared/icons/SettingsIcon": { default: Icon },
+    "../TaskList/TaskCell": { StateIcon: Icon },
     "../stateGroups": groups, "./stateDraft": drafts,
-    "./useTaskStatusConfiguration": { useTaskStatusConfiguration: () => ({ configuration, states: initial, templates: [preset], removed: [], loading: false, selected: null, error: "" }) },
+    "./useTaskStatusConfiguration": { useTaskStatusConfiguration: () => ({ configuration, states: initial, templates: [preset], categoryErrors: {}, loading: false, selected: null, error: "" }) },
   });
   const markup = renderToStaticMarkup(React.createElement(Dialog, { project: { permissions: { manage: true } } }));
   for (const category of groups.stateCategories) assert.ok(markup.includes(`aria-label="${category.label}"`));
   assert.equal((markup.match(/>Añadir estado</g) ?? []).length, 4);
-  assert.match(markup, /Guardar como plantilla/);
+  assert.equal((markup.match(/>Guardar como plantilla</g) ?? []).length, 1);
+  assert.doesNotMatch(markup, /Reasignar estados utilizados|Motivo|Selecciona un estado de destino/);
   assert.match(markup, /Aplicar cambios/);
   assert.doesNotMatch(markup, /Heredar|Más información sobre los estados/);
 });

@@ -5,12 +5,18 @@ import type { ProjectCatalogs, TaskCreationRequest } from "../types";
 
 export interface ProjectRouteProps {
   catalogs: ProjectCatalogs;
+  catalogLoading: boolean;
+  catalogError: string;
+  onRetryCatalogs: () => void;
   taskCreationRequest?: TaskCreationRequest | null;
   onTaskCreationHandled?: (sequence: number) => void;
 }
 
 export default function ProjectRoute({
   catalogs,
+  catalogLoading,
+  catalogError,
+  onRetryCatalogs,
   taskCreationRequest,
   onTaskCreationHandled,
 }: ProjectRouteProps) {
@@ -31,6 +37,9 @@ export default function ProjectRoute({
       key={projectId}
       projectId={id}
       catalogs={catalogs}
+      catalogLoading={catalogLoading}
+      catalogError={catalogError}
+      onRetryCatalogs={onRetryCatalogs}
       taskCreationSequence={
         taskCreationRequest?.projectId === id
           ? taskCreationRequest.sequence

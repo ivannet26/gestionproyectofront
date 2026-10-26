@@ -60,6 +60,10 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
         .getElementById(`${id}-error-${namingTemplate ? "name" : "main"}`)
         ?.focus();
   }, [editor.error, id, namingTemplate]);
+  useEffect(() => {
+    const category = Object.keys(editor.categoryErrors)[0];
+    if (category) document.getElementById(`${id}-category-${category}`)?.focus();
+  }, [editor.categoryErrors, id]);
 
   useEffect(() => {
     if (pendingFocus.current) {
@@ -187,8 +191,9 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
                     onFocus={() => setDismissedHelp(null)} onMouseEnter={() => setDismissedHelp(null)} onKeyDown={(event) => { if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); setDismissedHelp(category.value); } }}><span aria-hidden="true"><InfoIcon className="size-4" /></span></button>
                   <span id={`${id}-${category.value}-help`} role="tooltip" hidden={dismissedHelp === category.value} className="invisible absolute left-0 top-full z-10 w-48 rounded-lg border border-neutral-200 bg-white p-2 font-normal text-neutral-800 group-hover:visible group-focus-within:visible">{category.help}</span>
                 </span></h3>
-                <button id={`${id}-add-${category.value}`} type="button" className={styles.icon} aria-label={`Añadir estado a ${category.label}`} onClick={() => add(category.value)}><PlusIcon className="size-4" /></button>
+                <button id={`${id}-add-${category.value}`} type="button" className={styles.icon} aria-label={`Añadir estado a ${category.label}`} aria-describedby={editor.categoryErrors[category.value] ? `${id}-category-${category.value}` : undefined} onClick={() => add(category.value)}><PlusIcon className="size-4" /></button>
               </header>
+              {editor.categoryErrors[category.value] && <p id={`${id}-category-${category.value}`} tabIndex={-1} role="alert" className="mb-2 text-xs text-red-700">{editor.categoryErrors[category.value]}</p>}
               <ol className="m-0 grid list-none gap-2 p-0">
                 {states.map((state, index) => <li key={state.code} className="relative flex min-w-0 items-center gap-1 rounded-lg border border-neutral-200 bg-white px-1 py-0.5 focus-within:border-neutral-500"
                   onDragOver={(event) => { if (drag.current && states.some((item) => item.code === drag.current)) event.preventDefault(); }}
@@ -232,45 +237,22 @@ export default function TaskStatusConfiguration({ project, onConfigured, onClose
                   </details>
                 </li>)}
               </ol>
-              <button type="button" className="mt-2 flex w-full items-center gap-2 rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-left text-neutral-600 hover:bg-neutral-50" onClick={() => add(category.value)}><PlusIcon className="size-4" />Añadir estado</button>
+              <button type="button" aria-describedby={editor.categoryErrors[category.value] ? `${id}-category-${category.value}` : undefined} className="mt-2 flex w-full items-center gap-2 rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-left text-neutral-600 hover:bg-neutral-50" onClick={() => add(category.value)}><PlusIcon className="size-4" />Añadir estado</button>
             </section>;
           })}
-          {editor.removed.length > 0 && <section aria-label="Reasignación de tareas" className="grid gap-3 rounded-lg border border-neutral-200 p-3">
-            <h3 className="m-0 text-sm font-medium">Reasignar estados utilizados</h3>
-            <p className="m-0 text-neutral-600">Incluye tareas y subtareas. No se eliminarán. El cambio respetará las validaciones del proyecto.</p>
-            {editor.removed.map((state) => <div key={state.code} className="grid gap-1.5">
-              <label htmlFor={`${id}-target-${state.code}`}>{state.name} · {editor.configuration.usage?.[state.code]} tareas</label>
-              <select id={`${id}-target-${state.code}`} required className={styles.input} value={editor.reassignments[state.code]?.target ?? ""}
-                onChange={(event) => editor.setReassignments((items) => ({ ...items, [state.code]: { source: state.code, reason: items[state.code]?.reason ?? "", target: event.target.value } }))}>
-                <option value="">Selecciona un estado de destino</option>{editor.states.map((target) => <option key={target.code} value={target.code}>{target.name || "Sin nombre"}</option>)}
-              </select>
-              <input aria-label={`Motivo de reasignación de ${state.name}`} placeholder="Motivo (obligatorio al reabrir o cancelar)" maxLength={500} className={styles.input} value={editor.reassignments[state.code]?.reason ?? ""}
-                onChange={(event) => editor.setReassignments((items) => ({ ...items, [state.code]: { source: state.code, target: items[state.code]?.target ?? "", reason: event.target.value } }))} />
-            </div>)}
-          </section>}
         </div>
       </fieldset>}
       <footer className="shrink-0 border-t border-neutral-200 bg-white px-5 py-3 max-sm:px-4">
         {editor.error && <div id={`${id}-error-main`} tabIndex={-1} role="alert" className="mb-2 flex flex-wrap items-center gap-2 text-red-700"><p className="m-0 flex-1 [overflow-wrap:anywhere]">{editor.error}</p><button type="button" className={styles.secondary} disabled={editor.busy} onClick={editor.retry}>Recargar</button></div>}
         {!allowed && <p role="status">No tienes permiso para configurar este proyecto.</p>}
         <div className="flex flex-wrap items-center justify-end gap-3">
-          {!draft && <div className="flex items-stretch">
-            <button type="button" disabled={editor.loading || editor.busy || !allowed} className={`${styles.secondary} rounded-r-none`}
-              onClick={() => { if (editor.selected && !editor.selected.preset) { void editor.saveTemplate(editor.selected.name, true).then((saved) => { if (saved) setNotice("Plantilla guardada. El flujo del proyecto no ha cambiado."); }); } else setSavingName(""); }}>
-              {editor.selected && !editor.selected.preset ? "Guardar plantilla" : "Guardar como plantilla"}
-            </button>
-            <details className="relative flex">
-              <summary aria-label="Opciones para guardar plantilla" aria-disabled={editor.busy || editor.loading || !allowed} className={`${styles.secondary} flex list-none items-center rounded-l-none border-l-0 px-2 cursor-pointer [&::-webkit-details-marker]:hidden`}
-                onClick={(event) => { if (editor.busy || editor.loading || !allowed) event.preventDefault(); }}><ChevronDownIcon className="size-4" /></summary>
-              <div className={`${styles.menu} bottom-full right-0 mb-1`}><button type="button" disabled={editor.busy || !allowed} onClick={(event) => menuAction(event, () => setSavingName(""))}>Guardar como plantilla</button></div>
-            </details>
-          </div>}
+          {!draft && <button type="button" disabled={editor.loading || editor.busy || !allowed} className={styles.secondary} onClick={() => setSavingName("")}>Guardar como plantilla</button>}
           {draft && <><p className="m-0 mr-auto text-neutral-600">Solo se guardará al crear el proyecto.</p><button type="button" className={styles.secondary} onClick={editor.close}>Cancelar</button></>}
           <button type="button" disabled={editor.loading || editor.busy || !allowed} className={styles.primary} onClick={() => { void editor.apply(); }}>{editor.busy ? "Guardando…" : draft ? "Usar este flujo" : "Aplicar cambios"}</button>
         </div>
       </footer>
       {savingName !== null && <Modal title="Nueva plantilla" onClose={() => setSavingName(null)} busy={editor.busy}>
-        <form className="grid gap-4 p-5" onSubmit={(event) => { event.preventDefault(); void editor.saveTemplate(savingName, false).then((saved) => { if (saved) { setSavingName(null); setNotice("Plantilla guardada. El flujo del proyecto no ha cambiado."); } }); }}>
+        <form className="grid gap-4 p-5" onSubmit={(event) => { event.preventDefault(); void editor.saveTemplate(savingName).then((saved) => { if (saved) { setSavingName(null); setNotice("Plantilla guardada. El flujo del proyecto no ha cambiado."); } }); }}>
           <label htmlFor={`${id}-name`}>Nombre</label>
           <input id={`${id}-name`} data-initial-focus name="template_name" autoComplete="off" required maxLength={70} placeholder="Escribe un nombre…" value={savingName} onChange={(event) => setSavingName(event.target.value)} className={styles.input} disabled={editor.busy} />
           {editor.error && <p id={`${id}-error-name`} tabIndex={-1} role="alert" className="m-0 text-red-700">{editor.error}</p>}

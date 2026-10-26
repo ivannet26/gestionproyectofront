@@ -106,7 +106,7 @@ export default function TaskProperty({
   }
 
   return (
-    <div className={styles.property}>
+    <div className={styles.property} data-property-appearance={appearance}>
       <div
         className={
           triggers ? "flex flex-wrap items-center gap-0.5 px-1.5" : "contents"
@@ -140,6 +140,7 @@ export default function TaskProperty({
                 ref={index === 0 ? trigger : undefined}
                 id={index === 0 ? id : `${id}-${index}`}
                 type="button"
+                {...triggerProps}
                 className={
                   triggerClassName ??
                   (triggers

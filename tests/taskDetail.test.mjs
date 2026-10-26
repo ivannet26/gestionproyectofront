@@ -23,6 +23,16 @@ async function load(file, dependencies = {}) {
 const formatting = await load('../src/features/projects/TaskDetail/detailFormat.ts');
 const hierarchy = await load('../src/features/projects/TaskList/taskHierarchy.ts');
 const Empty = () => null;
+const stateGroups = await load('../src/features/projects/stateGroups.ts');
+const { StateIcon } = await load('../src/features/projects/TaskList/TaskCell.tsx', {
+  ...Object.fromEntries(['CalendarIcon', 'CheckIcon', 'CircleDashedIcon', 'CircleDotIcon', 'CircleHalfIcon', 'CircleMinusIcon', 'FlagIcon', 'HashIcon', 'SuccessIcon', 'UserIcon', 'XIcon', 'StatusIcon'].map(name => ['../../../shared/icons/'+name, { default: () => React.createElement('i', { 'data-icon': ['CheckIcon', 'SuccessIcon'].includes(name) ? 'check' : 'state' }) }])),
+  '../../../shared/InitialsAvatar': { default: Empty }, '../../auth/api': { errorText: String },
+  '../CreateProjectModal/ProjectEndDateSelector': { Calendar: Empty }, '../LabelEditor/LabelEditor': { default: Empty },
+  '../labelSelection': { labelSelection() {} }, '../ResponsiblePicker/AssigneeSelector': { default: Empty },
+  '../stateGroups': stateGroups, '../taskAssignees': { taskAssignees: () => [] },
+  '../TaskForm/PriorityOptions': { default: Empty }, '../TaskForm/priorityTones': { priorityTones: {} }, '../TaskForm/taskDates': { isPastTaskDate: () => false },
+  '../TaskForm/TaskDateValue': { default: Empty }, '../TaskForm/TaskProperty': { default: Empty }, './taskHierarchy': hierarchy,
+});
 
 test('duration is integer minutes with readable hours and Lima activity times', () => {
   assert.equal(formatting.formatEstimate(95), '1 h 35 min');
@@ -72,7 +82,8 @@ test('empty activity explicitly identifies missing historical events without inv
 
 test('subtask finished indicator uses category, not a Scrum display name; global counts survive paging', async () => {
   const { default: Subtasks } = await load('../src/features/projects/TaskDetail/TaskSubtasks.tsx', {
-    '../TaskList/TaskCell': { PriorityLabel: ({ name }) => name },
+    '../TaskList/TaskCell': { PriorityLabel: ({ name }) => name, StateIcon },
+    '../../../shared/icons/ChevronRightIcon': { default: Empty },
     '../TaskForm/TaskIcon': { default: ({ name }) => React.createElement('i', { 'data-icon': name }) },
     '../TaskList/QuickTaskRow': { default: Empty }, '../../../shared/Tooltip': { default: Empty },
     '../../../shared/avatar': { avatarFor: String }, '../taskAssignees': { taskAssignees: () => [] },
@@ -92,6 +103,7 @@ function hooks() {
     useState(initial) { const slot = index++; if (!(slot in slots)) slots[slot] = typeof initial === 'function' ? initial() : initial; return [slots[slot], next => { slots[slot] = typeof next === 'function' ? next(slots[slot]) : next; }]; },
     useRef(initial) { const slot = index++; return slots[slot] ??= { current: initial }; },
     useCallback(fn, deps) { const slot = index++; if (!same(slots[slot]?.deps, deps)) slots[slot] = { fn, deps }; return slots[slot].fn; },
+    useMemo(fn, deps) { const slot = index++; if (!same(slots[slot]?.deps, deps)) slots[slot] = { value: fn(), deps }; return slots[slot].value; },
     useEffect(effect, deps) { const slot = index++; if (!same(slots[slot]?.deps, deps)) { slots[slot]?.cleanup?.(); slots[slot] = { deps, cleanup: effect() }; } },
   }, render(fn) { index = 0; return fn(); }, unmount() { for (const slot of slots) slot?.cleanup?.(); } };
 }
@@ -109,6 +121,29 @@ test('late detail responses and unmounted loads cannot overwrite a new resource'
   await flush();
   second.resolve({ id: 2 }); await flush(); first.resolve({ id: 1 }); await flush();
   assert.equal(harness.render(() => useTaskResource(newLoad)).value.id, 2);
+  harness.unmount();
+});
+
+test('flow confirmation invalidates detail and all pages and rejects the previous configuration response', async () => {
+  const harness = hooks(), old = deferred(), current = deferred();
+  let version = 0, reads = 0, pageReads = 0;
+  const { useTaskDetail } = await load('../src/features/projects/TaskDetail/useTaskDetail.ts', {
+    react: harness.react, '../../auth/api': { errorText: error => error.message },
+    '../services': { ...services,
+      getTaskDetail: () => (++reads === 1 ? old.promise : current.promise),
+      getTaskSubtasks: async () => { pageReads++; return { items: [], total: version, next_cursor: null }; },
+    },
+  });
+  const render = () => harness.render(() => useTaskDetail({ projectId: 1, taskId: 4 }, () => {}, version));
+  const previous = render(); await flush();
+  version++;
+  assert.equal(render().detail.value, null); await flush();
+  current.resolve({ task: { id: 4, state_name: 'NUEVO', state_category: 'active' } }); await flush();
+  old.resolve({ task: { id: 4, state_name: 'ANTERIOR', state_category: 'active' } }); await flush();
+  await previous.accept({ id: 4, state_name: 'ANTERIOR' }); await flush();
+  assert.equal(render().detail.value.task.state_name, 'NUEVO');
+  assert.equal(render().children.value.total, 1);
+  assert.equal(reads, 2); assert.equal(pageReads, 2);
   harness.unmount();
 });
 

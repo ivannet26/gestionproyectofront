@@ -46,24 +46,16 @@ export default function TaskGroupingControl({
         id="task-list-grouping"
         label="Agrupar por"
         value={selected.label}
-        icon="settings"
-        content={
-          <>
-            <SelectedIcon className="size-4" />
-            <span>{selected.label}</span>
-          </>
-        }
-        triggerClassName={
-          selected.value === "state"
-            ? "inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-100 px-3 py-1.25 text-xs font-medium text-purple-800"
-            : undefined
-        }
+        compact
+        appearance="toolbar"
+        content={<StackIcon className="size-4" />}
+
       >
         {() => (
           <>
             <div className="flex flex-col gap-2 p-3 text-xs text-neutral-800">
               <span className="font-medium text-neutral-600">Agrupar por</span>
-              <div className="flex items-center gap-2">
+              <div className="grid min-w-0 grid-cols-[minmax(0,5fr)_minmax(0,3fr)] items-center gap-2">
                 <div className="flex-1 min-w-0 [&>div>button]:w-full [&>div>button]:text-xs [&>div>button[aria-expanded=true]_.group-chevron]:rotate-180 [&>div>[popover]]:p-1">
                   <TaskProperty
                     id={`${id}-mode`}

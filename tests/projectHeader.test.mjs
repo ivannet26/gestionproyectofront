@@ -41,6 +41,10 @@ const { default: ProjectHeader } = await load("../src/features/projects/ProjectW
   "../../../shared/icons/BuildingIcon": { default: Icon },
   "../../../shared/icons/ChevronRightIcon": { default: Icon },
   "../../../shared/icons/StarIcon": { default: Icon },
+  "../../../shared/icons/CalendarIcon": { default: Icon },
+  "../../../shared/icons/ActivityIcon": { default: Icon },
+  "../../../shared/icons/FileIcon": { default: Icon },
+  "../../../shared/icons/StackIcon": { default: Icon },
   "../TaskList/taskHierarchy": hierarchy,
   "../useProjectFavorite": { useProjectFavorite: (_id, initial) => ({ favorite: initial, pending: false, error: "", toggle() {}, ...favoriteState }) },
 });
@@ -48,7 +52,12 @@ const { default: TaskList } = await load("../src/features/projects/TaskList/Task
   "./QuickTaskRow": { default: () => null },
   "./stateInk": { stateInk: () => "#000000" },
   "../TaskForm/TaskProperty": { default: ({ id, value }) => React.createElement("button", { id }, value) },
-  "./TaskCell": { default: () => null, StateLabel: ({ name }) => React.createElement("span", null, name) },
+  "./TaskCell": { default: () => null, StateIcon: Icon, StateLabel: ({ name }) => React.createElement("span", null, name) },
+  "../../../shared/icons/ChevronDownIcon": { default: Icon },
+  "../../../shared/icons/DotsIcon": { default: Icon },
+  "../../../shared/icons/PlusIcon": { default: Icon },
+  "../../../shared/icons/RelationIcon": { default: Icon },
+  "./useTaskPointerDrag": { useTaskPointerDrag: () => ({ onPointerDown() {}, onClickCapture() {}, onDragStart() {} }) },
   "./taskHierarchy": hierarchy,
   "./useTaskGrouping": groupingHook,
   "./TaskGroupingControl": { default: () => React.createElement("button", null, "Agrupar por: Estado") },
@@ -62,6 +71,7 @@ const { default: TaskList } = await load("../src/features/projects/TaskList/Task
   "../TaskStateForm/TaskStateForm": { default: () => null },
   "../Modal/Modal": { default: () => null },
   "./taskListInteractions.css": {},
+  "./taskDropPosition": { taskDropPosition() {} },
 });
 const project = (changes = {}) => ({
   id: 42, name: "Proyecto sintético", areas: [{ id: 7, name: "Sistemas y Software" }],
@@ -102,7 +112,7 @@ test("dates preserve date-only values and missing dates are never invented", () 
   assert.match(missing, /Sin fecha de inicio/);
   assert.match(missing, /Sin fecha de fin/);
   assert.doesNotMatch(missing, /<time/);
-  assert.match(missing, /aria-label="2 tareas y subtareas visibles"/);
+  assert.match(missing, /data-task-count="true"[^>]*>2 tareas<\/span>/);
 });
 
 test("shared title and period precede breadcrumbs; primary action is no longer duplicated in Header", () => {
@@ -131,12 +141,12 @@ test("List has no duplicate primary action and preserves contextual creation per
     project: project({ permissions }), tasks: ["PENDIENTE", "EN_CURSO"].map((state_code, id) => ({
       id, parent_id: null, name: `Tarea ${id}`, state_code, state_name: state_code, labels: [],
       responsible_id: null, responsible_name: null, permissions: {},
-    })), catalogs: { priorities: [] }, onAction() {}, onCreate() {}, onPatch() {}, onState() {},
+    })), catalogs: { priorities: [] }, search: "", preferences: { mode: "state", order: "asc", separatePeople: false, separateLabels: false }, onAction() {}, onCreated() {}, onPatch() {}, onState() {},
   }));
   const admin = render({ manage: true, create_tasks: true });
   assert.doesNotMatch(admin, /\+ Tarea/);
   assert.equal((admin.match(/Añadir tarea/g) ?? []).length, 2);
-  assert.match(admin, /aria-label="Buscar tareas"/);
+  assert.doesNotMatch(admin, /aria-label="Buscar tareas"/);
   assert.equal((render({ manage: false, create_tasks: true }).match(/Añadir tarea/g) ?? []).length, 1);
   assert.doesNotMatch(render({ manage: false, create_tasks: false }), /Añadir tarea/);
 });
@@ -153,7 +163,7 @@ test("empty List renders configured states through Workspace without extra state
   const { default: Workspace } = await load("../src/features/projects/ProjectWorkspace/ProjectWorkspace.tsx", {
     react: { ...React, useState(initial) {
       const index = hookIndex++;
-      return React.useState(index === 0 ? currentProject() : index === 2 ? false : initial);
+      return React.useState(index === 0 ? currentProject() : index === 4 ? false : index === 11 ? { expanded: true, disabled: false, controls: "", toggle() {} } : initial);
     } },
     "react-router": { useSearchParams: () => [new URLSearchParams(`vista=${view}`)], Link: ({ to, children }) => React.createElement("a", { href: to }, children) },
     "../../auth/api": { errorText: String },
@@ -166,13 +176,19 @@ test("empty List renders configured states through Workspace without extra state
     "../TaskDetail/TaskDetailDialog": { default: Empty },
     "../TaskDetail/useTaskDetail": { useTaskDetailNavigation: () => ({ target: null, openTaskDetail() {}, closeTaskDetail() {} }) },
     "../TaskList/TaskList": { default: TaskList },
-    "./TaskBoard": { default: () => null },
+    "../TaskBoard/TaskBoard": { default: () => null },
+    "../../../hooks/useToast": { useToast: () => ({ addToast() {} }) },
+    "../TaskList/TaskGroupingControl": { default: () => React.createElement("button", { "aria-label": "Agrupar por: Estado" }) },
+    "../TaskList/TaskGroupExpansionControl": expansion,
+    "../TaskList/TaskSearch": { default: () => React.createElement("button", { "aria-label": "Buscar tareas" }) },
+    "../TaskList/TaskStatusSettingsControl": { default: Empty },
     "../TaskList/taskHierarchy": hierarchy,
     "../TaskStateForm/TaskStateForm": { default: Empty },
     "./ProjectHeader": { default: Empty },
     "./ProjectToolbar": { default: Toolbar },
     "../../../shared/icons/PlusIcon": { default: Icon },
     "../taskAssignees": assignees,
+    "../taskCollection": await load("../src/features/projects/taskCollection.ts"),
   });
   const render = () => { hookIndex = 0; return renderToStaticMarkup(React.createElement(Workspace, {
     projectId: 42, catalogs: { priorities: [] }, catalogLoading: false, catalogError: "", onRetryCatalogs() {},
@@ -186,12 +202,17 @@ test("empty List renders configured states through Workspace without extra state
   assert.equal((markup.match(/Añadir tarea/g) ?? []).length, 2);
   assert.equal((markup.match(/aria-label="Crear nueva tarea"/g) ?? []).length, 1);
   assert.match(markup, /aria-label="Contraer grupos"/);
+  assert.equal((markup.match(/aria-label="Buscar tareas"/g) ?? []).length, 1);
+  assert.equal((markup.match(/aria-label="Herramientas del proyecto"/g) ?? []).length, 1);
   permissions = { manage: false, create_tasks: true };
   assert.equal((render().match(/Añadir tarea/g) ?? []).length, 1);
   permissions = { manage: false, create_tasks: false };
   assert.doesNotMatch(render(), /Añadir tarea/);
   assert.doesNotMatch(render(), /Crear nueva tarea/);
   view = "tablero";
-  assert.doesNotMatch(render(), /data-group-key/);
+  const board = render();
+  assert.doesNotMatch(board, /data-group-key/);
+  assert.equal((board.match(/aria-label="Buscar tareas"/g) ?? []).length, 1);
+  assert.equal((board.match(/aria-label="Herramientas del proyecto"/g) ?? []).length, 1);
   assert.equal(requests, 0);
 });

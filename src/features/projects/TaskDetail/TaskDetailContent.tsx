@@ -11,12 +11,13 @@ import Tooltip from "../../../shared/Tooltip";
 import "./taskDetail.css";
 
 export interface TaskDetailProps {
+  version?: number;
   target: TaskIdentity; project: Project; catalogs: ProjectCatalogs;
   onUpdated: (task: Task) => void; onNavigate: (target: TaskIdentity) => void; onClose: () => void;
 }
 
-function DetailContent({ target, project, catalogs, onUpdated, onNavigate, onClose, onBusy, activityVisible, onActivityToggle }: TaskDetailProps & { onBusy: (busy: boolean) => void; activityVisible: boolean; onActivityToggle: () => void }) {
-  const model = useTaskDetail(target, onUpdated);
+function DetailContent({ target, project, catalogs, onUpdated, onNavigate, onClose, onBusy, activityVisible, onActivityToggle, version }: TaskDetailProps & { onBusy: (busy: boolean) => void; activityVisible: boolean; onActivityToggle: () => void }) {
+  const model = useTaskDetail(target, onUpdated, version);
   const [quickBusy, setQuickBusy] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);

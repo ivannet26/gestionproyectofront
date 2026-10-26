@@ -13,6 +13,19 @@ import type {
   TaskListGroup,
 } from "../types";
 import QuickTaskRow from "./QuickTaskRow";
+import RelationIcon from "../../../shared/icons/RelationIcon";
+import TaskMoveControl from "./TaskMoveControl";
+import { taskDropPosition } from "./taskDropPosition";
+import { useTaskMove } from "./useTaskMove";
+import { useTaskPointerDrag } from "./useTaskPointerDrag";
+import "./taskListInteractions.css";
+
+export interface TaskGroupControls {
+  expanded: boolean;
+  disabled: boolean;
+  controls: string;
+  toggle: () => void;
+}
 import type { TaskChanges } from "./TaskCell";
 import TaskCell, { StateIcon } from "./TaskCell";
 import TaskGroupLabel from "./TaskGroupLabel";
@@ -27,6 +40,8 @@ interface TaskListProps extends TaskChanges {
   onMoved?: (tasks: Task[]) => void;
   search: string;
   preferences: TaskGroupingPreferences;
+  onCountChange?: (count: number) => void;
+  onGroupControls?: (controls: TaskGroupControls | null) => void;
 }
 
 export default function TaskList({
@@ -39,6 +54,9 @@ export default function TaskList({
   onState,
   search,
   preferences,
+  onMoved,
+  onCountChange,
+  onGroupControls,
 }: TaskListProps) {
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -55,6 +73,8 @@ export default function TaskList({
     };
   }, []);
   const listId = useId();
+  const region = useRef<HTMLDivElement>(null);
+  const movement = useTaskMove(project, onMoved, region);
   const byId = useMemo(
     () => new Map(tasks.map((task) => [task.id, task])),
     [tasks],
@@ -67,6 +87,49 @@ export default function TaskList({
     catalogs.priorities,
     preferences,
   );
+  useEffect(() => { onCountChange?.(hierarchy.visible.size); }, [hierarchy.visible.size, onCountChange]);
+  useEffect(() => {
+    onGroupControls?.({
+      expanded: groups.length > 0 && groups.every((group) => !collapsed.has(group.key)),
+      disabled: groups.length === 0,
+      controls: groups.map((_, index) => `${listId}-group-${index}`).join(" "),
+      toggle: () => setCollapsed((current) => {
+        const next = new Set(current), close = groups.every((group) => !current.has(group.key));
+        for (const group of groups) { if (close) next.add(group.key); else next.delete(group.key); }
+        return next;
+      }),
+    });
+  }, [groups, collapsed, listId, onGroupControls]);
+  useEffect(() => () => onGroupControls?.(null), [onGroupControls]);
+
+  function locate(x: number, y: number, task: Task) {
+    const node = region.current;
+    if (!node || preferences.mode !== "state") return null;
+    const bounds = node.getBoundingClientRect();
+    if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) return null;
+    const sections = Array.from(node.querySelectorAll<HTMLElement>("[data-group-key]"));
+    const section = sections.find((section, index) => {
+      const rect = section.getBoundingClientRect(), next = sections[index + 1]?.getBoundingClientRect();
+      return y >= rect.top && y < (next?.top ?? bounds.bottom);
+    }) ?? sections[0];
+    const group = groups.find((group) => group.key === section?.dataset.groupKey);
+    if (!section || !group?.stateCode || !movement.permitted(task, group.stateCode)) return null;
+    const table = section.querySelector("table")!, tableBounds = table.getBoundingClientRect();
+    const heading = section.querySelector("h2")!.getBoundingClientRect();
+    const hidden = table.getClientRects().length === 0;
+    const visibleRows = Array.from(section.querySelectorAll<HTMLTableRowElement>("tbody tr")).filter((row) => row.getClientRects().length).map((row) => {
+      const rect = row.getBoundingClientRect();
+      return { id: row.dataset.taskId ? Number(row.dataset.taskId) : undefined, reference: row.dataset.parentReference ? Number(row.dataset.parentReference) : undefined, top: rect.top, bottom: rect.bottom };
+    });
+    const position = hidden ? { before: null, y: heading.bottom } : taskDropPosition(task, group.stateCode, tasks, visibleRows, y, tableBounds.bottom);
+    return {
+      state: group.stateCode, before: position.before,
+      top: Math.max(position.y, Math.min(heading.bottom, tableBounds.bottom || heading.bottom)) - bounds.top + node.scrollTop,
+      left: (hidden ? section.getBoundingClientRect().left : tableBounds.left) - bounds.left + node.scrollLeft,
+      width: hidden ? section.offsetWidth : tableBounds.width,
+    };
+  }
+  const pointerDrag = useTaskPointerDrag({ movement, locate, region });
   const canCreateIn = (code: string) =>
     project.permissions.create_tasks &&
     states.some((state) => state.code === code) &&
@@ -83,7 +146,7 @@ export default function TaskList({
     group: TaskListGroup,
     depth = 0,
     ancestors = new Set<number>(),
-  ): ReactNode {
+  ): ReactNode[] {
     return items
       .filter((task) => group.visible.has(task.id) && !ancestors.has(task.id))
       .flatMap((task) => {
@@ -99,16 +162,28 @@ export default function TaskList({
         const actions =
           task.permissions.edit ||
           task.permissions.create_child ||
-          task.permissions.dependencies;
+          task.permissions.dependencies || task.permissions.state;
+        if (context && preferences.mode === "state") return [
+          <tr key={`reference-${task.id}`} data-parent-reference={task.id} className="gm-parent-reference border-b border-neutral-200">
+            <td colSpan={7}><button type="button" title={`Subtareas de ${task.name}`} className="inline-flex max-w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-xs text-neutral-600 hover:text-neutral-800 hover:underline"
+              onClick={() => onAction("detail", task.id)}><RelationIcon className="size-4 shrink-0" /><span className="min-w-0 truncate">Subtareas de {task.name}</span></button></td>
+          </tr>, ...rows(children, group, depth, next),
+        ];
         return [
           <tr
             key={task.id}
             data-task-id={task.id}
+            data-context={context || undefined}
+            data-dragging={movement.dragging?.id === task.id || undefined}
+            data-drag-enabled={preferences.mode === "state" && !context && !search.trim() && !movement.busy && task.permissions.state && Boolean(task.move_revision && onMoved) || undefined}
+            onPointerDown={(event) => pointerDrag.onPointerDown(event, task, preferences.mode === "state" && !context && !search.trim() && !movement.busy && task.permissions.state && Boolean(task.move_revision && onMoved))}
+            onClickCapture={pointerDrag.onClickCapture}
+            onDragStart={pointerDrag.onDragStart}
             className="gm-task-row group/row h-12 border-b border-neutral-200 hover:bg-neutral-100"
             onClick={(event) => {
               if (
                 event.target instanceof Element &&
-                !event.target.closest("button, input, textarea, [popover]")
+                !event.target.closest("button, input, textarea, select, a, summary, [contenteditable=true], [popover]")
               )
                 onAction("detail", task.id);
             }}
@@ -174,12 +249,14 @@ export default function TaskList({
                   <div className="flex min-w-0 items-center gap-1.5">
                     <button
                       type="button"
+                      data-task-drag-surface
                       className="cursor-pointer truncate text-left text-sm text-neutral-800 hover:underline"
                       title={task.name}
                       onClick={() => onAction("detail", task.id)}
                     >
                       {task.name}
                     </button>
+                    {task.permissions.edit && <span className="gm-row-actions shrink-0"><TaskCell field="labels" task={task} project={project} catalogs={catalogs} onPatch={onPatch} onState={onState} /></span>}
                     {children.length > 0 && (
                       <span
                         className="whitespace-nowrap text-[10px] text-neutral-500"
@@ -237,7 +314,7 @@ export default function TaskList({
             ))}
             <td className="py-1 pl-0 pr-2 text-center">
               {actions && (
-                <div className="flex items-center justify-center opacity-0 focus-within:opacity-100 group-hover/row:opacity-100 [@media(pointer:coarse)]:opacity-100">
+                <div className="gm-row-actions flex items-center justify-center gap-1">
                   <TaskProperty
                     cell
                     id={`${listId}-${encodeURIComponent(group.key)}-task-${task.id}-actions`}
@@ -250,6 +327,7 @@ export default function TaskList({
                   >
                     {(close) => (
                       <div className="max-h-60 overflow-y-auto p-1">
+                        {preferences.mode === "state" && !context && task.permissions.state && task.move_revision && onMoved && <TaskMoveControl key={`${task.id}:${task.state_code}`} task={task} states={states} tasks={tasks} disabled={movement.busy || Boolean(search.trim())} onMove={movement.propose} onClose={close} />}
                         {task.permissions.edit && (
                           <button
                             className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs text-neutral-800 cursor-pointer hover:bg-neutral-100"
@@ -301,8 +379,12 @@ export default function TaskList({
   return (
     <section
       aria-label="Lista de tareas"
+      data-moving={Boolean(movement.dragging) || undefined}
+      aria-busy={movement.busy}
       className="gm-task-list flex min-h-0 flex-1 flex-col min-w-0"
     >
+      {movement.error && <div role="alert" className="flex flex-wrap items-center gap-2 py-2 text-xs text-red-700"><span>{movement.error}</span><button type="button" disabled={movement.busy} className="cursor-pointer rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-neutral-800 hover:bg-neutral-100" onClick={() => { void movement.refresh(); }}>Actualizar lista</button></div>}
+      {search.trim() && preferences.mode === "state" && <p className="my-1 text-xs text-neutral-600">Limpia la búsqueda para mover posiciones. Puedes seguir usando el selector de estado.</p>}
       {hierarchy.roots.length === 0 && (
         <p className="my-4 text-xs text-neutral-500" role="status">
           {search
@@ -311,9 +393,10 @@ export default function TaskList({
         </p>
       )}
       <div
-        className="min-h-0 flex-1 overflow-auto"
+        ref={region}
+        className="relative min-h-0 flex-1 overflow-auto overscroll-contain"
         role="region"
-        aria-label="Tabla de tareas"
+        aria-label="Tabla de tareas con desplazamiento horizontal"
       >
         {groups.map((group, index) => {
           const open = !collapsed.has(group.key);
@@ -365,10 +448,10 @@ export default function TaskList({
                       </span>
                     </>
                   ) : (
-                    <span className="text-xs text-neutral-600">
+                    <><TaskGroupLabel group={group} mode={preferences.mode} /><span className="text-xs text-neutral-600">
                       {group.members.size}{" "}
                       {group.members.size === 1 ? "tarea" : "tareas"}
-                    </span>
+                    </span></>
                   )}
                 </button>
               </h2>
@@ -458,7 +541,12 @@ export default function TaskList({
             </section>
           );
         })}
+        {movement.drop && <div className="gm-task-insertion" aria-hidden="true" style={{ top: movement.drop.top, left: movement.drop.left, width: movement.drop.width }} />}
       </div>
+      {movement.dragging && <div role="status" className="pointer-events-none fixed bottom-4 left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-800">
+        <span className="block max-w-80 truncate font-medium">{movement.dragging.name}</span>
+        <span className="text-neutral-600">{movement.drop ? `Soltar en ${states.find((state) => state.code === movement.drop!.state)?.name ?? movement.drop.state}` : "Arrastra hacia un estado disponible"} · Escape para cancelar</span>
+      </div>}
     </section>
   );
 }

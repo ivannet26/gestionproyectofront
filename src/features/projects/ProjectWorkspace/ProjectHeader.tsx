@@ -1,5 +1,7 @@
 import { Link } from "react-router";
 import { projectPath } from "../../../routes";
+import CalendarIcon from "../../../shared/icons/CalendarIcon";
+import { formatTaskDate } from "../TaskList/taskHierarchy";
 import ActivityIcon from "../../../shared/icons/ActivityIcon";
 import BuildingIcon from "../../../shared/icons/BuildingIcon";
 import ChevronRightIcon from "../../../shared/icons/ChevronRightIcon";
@@ -22,7 +24,8 @@ export default function ProjectHeader({
   project,
   view,
   taskCount,
-}: Pick<ProjectHeaderProps, "project" | "view" | "taskCount">) {
+  filteredCount,
+}: Pick<ProjectHeaderProps, "project" | "view" | "taskCount"> & { filteredCount?: number | null }) {
   const { favorite, pending, error, toggle } = useProjectFavorite(
     project.id,
     project.is_favorite,
@@ -36,6 +39,18 @@ export default function ProjectHeader({
 
   return (
     <header className="min-w-0 shrink-0 text-neutral-800">
+      <div className="mb-3 flex min-w-0 flex-wrap items-baseline justify-between gap-2 border-b border-neutral-200 pb-3">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-3">
+          <h1 className="m-0 min-w-0 text-lg font-semibold [overflow-wrap:anywhere]">{project.name}</h1>
+          <span data-task-count role="status" className="text-xs text-neutral-600">{filteredCount != null && filteredCount !== taskCount ? `${filteredCount} de ${taskCount}` : taskCount} {taskCount === 1 ? "tarea" : "tareas"}</span>
+        </div>
+        <div aria-label="Periodo del proyecto" className="flex flex-wrap items-center gap-1.5 text-xs text-neutral-600 tabular-nums">
+          <CalendarIcon className="size-4" />
+          {project.start_date ? <time dateTime={project.start_date} aria-label={`Inicio: ${formatTaskDate(project.start_date)}`}>{formatTaskDate(project.start_date)}</time> : <span>Sin fecha de inicio</span>}
+          <span aria-hidden="true">→</span>
+          {project.end_date ? <time dateTime={project.end_date} aria-label={`Fin: ${formatTaskDate(project.end_date)}`}>{formatTaskDate(project.end_date)}</time> : <span>Sin fecha de fin</span>}
+        </div>
+      </div>
       <div className="flex min-w-0 items-center">
         <nav
           aria-label="Ruta de navegación"

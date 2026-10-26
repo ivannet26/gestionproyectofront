@@ -50,7 +50,7 @@ function Card({
   onToggleChildren,
   childrenTasks,
   childrenMap,
-  expandedParents,
+  overlay = false,
 }: {
   task: Task;
   catalogs: ProjectCatalogs;
@@ -61,13 +61,13 @@ function Card({
   onToggleChildren?: (id: number) => void;
   childrenTasks?: Task[];
   childrenMap?: Map<number, Task[]>;
-  expandedParents?: Set<number>;
+  overlay?: boolean;
 }) {
   const resolvedChildCount =
     childCount ?? childrenMap?.get(task.id)?.length ?? 0;
   const resolvedChildren = childrenTasks ?? childrenMap?.get(task.id) ?? [];
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: task.id,
+    id: overlay ? `preview-${task.id}` : task.id,
     data: { task },
     disabled: !draggable,
   });
@@ -84,6 +84,10 @@ function Card({
       onClick={() => onAction("detail", task.id)}
       {...(draggable ? listeners : {})}
       {...(draggable ? attributes : {})}
+      role="button"
+      tabIndex={0}
+      aria-label={task.name}
+      onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); onAction("detail", task.id); } else listeners?.onKeyDown?.(event); }}
     >
       <div className="font-medium text-neutral-800 leading-snug">
         {task.name}
@@ -149,16 +153,10 @@ function Card({
           {expanded && resolvedChildren.length > 0 && (
             <div className="mt-2 space-y-2 border-l border-neutral-200 pl-2">
               {resolvedChildren.map((child) => (
-                <Card
-                  key={child.id}
-                  task={child}
-                  catalogs={catalogs}
-                  onAction={onAction}
-                  draggable={child.permissions.state}
-                  expanded={expandedParents?.has(child.id) ?? false}
-                  onToggleChildren={onToggleChildren}
-                  childrenMap={childrenMap}
-                />
+                <button key={child.id} type="button" className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100"
+                  onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onAction("detail", child.id); }}>
+                  <span className="truncate">{child.name}</span><span className="shrink-0 text-[10px] text-neutral-600">{child.state_name}</span>
+                </button>
               ))}
             </div>
           )}
@@ -234,7 +232,6 @@ function Column({
             onToggleChildren={onToggleChildren}
             childrenTasks={childrenMap.get(task.id) ?? []}
             childrenMap={childrenMap}
-            expandedParents={expandedParents}
           />
         ))}
       </div>
@@ -251,6 +248,7 @@ export default function TaskBoard({
 }: TaskBoardProps) {
   const boardRef = useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = useState<number | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [expandedParents, setExpandedParents] = useState<Set<number>>(
     new Set(),
@@ -294,25 +292,6 @@ export default function TaskBoard({
     return map;
   }, [tasks]);
 
-  const descendantIds = useCallback(
-    (id: number): number[] => {
-      const result: number[] = [];
-      const visited = new Set<number>();
-      const stack = [...(childrenMap.get(id) ?? [])];
-      while (stack.length) {
-        const child = stack.pop()!;
-        if (visited.has(child.id)) continue;
-        visited.add(child.id);
-        result.push(child.id);
-        for (const grandchild of childrenMap.get(child.id) ?? []) {
-          if (!visited.has(grandchild.id)) stack.push(grandchild);
-        }
-      }
-      return result;
-    },
-    [childrenMap],
-  );
-
   const activeTask =
     activeId != null ? tasks.find((t) => t.id === activeId) : null;
 
@@ -325,6 +304,7 @@ export default function TaskBoard({
     async (event: DragEndEvent) => {
       const { active, over } = event;
       setActiveId(null);
+      setOverId(null);
       if (!over) return;
       const taskId = Number(active.id);
       const target = String(over.id);
@@ -336,29 +316,13 @@ export default function TaskBoard({
       );
       if (!transition) return;
       try {
-        await onState(task, { state_code: target, reason: "" });
-        for (const childId of descendantIds(taskId)) {
-          const child = tasks.find((item) => item.id === childId);
-          if (!child || child.state_code === target) continue;
-          if (!child.permissions?.state) continue;
-          const transition = child.transitions.find(
-            (item) => item.target === target,
-          );
-          if (!transition) continue;
-          try {
-            await onState(child, { state_code: target, reason: "" });
-          } catch (failure) {
-            setError(String(failure));
-          }
-        }
+        await onState(task, { state_code: target });
       } catch (failure) {
         setError(String(failure));
       }
     },
-    [tasks, onState, descendantIds],
+    [tasks, onState],
   );
-
-  const [overId, setOverId] = useState<string | null>(null);
 
   const handleBoardWheel = (event: React.WheelEvent<HTMLDivElement>) => {
     if (event.shiftKey || !boardRef.current) return;
@@ -386,6 +350,7 @@ export default function TaskBoard({
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={(e) => void handleDragEnd(e)}
+        onDragCancel={() => { setActiveId(null); setOverId(null); }}
         onDragOver={(e) => setOverId(e.over ? String(e.over.id) : null)}
       >
         <div
@@ -415,6 +380,7 @@ export default function TaskBoard({
                 catalogs={catalogs}
                 onAction={onAction}
                 draggable={false}
+                overlay
               />
             </div>
           ) : null}

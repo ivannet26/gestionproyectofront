@@ -45,9 +45,10 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const [taskCreationRequest, setTaskCreationRequest] =
     useState<TaskCreationRequest | null>(null);
   const taskCreationSequence = useRef(0);
+  const hasLoadedProjects = useRef(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { hideLoading } = useLoading();
+  const { hideLoading, startLoading } = useLoading();
   const canViewAdmin = user.permissions.manage_accounts;
   const canCreateProject = user.role === "ADMINISTRADOR";
   const canCreateTasks =
@@ -55,12 +56,15 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const creationDisabled = projectsLoading || Boolean(projectError);
   const projectWorkspace = /^\/proyectos\/\d+$/.test(pathname);
   const needsCatalogs = creating || projectWorkspace;
+  const catalogLoading = needsCatalogs && !catalogsReady && !catalogError;
 
   useEffect(() => {
     let current = true;
+    const finishLoading = hasLoadedProjects.current ? () => {} : startLoading();
     void getProjects()
       .then((items) => {
         if (current) {
+          hasLoadedProjects.current = true;
           setProjects(items);
           setProjectError("");
         }
@@ -69,6 +73,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         if (current) setProjectError(errorText(failure));
       })
       .finally(() => {
+        finishLoading();
         if (current) {
           setProjectsLoading(false);
           hideLoading();
@@ -76,8 +81,9 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
       });
     return () => {
       current = false;
+      finishLoading();
     };
-  }, [projectReload, hideLoading]);
+  }, [projectReload, hideLoading, startLoading]);
 
   useEffect(() => {
     if (!needsCatalogs || catalogsReady) return;
@@ -170,6 +176,9 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
       return (
         <route.Component
           catalogs={catalogs}
+          catalogLoading={catalogLoading}
+          catalogError={catalogError}
+          onRetryCatalogs={retryCatalogs}
           taskCreationRequest={taskCreationRequest}
           onTaskCreationHandled={taskCreationHandled}
         />

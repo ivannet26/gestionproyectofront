@@ -1,13 +1,7 @@
 import FlagIcon from "../../../shared/icons/FlagIcon";
 import SuccessIcon from "../../../shared/icons/SuccessIcon";
 import type { ProjectCatalogs } from "../types";
-
-export const priorityTones: Record<number, string> = {
-  1: "text-[#be2937]",
-  2: "text-[#a66a08]",
-  3: "text-[#4267c5]",
-  4: "text-[#707b80]",
-};
+import { priorityTones } from "./priorityTones";
 
 export default function PriorityOptions({
   priorities,

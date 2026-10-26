@@ -23,7 +23,8 @@ import {
   stateCategories,
 } from "../stateGroups";
 import { taskAssignees } from "../taskAssignees";
-import PriorityOptions, { priorityTones } from "../TaskForm/PriorityOptions";
+import PriorityOptions from "../TaskForm/PriorityOptions";
+import { priorityTones } from "../TaskForm/priorityTones";
 import { isPastTaskDate } from "../TaskForm/taskDates";
 import TaskDateValue from "../TaskForm/TaskDateValue";
 import StatusIcon from "../../../shared/icons/StatusIcon";
@@ -139,7 +140,7 @@ export function StateIcon({
 
 export function StateLabel({ code, name, category, color }: ProjectTaskState) {
   return (
-    <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-xs font-medium text-neutral-700">
+    <span data-state={code} className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-xs font-medium text-neutral-700">
       <StateIcon code={code} name={name} category={category} color={color} />
       <span className="truncate">{name}</span>
     </span>
@@ -149,6 +150,7 @@ export function StateLabel({ code, name, category, color }: ProjectTaskState) {
 export function StateBadge({ code, name, category, color }: ProjectTaskState) {
   return (
     <span
+      data-state={code}
       className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-medium text-white"
       style={{ backgroundColor: color ?? "#737373" }}
     >
@@ -207,7 +209,7 @@ function Editor({
     (state) =>
       matches(state.name) &&
       (state.code === task.state_code ||
-        task.transitions.some((item) => item.target === state.code)),
+        (task.move_targets ?? task.transitions.map((item) => item.target)).includes(state.code)),
   );
 
   async function save() {
@@ -216,7 +218,7 @@ function Editor({
     setError("");
     try {
       if (field === "state_code")
-        await onState(task, { state_code: value, reason: "" });
+        await onState(task, { state_code: value });
       else if (field === "responsible_id")
         await onPatch(task, { responsible_ids: responsibles });
       else if (field === "labels") {
