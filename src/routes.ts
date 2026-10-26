@@ -9,6 +9,7 @@ import TeamsPage from "./features/teams/TeamsPage";
 import TeamDetailPage from "./features/teams/TeamDetailPage";
 import AccountsPage from "./features/accounts/AccountsPage";
 import RecoveryRequestsPage from "./features/recovery-requests/RecoveryRequestsPage";
+import PublicationsPage from "./features/publications/PublicationsPage";
 
 export interface AppRoute {
   path: string;
@@ -20,6 +21,11 @@ export const appRoutes: AppRoute[] = [
   {
     path: "/",
     Component: DashboardPage,
+    requiresAdmin: false,
+  },
+  {
+    path: "/publicaciones",
+    Component: PublicationsPage,
     requiresAdmin: false,
   },
   {

@@ -10,6 +10,7 @@ import DashboardPage from "../../dashboard/DashboardPage/DashboardPage";
 import Modal from "../../projects/Modal/Modal";
 import ProjectList from "../../projects/ProjectList/ProjectList";
 import ProjectRoute from "../../projects/ProjectRoute/ProjectRoute";
+import PublicationsPage from "../../publications/PublicationsPage";
 import { getProjectCatalogs, getProjects } from "../../projects/services";
 import type {
   Project,
@@ -172,6 +173,11 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
           taskCreationRequest={taskCreationRequest}
           onTaskCreationHandled={taskCreationHandled}
         />
+      );
+    }
+    if (route.Component === PublicationsPage) {
+      return (
+        <route.Component canManage={user.role === "ADMINISTRADOR"} />
       );
     }
     return <route.Component />;
