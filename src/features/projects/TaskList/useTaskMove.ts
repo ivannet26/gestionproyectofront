@@ -10,6 +10,7 @@ export interface DropPosition { state: string; before: number | null; top: numbe
 export function useTaskMove(project: Project, onConfirmed: ((tasks: Task[]) => void) | undefined, region: RefObject<HTMLDivElement | null>) {
   const [dragging, setDragging] = useState<Task | null>(null), [drop, setDrop] = useState<DropPosition | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState("");
+  const [cursor, setCursor] = useState<{ x: number; y: number } | null>(null), [invalid, setInvalid] = useState("");
   const pending = useRef(false), alive = useRef(true), activeDrag = useRef<Task | null>(null), point = useRef({ x: 0, y: 0 });
   const session = useRef(0);
   useEffect(() => { alive.current = true; const generation = ++session.current; return () => { alive.current = false; session.current = generation + 1; activeDrag.current = null; }; }, [project.id]);
@@ -38,7 +39,7 @@ export function useTaskMove(project: Project, onConfirmed: ((tasks: Task[]) => v
   function permitted(task: Task, state: string) {
     return Boolean(onConfirmed && !pending.current && task.move_revision && task.permissions.state && (task.state_code === state || (task.move_targets ? task.move_targets.includes(state) : task.transitions.some((item) => item.target === state))));
   }
-  function end() { activeDrag.current = null; setDragging(null); setDrop(null); }
+  function end() { activeDrag.current = null; setDragging(null); setDrop(null); setCursor(null); setInvalid(""); }
   async function execute(movement: Movement) {
     if (pending.current || !alive.current) return;
     pending.current = true; setBusy(true); setError("");
@@ -47,7 +48,7 @@ export function useTaskMove(project: Project, onConfirmed: ((tasks: Task[]) => v
       const result = await moveTask(project.id, movement.task.id, { state_code: movement.state, before_id: movement.before, expected_revision: movement.task.move_revision! });
       if (alive.current && requestSession === session.current) {
         onConfirmed?.(result);
-        requestAnimationFrame(() => { if (alive.current && document.activeElement === document.body) document.querySelector<HTMLButtonElement>(`tr[data-task-id="${movement.task.id}"]:not([data-context]) button[aria-label^="Opciones"]`)?.focus({ preventScroll: true }); });
+        requestAnimationFrame(() => { if (alive.current && document.activeElement === document.body) document.querySelector<HTMLButtonElement>(`tr[data-task-id="${movement.task.id}"]:not([data-context]) button[data-task-drag-surface]`)?.focus({ preventScroll: true }); });
       }
     } catch (failure) { if (alive.current && requestSession === session.current) { end(); setError(errorText(failure)); throw failure; } }
     finally { pending.current = false; if (alive.current) setBusy(false); }
@@ -57,10 +58,11 @@ export function useTaskMove(project: Project, onConfirmed: ((tasks: Task[]) => v
     const movement = { task, state, before };
     void execute(movement).catch(() => undefined);
   }
-  return { dragging, drop, busy, error, permitted, propose, execute, end,
-    start: (task: Task, x: number, y: number) => { activeDrag.current = task; point.current = { x, y }; setDragging(task); setError(""); },
-    track: (x: number, y: number) => { point.current = { x, y }; },
-    over: setDrop,
+  return { dragging, drop, busy, error, cursor, invalid, permitted, propose, execute, end,
+    start: (task: Task, x: number, y: number) => { activeDrag.current = task; point.current = { x, y }; setCursor({ x, y }); setDragging(task); setError(""); setInvalid(""); },
+    track: (x: number, y: number) => { point.current = { x, y }; setCursor({ x, y }); },
+    over: (position: DropPosition | null) => { setDrop(position); if (position) setInvalid(""); },
+    reject: (message: string) => { setDrop(null); setInvalid(message); },
     refresh: async () => { if (pending.current) return; const generation = session.current; try { const result = await getTasks(project.id); if (alive.current && generation === session.current) { onConfirmed?.(result); setError(""); } } catch (failure) { if (alive.current && generation === session.current) setError(errorText(failure)); } },
   };
 }

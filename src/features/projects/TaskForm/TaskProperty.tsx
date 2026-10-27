@@ -133,6 +133,7 @@ export default function TaskProperty({
           <Tooltip
             key={index}
             label={item.label}
+            nonBlocking={appearance === "list"}
             stretch={!compact && !triggers}
           >
             {(description) => (

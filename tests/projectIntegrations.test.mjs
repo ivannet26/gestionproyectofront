@@ -89,12 +89,12 @@ test("shared assignee picker keeps selected people controlled and unique across 
   assert.match(html, /Ángela QA/);
 });
 
-test("past comparison uses America Lima across UTC midnight without shifting date-only values", () => {
+test("creation-day comparison uses America Lima across UTC midnight without shifting date-only values", () => {
   const instant = new Date("2026-10-22T02:00:00Z");
   assert.equal(grouping.projectToday(instant), "2026-10-21");
-  assert.equal(dates.isPastTaskDate("2026-10-20", instant), true);
-  assert.equal(dates.isPastTaskDate("2026-10-21", instant), false);
-  assert.equal(dates.isPastTaskDate(null, instant), false);
+  assert.equal(dates.isBeforeTaskCreation("2026-10-20", instant.toISOString()), true);
+  assert.equal(dates.isBeforeTaskCreation("2026-10-21", instant.toISOString()), false);
+  assert.equal(dates.isBeforeTaskCreation(null, instant.toISOString()), false);
 });
 
 async function movementHarness() {

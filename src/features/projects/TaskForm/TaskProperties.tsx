@@ -12,6 +12,7 @@ import { propertyClasses as styles } from "../ProjectForm/formClasses";
 import { taskAssignees } from "../taskAssignees";
 import { Calendar } from "../CreateProjectModal/ProjectEndDateSelector";
 import TaskDateValue from "./TaskDateValue";
+import { taskCreationDay } from "./taskDates";
 import { formatTaskDate } from "../TaskList/taskHierarchy";
 import { StateIcon } from "../TaskList/TaskCell";
 
@@ -74,11 +75,11 @@ export default function TaskProperties({
           onClick={() => { close(); onConfigure(); }}><SettingsIcon className="size-4" />Configurar estados</button>}
       </>}
     </TaskProperty>
-    <TaskProperty id="task-start" label="Fecha de inicio" value={formatTaskDate(startDate)} icon={CalendarIcon} error={errors["task-start"]} content={<><CalendarIcon className="size-4" /><TaskDateValue value={startDate} /></>}>
-      {(close) => <Calendar label="Fecha de inicio" optional={false} value={startDate} min={creationMin ?? parent?.start_date ?? project.start_date ?? undefined}
+    <TaskProperty id="task-start" label="Fecha de inicio" value={formatTaskDate(startDate)} icon={CalendarIcon} error={errors["task-start"]} content={<><CalendarIcon className="size-4" /><TaskDateValue value={startDate} createdAt={task?.created_at} /></>}>
+      {(close) => <Calendar label="Fecha de inicio" optional={false} value={startDate} warningBefore={taskCreationDay(task?.created_at)} min={creationMin ?? parent?.start_date ?? project.start_date ?? undefined}
         max={dueDate || parent?.due_date || project.end_date || undefined} onChange={onStartDate} close={close} />}
     </TaskProperty>
-    <TaskOptionalProperties project={project} catalogs={catalogs} responsible={responsible} dueDate={dueDate}
+    <TaskOptionalProperties project={project} catalogs={catalogs} responsible={responsible} dueDate={dueDate} createdAt={task?.created_at}
       priority={priority} labels={labels} errors={errors} canAssign={canAssign}
       readOnlyResponsible={task ? taskAssignees(task).map((person) => person.name).join(", ") || "Sin persona asignada" : "Tú"}
       min={startDate || parent?.start_date || project.start_date || undefined} max={parent?.due_date ?? project.end_date ?? undefined}

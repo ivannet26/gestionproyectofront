@@ -8,7 +8,6 @@ import CircleDotIcon from "../../../shared/icons/CircleDotIcon";
 import CircleHalfIcon from "../../../shared/icons/CircleHalfIcon";
 import CircleMinusIcon from "../../../shared/icons/CircleMinusIcon";
 import FlagIcon from "../../../shared/icons/FlagIcon";
-import HashIcon from "../../../shared/icons/HashIcon";
 import SuccessIcon from "../../../shared/icons/SuccessIcon";
 import UserIcon from "../../../shared/icons/UserIcon";
 import XIcon from "../../../shared/icons/XIcon";
@@ -25,7 +24,9 @@ import {
 import { taskAssignees } from "../taskAssignees";
 import PriorityOptions from "../TaskForm/PriorityOptions";
 import { priorityTones } from "../TaskForm/priorityTones";
-import { isPastTaskDate } from "../TaskForm/taskDates";
+import { isBeforeTaskCreation, taskCreationDay } from "../TaskForm/taskDates";
+import TaskIcon from "../TaskForm/TaskIcon";
+import TaskMoveControl from "./TaskMoveControl";
 import TaskDateValue from "../TaskForm/TaskDateValue";
 import StatusIcon from "../../../shared/icons/StatusIcon";
 import TaskProperty from "../TaskForm/TaskProperty";
@@ -73,6 +74,7 @@ interface TaskCellProps extends TaskChanges {
   project: Project;
   catalogs: ProjectCatalogs;
   parent?: Task;
+  movement?: { tasks: Task[]; disabled: boolean; onMove: (task: Task, state: string, before: number | null) => void };
 }
 const labels: Record<Field, string> = {
   state_code: "Estado",
@@ -88,7 +90,7 @@ const icons: Record<Field, ComponentType<{ className?: string }>> = {
   responsible_id: UserIcon,
   start_date: CalendarIcon,
   due_date: CalendarIcon,
-  labels: HashIcon,
+  labels: ({ className }) => <TaskIcon name="labels" className={className} />,
 };
 
 export function StateIcon({
@@ -186,6 +188,7 @@ function Editor({
   parent,
   onPatch,
   onState,
+  movement,
   close,
 }: TaskCellProps & { close: () => void }) {
   const [value, setValue] = useState(String(task[field] ?? ""));
@@ -336,6 +339,7 @@ function Editor({
             value={value}
             label={labels[field]}
             optional={field === "due_date"}
+            warningBefore={taskCreationDay(task.created_at)}
             min={
               field === "due_date"
                 ? task.start_date
@@ -354,6 +358,7 @@ function Editor({
           />
         )}
       </fieldset>
+      {field === "state_code" && movement && <TaskMoveControl key={`${task.id}:${value}`} task={task} state={value} tasks={movement.tasks} disabled={busy || movement.disabled} onMove={movement.onMove} onClose={close} />}
       {error && (
         <p
           ref={errorMessage}
@@ -451,7 +456,7 @@ export default function TaskCell(props: TaskCellProps) {
               : "Sin etiquetas"}
         </span>
       ) : (
-        <HashIcon className="size-4" />
+        <TaskIcon name="labels" className="size-4" />
       )
     ) : field === "priority" ? (
       <PriorityLabel priority={task.priority} name={value} />
@@ -459,7 +464,7 @@ export default function TaskCell(props: TaskCellProps) {
       <>
         {props.appearance !== "detail" && <CalendarIcon className="size-4" />}
         {field === "start_date" || field === "due_date" ? (
-          <TaskDateValue value={task[field]} />
+          <TaskDateValue value={task[field]} createdAt={task.created_at} />
         ) : (
           <span>{value}</span>
         )}
@@ -468,9 +473,10 @@ export default function TaskCell(props: TaskCellProps) {
   return (
     <TaskProperty
       appearance={props.appearance ?? "list"}
+      compact={field === "labels" && props.appearance !== "detail"}
       cell
       id={`${instanceId}-task-${task.id}-${field}`}
-      label={`${props.appearance === "detail" ? labels[field] : `${labels[field]} · ${task.name}`}${(field === "start_date" || field === "due_date") && isPastTaskDate(task[field]) ? " · Fecha anterior a hoy" : ""}`}
+      label={`${props.appearance === "detail" ? labels[field] : `${labels[field]} · ${task.name}`}${(field === "start_date" || field === "due_date") && isBeforeTaskCreation(task[field], task.created_at) ? " · Fecha actual anterior al día de creación" : ""}`}
       value={value}
       icon={icons[field]}
       disabled={!permitted}

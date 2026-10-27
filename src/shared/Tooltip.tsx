@@ -2,11 +2,12 @@ import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
-export default function Tooltip({ label, children, stretch = false, portalTarget, disabled = false }: {
+export default function Tooltip({ label, children, stretch = false, portalTarget, disabled = false, nonBlocking = false }: {
   label: string;
   stretch?: boolean;
   portalTarget?: "dialog";
   disabled?: boolean;
+  nonBlocking?: boolean;
   children: (description: string) => ReactNode;
 }) {
   const id = useId();
@@ -45,7 +46,7 @@ export default function Tooltip({ label, children, stretch = false, portalTarget
     onKeyDown={(event) => { if (event.key === "Escape") setOpen(false); }}>
     {children(id)}
     {open && !disabled && createPortal(<span ref={tip} id={id} role="tooltip"
-      className={`fixed z-[100] max-w-[calc(100vw-16px)] break-words rounded-lg border border-neutral-200 bg-neutral-800 px-2 py-1 text-xs text-white [overflow-wrap:anywhere]${portalTarget === "dialog" ? " pointer-events-none w-max max-w-[min(22rem,calc(100vw-16px))]!" : ""}`}>{label}</span>, portalContainer ?? document.body)}
+      className={`fixed z-[100] max-w-[calc(100vw-16px)] break-words rounded-lg border border-neutral-200 bg-neutral-800 px-2 py-1 text-xs text-white [overflow-wrap:anywhere]${nonBlocking || portalTarget === "dialog" ? " pointer-events-none" : ""}${portalTarget === "dialog" ? " w-max max-w-[min(22rem,calc(100vw-16px))]!" : ""}`}>{label}</span>, portalContainer ?? document.body)}
     {(!open || disabled) && <span id={id} role="tooltip" hidden>{label}</span>}
   </span>;
 }

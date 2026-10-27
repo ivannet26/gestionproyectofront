@@ -12,13 +12,14 @@ import { formatTaskDate } from "../TaskList/taskHierarchy";
 import TaskProperty from "./TaskProperty";
 import PriorityOptions from "./PriorityOptions";
 import TaskDateValue from "./TaskDateValue";
-import { isPastTaskDate } from "./taskDates";
+import { isBeforeTaskCreation, taskCreationDay } from "./taskDates";
 
 export default function TaskOptionalProperties({
   project,
   catalogs,
   responsible,
   dueDate,
+  createdAt,
   priority,
   labels,
   onResponsible,
@@ -36,6 +37,7 @@ export default function TaskOptionalProperties({
   catalogs: ProjectCatalogs;
   responsible: number[];
   dueDate: string;
+  createdAt?: string;
   priority: number | null;
   labels: Label[];
   onResponsible: (value: number[]) => void;
@@ -82,20 +84,20 @@ export default function TaskOptionalProperties({
       )}
       <TaskProperty
         id={id("due")}
-        label={`Fecha límite${isPastTaskDate(dueDate) ? " · Fecha anterior a hoy" : ""}`}
+        label={`Fecha límite${isBeforeTaskCreation(dueDate, createdAt) ? " · Fecha actual anterior al día de creación" : ""}`}
         value={dueDate ? formatTaskDate(dueDate) : "Sin fecha límite"}
         icon="date"
         compact={compact}
         selected={Boolean(dueDate)}
         content={
           compact ? (
-            <span className={isPastTaskDate(dueDate) ? "text-red-700" : ""}>
+            <span className={isBeforeTaskCreation(dueDate, createdAt) ? "text-red-700" : ""}>
               <CalendarIcon className="size-4" />
             </span>
           ) : (
             <>
               <CalendarIcon className="size-4" />
-              <TaskDateValue value={dueDate} />
+              <TaskDateValue value={dueDate} createdAt={createdAt} />
             </>
           )
         }
@@ -104,6 +106,7 @@ export default function TaskOptionalProperties({
         {(close) => (
           <Calendar
             value={dueDate}
+            warningBefore={taskCreationDay(createdAt)}
             min={min ?? project.start_date ?? undefined}
             max={max ?? project.end_date ?? undefined}
             label="Fecha límite"

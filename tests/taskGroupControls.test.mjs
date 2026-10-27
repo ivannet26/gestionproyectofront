@@ -64,13 +64,12 @@ test("global action handles open, closed and mixed groups without changing subtr
   const Marker = () => null;
   const { default: List } = await load("../src/features/projects/TaskList/TaskList.tsx", {
     react: hooks,
-    "../TaskForm/TaskProperty": { default: Marker },
     "../../../shared/icons/ChevronDownIcon": { default: Icon },
-    "../../../shared/icons/DotsIcon": { default: Icon },
     "../../../shared/icons/PlusIcon": { default: Icon },
     "../../../shared/icons/RelationIcon": { default: Icon },
     "../TaskForm/TaskIcon": { default: Icon },
-    "./TaskCell": { default: Marker, StateIcon: Icon },
+    "./TaskCell": { default: Marker, StateIcon: Icon, StateBadge: Icon },
+    "./taskStatePresentation": await load("../src/features/projects/TaskList/taskStatePresentation.ts"),
     "./QuickTaskRow": { default: Marker },
     "./stateInk": { stateInk: () => "#000000" },
     "./TaskGroupingControl": { default: Marker },
@@ -79,7 +78,6 @@ test("global action handles open, closed and mixed groups without changing subtr
     "./TaskGroupLabel": { default: Marker },
     "../ProjectWorkspace/ProjectToolbar": { default: Marker },
     "./TaskSearch": { default: Marker },
-    "./TaskMoveControl": { default: Marker },
     "./useTaskMove": { useTaskMove: () => ({ permitted: () => false }) },
     "./useTaskPointerDrag": { useTaskPointerDrag: () => ({ onPointerDown() {}, onClickCapture() {}, onDragStart() {} }) },
     "../TaskStateForm/TaskStateForm": { default: Marker },

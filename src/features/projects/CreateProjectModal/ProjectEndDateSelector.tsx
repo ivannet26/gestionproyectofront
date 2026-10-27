@@ -59,6 +59,7 @@ export function Calendar({
   max,
   label = "Fecha de fin estimada",
   optional = true,
+  warningBefore,
   onChange,
   close,
 }: ProjectEndDateSelectorProps & {
@@ -66,6 +67,7 @@ export function Calendar({
   max?: string;
   label?: string;
   optional?: boolean;
+  warningBefore?: string | null;
 }) {
   const today = projectToday();
   const initial = value || min || today;
@@ -220,13 +222,14 @@ export function Calendar({
                 (min && key < min) || (max && key > max),
               );
               const past = key < today && !disabled;
+              const warning = !disabled && key < (warningBefore === undefined ? today : warningBefore ?? "");
               return (
                 <button
                   type="button"
                   key={key}
                   role="gridcell"
                   data-date={key}
-                  className={`${styles.day}${date.getMonth() !== month.getMonth() ? ` ${styles.outside}` : ""}${past ? " bg-neutral-100! text-neutral-600! aria-selected:bg-red-50! aria-selected:text-red-700! aria-selected:border-red-700" : ""}`}
+                  className={`${styles.day}${date.getMonth() !== month.getMonth() ? ` ${styles.outside}` : ""}${past ? " bg-neutral-100! text-neutral-600!" : ""}${warning ? " aria-selected:bg-red-50! aria-selected:text-red-700! aria-selected:border-red-700" : ""}`}
                   aria-label={`${fullDate.format(date)}${past ? " · Fecha anterior a hoy, seleccionable" : ""}`}
                   data-past={past || undefined}
                   aria-selected={value === key}

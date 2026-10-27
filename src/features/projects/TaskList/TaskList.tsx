@@ -1,8 +1,6 @@
 import type { ReactNode } from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import TaskProperty from "../TaskForm/TaskProperty";
 import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
-import DotsIcon from "../../../shared/icons/DotsIcon";
 import PlusIcon from "../../../shared/icons/PlusIcon";
 import type {
   Project,
@@ -10,11 +8,11 @@ import type {
   Task,
   TaskActionKind,
   TaskGroupingPreferences,
-  TaskListGroup,
 } from "../types";
 import QuickTaskRow from "./QuickTaskRow";
 import RelationIcon from "../../../shared/icons/RelationIcon";
-import TaskMoveControl from "./TaskMoveControl";
+import { taskStatePresentation } from "./taskStatePresentation";
+import type { PresentedTaskGroup } from "./taskStatePresentation";
 import { taskDropPosition } from "./taskDropPosition";
 import { useTaskMove } from "./useTaskMove";
 import { useTaskPointerDrag } from "./useTaskPointerDrag";
@@ -27,7 +25,7 @@ export interface TaskGroupControls {
   toggle: () => void;
 }
 import type { TaskChanges } from "./TaskCell";
-import TaskCell, { StateIcon } from "./TaskCell";
+import TaskCell, { StateBadge, StateIcon } from "./TaskCell";
 import TaskGroupLabel from "./TaskGroupLabel";
 import { useTaskGrouping } from "./useTaskGrouping";
 
@@ -80,13 +78,16 @@ export default function TaskList({
     [tasks],
   );
   const states = project.task_states.states;
-  const { hierarchy, groups } = useTaskGrouping(
+  const { hierarchy, groups: countedGroups } = useTaskGrouping(
     tasks,
     search,
     states,
     catalogs.priorities,
     preferences,
   );
+  const groups = useMemo<PresentedTaskGroup[]>(() => preferences.mode === "state"
+    ? taskStatePresentation(tasks, countedGroups, expanded, Boolean(search.trim()))
+    : countedGroups, [tasks, countedGroups, expanded, search, preferences.mode]);
   useEffect(() => { onCountChange?.(hierarchy.visible.size); }, [hierarchy.visible.size, onCountChange]);
   useEffect(() => {
     onGroupControls?.({
@@ -103,17 +104,19 @@ export default function TaskList({
   useEffect(() => () => onGroupControls?.(null), [onGroupControls]);
 
   function locate(x: number, y: number, task: Task) {
+    const reject = (message: string) => { movement.reject(message); return null; };
     const node = region.current;
-    if (!node || preferences.mode !== "state") return null;
+    if (!node || preferences.mode !== "state" || search.trim()) return reject("Mueve posiciones en la agrupación Estado sin búsqueda.");
     const bounds = node.getBoundingClientRect();
-    if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) return null;
+    if (x < bounds.left || x > bounds.right || y < bounds.top || y > bounds.bottom) return reject("Fuera de la lista. Acerca la tarea a un estado disponible.");
     const sections = Array.from(node.querySelectorAll<HTMLElement>("[data-group-key]"));
     const section = sections.find((section, index) => {
       const rect = section.getBoundingClientRect(), next = sections[index + 1]?.getBoundingClientRect();
       return y >= rect.top && y < (next?.top ?? bounds.bottom);
     }) ?? sections[0];
     const group = groups.find((group) => group.key === section?.dataset.groupKey);
-    if (!section || !group?.stateCode || !movement.permitted(task, group.stateCode)) return null;
+    if (!section || !group?.stateCode) return reject("Selecciona un estado de destino.");
+    if (!movement.permitted(task, group.stateCode)) return reject(`No tienes permiso para mover a ${group.name}.`);
     const table = section.querySelector("table")!, tableBounds = table.getBoundingClientRect();
     const heading = section.querySelector("h2")!.getBoundingClientRect();
     const hidden = table.getClientRects().length === 0;
@@ -121,6 +124,10 @@ export default function TaskList({
       const rect = row.getBoundingClientRect();
       return { id: row.dataset.taskId ? Number(row.dataset.taskId) : undefined, reference: row.dataset.parentReference ? Number(row.dataset.parentReference) : undefined, top: rect.top, bottom: rect.bottom };
     });
+    const hovered = visibleRows.find((row) => y >= row.top && y < row.bottom && row.id !== undefined);
+    const target = hovered?.id === undefined ? undefined : byId.get(hovered.id);
+    if (target && target.id !== task.id && target.id !== task.parent_id && target.parent_id !== task.parent_id) return reject("Posición incompatible: conserva el padre y elige una posición entre hermanos.");
+    if (target && target.id !== task.parent_id && target.state_code !== group.stateCode) return reject("Esta subtarea conserva otro estado. Usa el grupo del estado de destino.");
     const position = hidden ? { before: null, y: heading.bottom } : taskDropPosition(task, group.stateCode, tasks, visibleRows, y, tableBounds.bottom);
     return {
       state: group.stateCode, before: position.before,
@@ -143,7 +150,7 @@ export default function TaskList({
 
   function rows(
     items: Task[],
-    group: TaskListGroup,
+    group: PresentedTaskGroup,
     depth = 0,
     ancestors = new Set<number>(),
   ): ReactNode[] {
@@ -153,28 +160,28 @@ export default function TaskList({
         const children = (hierarchy.children.get(task.id) ?? []).filter(
           (child) => group.visible.has(child.id),
         );
-        const context = !group.members.has(task.id);
+        const context = !(group.displayed ?? group.members).has(task.id);
         const contextKey = `${group.key}:${task.id}`;
         const open =
           Boolean(search.trim()) ||
           (context ? !collapsedContext.has(contextKey) : expanded.has(task.id));
         const next = new Set([...ancestors, task.id]);
-        const actions =
-          task.permissions.edit ||
-          task.permissions.create_child ||
-          task.permissions.dependencies || task.permissions.state;
         if (context && preferences.mode === "state") return [
-          <tr key={`reference-${task.id}`} data-parent-reference={task.id} className="gm-parent-reference border-b border-neutral-200">
-            <td colSpan={7}><button type="button" title={`Subtareas de ${task.name}`} className="inline-flex max-w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-xs text-neutral-600 hover:text-neutral-800 hover:underline"
-              onClick={() => onAction("detail", task.id)}><RelationIcon className="size-4 shrink-0" /><span className="min-w-0 truncate">Subtareas de {task.name}</span></button></td>
-          </tr>, ...rows(children, group, depth, next),
+          <tr key={`reference-${task.id}`} data-parent-reference={task.id} data-depth={depth} className="gm-parent-reference border-b border-neutral-200">
+            <td colSpan={6}><button type="button" title={`Subtareas de ${task.name}`} className="inline-flex max-w-full cursor-pointer items-center gap-2 px-3 py-1.5 text-left text-xs text-neutral-600 hover:text-neutral-800 hover:underline"
+              style={{ paddingInlineStart: `${12 + depth * 20}px` }} onClick={() => onAction("detail", task.id)}><RelationIcon className="size-4 shrink-0" /><span className="min-w-0 truncate">Subtareas de {task.name}</span></button></td>
+          </tr>, ...rows(children, group, depth + 1, next),
         ];
         return [
           <tr
             key={task.id}
             data-task-id={task.id}
             data-context={context || undefined}
+            data-depth={depth}
+            data-own-state={task.state_code}
+            data-nested-state={preferences.mode === "state" && task.state_code !== group.stateCode || undefined}
             data-dragging={movement.dragging?.id === task.id || undefined}
+            inert={movement.dragging?.id === task.id || undefined}
             data-drag-enabled={preferences.mode === "state" && !context && !search.trim() && !movement.busy && task.permissions.state && Boolean(task.move_revision && onMoved) || undefined}
             onPointerDown={(event) => pointerDrag.onPointerDown(event, task, preferences.mode === "state" && !context && !search.trim() && !movement.busy && task.permissions.state && Boolean(task.move_revision && onMoved))}
             onClickCapture={pointerDrag.onClickCapture}
@@ -193,7 +200,7 @@ export default function TaskList({
                 className="flex min-w-0 items-center gap-2"
                 style={{ paddingInlineStart: `${Math.min(depth, 8) * 20}px` }}
               >
-                {children.length > 0 ? (
+                {(hierarchy.children.get(task.id) ?? []).some((child) => hierarchy.visible.has(child.id)) ? (
                   <button
                     className="inline-flex size-5 shrink-0 cursor-pointer items-center justify-center text-neutral-500 hover:text-neutral-800"
                     type="button"
@@ -232,7 +239,7 @@ export default function TaskList({
                     color={task.state_color}
                   />
                 </span>
-                <div className={`min-w-0 flex-1 ${depth ? "pl-2" : ""}`}>
+                <div className="min-w-0 flex-1">
                   <span
                     className="block truncate text-xs leading-4 text-neutral-600"
                     title={project.name}
@@ -243,7 +250,7 @@ export default function TaskList({
                       : depth > 0
                         ? " · Subtarea"
                         : task.parent_id !== null
-                          ? " · Subtarea asignada"
+                          ? " · Subtarea"
                           : ""}
                   </span>
                   <div className="flex min-w-0 items-center gap-1.5">
@@ -256,8 +263,7 @@ export default function TaskList({
                     >
                       {task.name}
                     </button>
-                    {task.permissions.edit && <span className="gm-row-actions shrink-0"><TaskCell field="labels" task={task} project={project} catalogs={catalogs} onPatch={onPatch} onState={onState} /></span>}
-                    {children.length > 0 && (
+                    {(hierarchy.children.get(task.id) ?? []).length > 0 && (
                       <span
                         className="whitespace-nowrap text-[10px] text-neutral-500"
                         title="Subtareas visibles"
@@ -265,7 +271,7 @@ export default function TaskList({
                         {hierarchy.descendants(
                           task.id,
                           new Set(),
-                          group.visible,
+                          hierarchy.visible,
                         )}
                       </span>
                     )}
@@ -297,79 +303,23 @@ export default function TaskList({
               ] as const
             ).map((field) => (
               <td key={field} className="py-1 px-1.5">
-                <TaskCell
-                  field={field}
-                  task={task}
-                  project={project}
-                  catalogs={catalogs}
-                  parent={
-                    task.parent_id === null
-                      ? undefined
-                      : byId.get(task.parent_id)
-                  }
-                  onPatch={onPatch}
-                  onState={onState}
-                />
+                <div className="flex min-w-0 items-center gap-1">
+                  {field === "responsible_id" && <span className="gm-row-labels inline-flex w-8 shrink-0 items-center justify-center">{task.permissions.edit && <TaskCell field="labels" task={task} project={project} catalogs={catalogs} onPatch={onPatch} onState={onState} />}</span>}
+                  <div className="min-w-0 flex-1">
+                    <TaskCell
+                      field={field}
+                      task={task}
+                      project={project}
+                      catalogs={catalogs}
+                      parent={task.parent_id === null ? undefined : byId.get(task.parent_id)}
+                      onPatch={onPatch}
+                      onState={onState}
+                      movement={field === "state_code" && preferences.mode === "state" && !context && task.permissions.state && task.move_revision && onMoved ? { tasks, disabled: movement.busy || Boolean(search.trim()), onMove: movement.propose } : undefined}
+                    />
+                  </div>
+                </div>
               </td>
             ))}
-            <td className="py-1 pl-0 pr-2 text-center">
-              {actions && (
-                <div className="gm-row-actions flex items-center justify-center gap-1">
-                  <TaskProperty
-                    cell
-                    id={`${listId}-${encodeURIComponent(group.key)}-task-${task.id}-actions`}
-                    label={`Opciones de ${task.name}`}
-                    value="Opciones"
-                    icon="settings"
-                    content={
-                      <DotsIcon className="size-4 text-neutral-500 hover:text-neutral-800" />
-                    }
-                  >
-                    {(close) => (
-                      <div className="max-h-60 overflow-y-auto p-1">
-                        {preferences.mode === "state" && !context && task.permissions.state && task.move_revision && onMoved && <TaskMoveControl key={`${task.id}:${task.state_code}`} task={task} states={states} tasks={tasks} disabled={movement.busy || Boolean(search.trim())} onMove={movement.propose} onClose={close} />}
-                        {task.permissions.edit && (
-                          <button
-                            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs text-neutral-800 cursor-pointer hover:bg-neutral-100"
-                            type="button"
-                            onClick={() => {
-                              close();
-                              onAction("edit", task.id);
-                            }}
-                          >
-                            Editar datos
-                          </button>
-                        )}
-                        {task.permissions.create_child && (
-                          <button
-                            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs text-neutral-800 cursor-pointer hover:bg-neutral-100"
-                            type="button"
-                            onClick={() => {
-                              close();
-                              onAction("child", task.id);
-                            }}
-                          >
-                            Nueva subtarea
-                          </button>
-                        )}
-                        {task.permissions.dependencies && (
-                          <button
-                            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs text-neutral-800 cursor-pointer hover:bg-neutral-100"
-                            type="button"
-                            onClick={() => {
-                              close();
-                              onAction("dependencies", task.id);
-                            }}
-                          >
-                            Dependencias
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </TaskProperty>
-                </div>
-              )}
-            </td>
           </tr>,
           ...(open ? [rows(children, group, depth + 1, next)] : []),
         ];
@@ -446,6 +396,7 @@ export default function TaskList({
                         {group.members.size}{" "}
                         {group.members.size === 1 ? "tarea" : "tareas"}
                       </span>
+                      {Boolean(group.elsewhere) && <span className="text-[10px] text-neutral-500">· {group.elsewhere} junto a su padre</span>}
                     </>
                   ) : (
                     <><TaskGroupLabel group={group} mode={preferences.mode} /><span className="text-xs text-neutral-600">
@@ -461,20 +412,19 @@ export default function TaskList({
                   aria-label={`Tareas de ${group.name}`}
                 >
                   <colgroup>
-                    <col className="w-[35%]" />
+                    <col className="w-[39%]" />
                     <col className="w-[13%]" />
                     <col className="w-[13%]" />
                     <col className="w-[13%]" />
                     <col className="w-[10%]" />
                     <col className="w-[12%]" />
-                    <col className="w-[4%]" />
                   </colgroup>
                   <thead className="border-b border-neutral-200 text-left font-medium text-neutral-500">
                     <tr>
                       <th scope="col" className="py-2 px-3 text-left">
                         Nombre
                       </th>
-                      <th scope="col" className="py-2 px-1.5">
+                      <th scope="col" className="py-2 pl-10 pr-1.5">
                         Persona asignada
                       </th>
                       <th scope="col" className="py-2 px-1.5">
@@ -488,9 +438,6 @@ export default function TaskList({
                       </th>
                       <th scope="col" className="py-2 px-1.5">
                         Estado
-                      </th>
-                      <th scope="col" className="py-2 px-1 text-center">
-                        <span className="sr-only">Acciones</span>
                       </th>
                     </tr>
                   </thead>
@@ -543,10 +490,15 @@ export default function TaskList({
         })}
         {movement.drop && <div className="gm-task-insertion" aria-hidden="true" style={{ top: movement.drop.top, left: movement.drop.left, width: movement.drop.width }} />}
       </div>
-      {movement.dragging && <div role="status" className="pointer-events-none fixed bottom-4 left-1/2 z-50 max-w-[calc(100vw-2rem)] -translate-x-1/2 rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-800">
-        <span className="block max-w-80 truncate font-medium">{movement.dragging.name}</span>
-        <span className="text-neutral-600">{movement.drop ? `Soltar en ${states.find((state) => state.code === movement.drop!.state)?.name ?? movement.drop.state}` : "Arrastra hacia un estado disponible"} · Escape para cancelar</span>
-      </div>}
+      {movement.dragging && <>
+        <div data-task-preview data-invalid={Boolean(movement.invalid) || undefined} aria-hidden="true" className="gm-task-preview fixed z-50 w-80 max-w-[calc(100vw-2rem)] rounded-lg border border-neutral-300 bg-white px-3 py-2 text-xs text-neutral-800" style={{ left: `clamp(12px, ${(movement.cursor?.x ?? 0) + 16}px, calc(100vw - 332px))`, top: `clamp(12px, ${(movement.cursor?.y ?? 0) + 20}px, calc(100vh - 120px))` }}>
+          <div className="flex min-w-0 items-center gap-2"><StateIcon code={movement.dragging.state_code} name={movement.dragging.state_name} category={movement.dragging.state_category} color={movement.dragging.state_color} /><span className="min-w-0 flex-1 truncate font-medium">{movement.dragging.name}</span></div>
+          {movement.dragging.parent_id !== null && <p className="my-1 truncate text-[10px] text-neutral-500">Subtarea de {byId.get(movement.dragging.parent_id)?.name ?? "su padre"}</p>}
+          <div className="mt-2 flex items-center gap-2"><span>{movement.invalid ? "No disponible" : "Soltar en"}</span>{movement.drop && <StateBadge code={movement.drop.state} name={states.find((state) => state.code === movement.drop!.state)?.name ?? movement.drop.state} category={states.find((state) => state.code === movement.drop!.state)?.category} color={states.find((state) => state.code === movement.drop!.state)?.color} />}</div>
+          <p className={`mb-0 mt-1 ${movement.invalid ? "text-red-700" : "text-neutral-600"}`}>{movement.invalid || (movement.drop ? movement.drop.before ? `Antes de ${byId.get(movement.drop.before)?.name ?? "la siguiente tarea"}` : "Al final entre sus hermanos" : "Elige un estado disponible")} · Escape para cancelar</p>
+        </div>
+        <span role="status" className="sr-only">Moviendo {movement.dragging.name}. {movement.invalid || (movement.drop ? `Destino ${states.find((state) => state.code === movement.drop!.state)?.name}` : "Elige un destino")}. Escape para cancelar.</span>
+      </>}
     </section>
   );
 }
