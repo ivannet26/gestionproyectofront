@@ -6,7 +6,7 @@ import KeyIcon from "../../../shared/icons/KeyIcon";
 import TeamsIcon from "../../../shared/icons/TeamsIcon";
 import type { IconProps } from "../../../shared/icons/types";
 import BriefcaseIcon from "../../../shared/icons/BriefcaseIcon";
-import MegaphoneIcon from "../../../shared/icons/MegaphoneIcon";
+import TablerIcon from "../../../shared/icons/TablerIcon";
 
 export interface NavigationEntry {
   label: string;
@@ -20,7 +20,7 @@ export const navigation: NavigationEntry[] = [
   {
     label: "Publicaciones",
     path: "/publicaciones",
-    icon: MegaphoneIcon,
+    icon: TablerIcon,
     requiresAdmin: false,
   },
   {

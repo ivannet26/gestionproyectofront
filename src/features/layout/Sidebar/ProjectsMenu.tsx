@@ -23,13 +23,13 @@ export default function ProjectsMenu({
 
   return (
     <div className="mt-3" hidden={isCollapsed}>
-      <div className="group/project relative mb-2 flex items-center rounded-lg hover:bg-neutral-100">
+      <div className="group/project relative mb-2 flex items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
         <button
           type="button"
           onClick={() => setOpen((current) => !current)}
           aria-expanded={open}
           aria-controls={itemsId}
-          className="flex min-w-0 flex-1 items-center justify-between rounded-lg px-3 py-2.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-100 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700"
+          className="flex min-w-0 flex-1 items-center justify-between rounded-lg px-3 py-2.5 text-xs font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700"
         >
           <span className="min-w-0 flex-1 truncate pr-9 text-left">
             Proyectos

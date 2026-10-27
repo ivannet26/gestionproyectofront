@@ -185,15 +185,13 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
       );
     }
     if (route.Component === PublicationsPage) {
-      return (
-        <route.Component canManage={user.role === "ADMINISTRADOR"} />
-      );
+      return <route.Component canManage={user.role === "ADMINISTRADOR"} />;
     }
     return <route.Component />;
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-neutral-900 md:h-screen md:flex-row">
+    <div className="flex min-h-screen flex-col bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 md:h-screen md:flex-row">
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
@@ -211,7 +209,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         onCreateTask={openTaskCreation}
       />
       <div
-        className={`min-w-0 w-full flex-1 bg-white pb-0! p-3 md:p-6 ${projectWorkspace ? "md:overflow-hidden" : "md:overflow-y-auto"}`}
+        className={`min-w-0 w-full flex-1 bg-white dark:bg-neutral-900 pb-0! p-3 md:p-6 ${projectWorkspace ? "md:overflow-hidden" : "md:overflow-y-auto"}`}
       >
         {logoutError && (
           <p role="alert" className="mb-4 text-sm text-neutral-800">

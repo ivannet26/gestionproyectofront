@@ -6,6 +6,8 @@ import type {
 } from "../../../core/interfaces/worker.interface";
 import type { Area } from "../../../core/interfaces/organization.interface";
 import XIcon from "../../../shared/icons/XIcon";
+import Button from "../../../shared/Button/Button";
+import SecondaryButton from "../../../shared/Button/SecondaryButton";
 
 interface TextField {
   name: Exclude<keyof WorkerFormState, "active">;
@@ -52,12 +54,12 @@ function WorkerForm({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white border border-neutral-200 rounded-lg">
-        <header className="flex items-center justify-between px-5 py-4 border-b border-neutral-200">
-          <h3 className="text-neutral-700">Editar trabajador</h3>
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+        <header className="flex items-center justify-between px-5 py-4 border-b border-neutral-200 dark:border-neutral-800">
+          <h3 className="text-neutral-700 dark:text-neutral-100">Editar trabajador</h3>
           <button
             type="button"
-            className="p-2 flex items-center justify-center text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg cursor-pointer text-base leading-none"
+            className="p-2 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg cursor-pointer text-base leading-none"
             onClick={onClose}
             aria-label="Cerrar"
           >
@@ -71,7 +73,7 @@ function WorkerForm({
               <div key={field.name} className="flex flex-col gap-1.5">
                 <label
                   htmlFor={field.name}
-                  className="text-xs text-neutral-600"
+                  className="text-xs text-neutral-600 dark:text-neutral-400"
                 >
                   {field.label}
                 </label>
@@ -81,7 +83,7 @@ function WorkerForm({
                   type={field.type}
                   value={formData[field.name]}
                   onChange={(e) => updateField(field.name, e.target.value)}
-                  className="w-full h-9 px-4 text-sm text-neutral-900 bg-white border border-neutral-200 rounded-lg focus:border-neutral-400 focus:ring-0 focus-visible:outline-none"
+                  className="w-full h-9 px-4 text-sm text-neutral-900 dark:text-neutral-100 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:border-neutral-400 focus:ring-0 focus-visible:outline-none"
                   min={field.min}
                   max={field.max}
                   required
@@ -90,7 +92,7 @@ function WorkerForm({
             ))}
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="area" className="text-xs text-neutral-600">
+              <label htmlFor="area" className="text-xs text-neutral-600 dark:text-neutral-400">
                 Área
               </label>
               <select
@@ -98,7 +100,7 @@ function WorkerForm({
                 name="area"
                 value={formData.area}
                 onChange={(e) => updateField("area", e.target.value)}
-                className="w-full h-9 px-4 text-sm text-neutral-900 bg-white border border-neutral-200 rounded-lg focus:border-neutral-400 focus:ring-0 focus-visible:outline-none cursor-pointer"
+                className="w-full h-9 px-4 text-sm text-neutral-900 dark:text-neutral-100 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:border-neutral-400 focus:ring-0 focus-visible:outline-none cursor-pointer"
               >
                 <option value="">Sin área</option>
                 {areas.map((area) => (
@@ -110,13 +112,13 @@ function WorkerForm({
             </div>
 
             <div className="flex items-center sm:pt-6 pl-2">
-              <label className="inline-flex items-center gap-2 text-sm text-neutral-600 cursor-pointer">
+              <label className="inline-flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400 cursor-pointer">
                 <input
                   name="active"
                   type="checkbox"
                   checked={formData.active}
                   onChange={(e) => updateField("active", e.target.checked)}
-                  className="rounded border-neutral-200 accent-neutral-900 cursor-pointer"
+                  className="rounded border-neutral-200 dark:border-neutral-700 accent-neutral-900 dark:accent-neutral-100 cursor-pointer"
                 />
                 Trabajador activo
               </label>
@@ -124,21 +126,12 @@ function WorkerForm({
           </div>
         </form>
         <footer className="flex items-center justify-end gap-2 p-4">
-          <button
-            type="button"
-            className="px-4 py-2 text-sm text-neutral-900 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-100 cursor-pointer"
-            onClick={onClose}
-          >
+          <SecondaryButton type="button" onClick={onClose} className="!px-4 !py-2 !text-sm">
             Cancelar
-          </button>
-          <button
-            type="submit"
-            form="worker-form"
-            className="px-4 py-2 text-sm bg-neutral-800 text-white rounded-lg hover:bg-neutral-800 cursor-pointer disabled:opacity-50"
-            disabled={submitting}
-          >
+          </SecondaryButton>
+          <Button type="submit" form="worker-form" className="!px-4 !py-2 !text-sm" disabled={submitting}>
             {submitting ? "Guardando…" : "Guardar"}
-          </button>
+          </Button>
         </footer>
       </div>
     </div>

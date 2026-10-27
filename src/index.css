@@ -1,6 +1,21 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  html.dark {
+    background-color: #171717;
+    color: #e5e5e5;
+  }
+
   body {
     font-family: "Inter Tight";
   }
@@ -19,11 +34,6 @@
 }
 
 @layer base {
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: #d4d4d4 transparent;
-  }
-
   *::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -31,14 +41,5 @@
 
   *::-webkit-scrollbar-track {
     background: transparent;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    background-color: #d4d4d4;
-    border-radius: 9999px;
-  }
-
-  *::-webkit-scrollbar-thumb:hover {
-    background-color: #a3a3a3;
   }
 }

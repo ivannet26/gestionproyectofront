@@ -13,6 +13,7 @@ import type {
   AreaWriteData,
 } from "../../../core/interfaces/organization.interface";
 import AreaForm from "./AreaForm/AreaForm";
+import Button from "../../../shared/Button/Button";
 
 type AreaModal = { mode: "create" } | { mode: "edit"; area: Area };
 
@@ -44,16 +45,11 @@ function AreasSection() {
   return (
     <section aria-label="Áreas" className="flex h-full flex-col">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="m-0 text-sm text-neutral-800">Áreas</h3>
-        <button
-          type="button"
-          className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs rounded-lg cursor-pointer inline-flex items-center gap-1.5"
-          onClick={() => setModal({ mode: "create" })}
-          aria-label="Nueva área"
-        >
+        <h3 className="m-0 text-sm text-neutral-800 dark:text-neutral-100">Áreas</h3>
+        <Button type="button" onClick={() => setModal({ mode: "create" })} aria-label="Nueva área" className="inline-flex items-center gap-1.5">
           <PlusIcon className="size-4" />
           <span>Nueva área</span>
-        </button>
+        </Button>
       </div>
 
       {data.length === 0 ? (
@@ -63,7 +59,7 @@ function AreasSection() {
           {data.map((area) => (
             <li
               key={area.id}
-              className="px-3 py-2 rounded-lg hover:bg-neutral-100 flex items-center justify-between text-xs"
+              className="px-3 py-2 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center justify-between text-xs"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
@@ -72,8 +68,8 @@ function AreasSection() {
                 >
                   <FolderIcon className="size-4" />
                 </span>
-                <span className="text-neutral-800 truncate">{area.name}</span>
-                <span className="px-2 py-0.5 text-[10px] text-neutral-600 bg-neutral-100 rounded font-medium">
+                <span className="text-neutral-800 dark:text-neutral-100 truncate">{area.name}</span>
+                <span className="px-2 py-0.5 text-[10px] text-neutral-600 dark:text-neutral-400 bg-neutral-100 dark:bg-neutral-800 rounded font-medium">
                   {area.code}
                 </span>
               </div>
@@ -81,7 +77,7 @@ function AreasSection() {
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
-                  className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-lg cursor-pointer inline-flex items-center"
+                  className="p-1.5 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-100 rounded-lg cursor-pointer inline-flex items-center"
                   onClick={() => setModal({ mode: "edit", area })}
                   aria-label={`Editar ${area.name}`}
                 >

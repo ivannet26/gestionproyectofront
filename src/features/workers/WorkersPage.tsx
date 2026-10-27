@@ -17,6 +17,8 @@ import type {
   WorkerUpdateData,
 } from "../../core/interfaces/worker.interface";
 import StackIcon from "../../shared/icons/StackIcon";
+import Button from "../../shared/Button/Button";
+import SecondaryButton from "../../shared/Button/SecondaryButton";
 
 function WorkersPage() {
   const [searchInput, setSearchInput] = useState("");
@@ -61,13 +63,13 @@ function WorkersPage() {
   };
 
   return (
-    <main className="min-h-full bg-white text-neutral-800">
+    <main className="min-h-full text-neutral-800 dark:text-neutral-100">
       <header className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div className="max-w-2xl">
-          <h1 className="m-0 text-lg font-medium text-neutral-800">
+          <h1 className="m-0 text-lg font-medium text-neutral-800 dark:text-neutral-100">
             Gestión de Trabajadores
           </h1>
-          <p className="m-0 mt-0.5 text-sm text-neutral-600">
+          <p className="m-0 mt-0.5 text-sm text-neutral-600 dark:text-neutral-400">
             Listado de trabajadores registrados y su disponibilidad.
           </p>
         </div>
@@ -77,13 +79,15 @@ function WorkersPage() {
         onSubmit={applyFilters}
         className="flex flex-wrap items-center gap-2 mb-6"
       >
-        <h2 className="m-0 mr-auto text-sm font-medium text-neutral-800">
+        <h2 className="m-0 mr-auto text-sm font-medium text-neutral-800 dark:text-neutral-100">
           Trabajadores{" "}
-          <span className="font-normal text-neutral-600">({data.length})</span>
+          <span className="font-normal text-neutral-600 dark:text-neutral-400">
+            ({data.length})
+          </span>
         </h2>
 
         <div className="relative flex-1 min-w-48 max-w-sm">
-          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600" />
+          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600 dark:text-neutral-400" />
           <input
             type="search"
             value={searchInput}
@@ -91,7 +95,7 @@ function WorkersPage() {
             placeholder="Buscar por nombre, apellido o código"
             aria-label="Buscar trabajadores"
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 pl-8 pr-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none"
+            className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-600 dark:placeholder:text-neutral-500 pl-8 pr-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none"
           />
         </div>
 
@@ -100,38 +104,30 @@ function WorkersPage() {
             value={disponibleInput}
             aria-label="Filtrar por disponibilidad"
             onChange={(e) => setDisponibleInput(e.target.value)}
-            className="bg-white border border-neutral-200 text-neutral-800 pl-3 pr-8 py-1.5 text-xs rounded-lg appearance-none focus:border-neutral-400 focus:outline-none cursor-pointer"
+            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-100 pl-3 pr-8 py-1.5 text-xs rounded-lg appearance-none focus:border-neutral-400 focus:outline-none cursor-pointer"
           >
             <option value="">Todos</option>
             <option value="true">Sin proyecto</option>
             <option value="false">Con proyecto</option>
           </select>
-          <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600" />
+          <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600 dark:text-neutral-400" />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+        <Button type="submit" disabled={loading}>
           Buscar trabajador
-        </button>
+        </Button>
 
         {hasFilters && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="text-xs font-medium text-neutral-700 hover:text-neutral-800 px-2 py-1.5 rounded-lg hover:bg-neutral-100 cursor-pointer"
-          >
+          <SecondaryButton type="button" onClick={clearFilters} className="px-2 py-1.5">
             Limpiar
-          </button>
+          </SecondaryButton>
         )}
       </form>
 
-      <section className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
+      <section className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 overflow-hidden rounded-xl">
         <div className="w-full overflow-x-auto">
-          <table className="w-full border-collapse text-xs text-neutral-600 text-left">
-            <thead className="border-b border-neutral-200 font-medium text-neutral-700">
+          <table className="w-full border-collapse text-xs text-neutral-600 dark:text-neutral-400 text-left">
+            <thead className="border-b border-neutral-200 dark:border-neutral-800 font-medium text-neutral-700 dark:text-neutral-300">
               <tr>
                 <th scope="col" className="p-3 items-center">
                   <span className="inline-flex items-center gap-1.5">
@@ -181,7 +177,7 @@ function WorkersPage() {
               {data.map((worker) => (
                 <tr
                   key={worker.id}
-                  className="border-b border-neutral-200 last:border-b-0 hover:bg-neutral-100"
+                  className="border-b border-neutral-200 dark:border-neutral-800 last:border-b-0 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 >
                   <td className="px-3 py-2.5 items-center">
                     <span className="flex items-center min-w-0 line-clamp-1">
@@ -223,7 +219,7 @@ function WorkersPage() {
                     <div className="flex items-center">
                       <button
                         type="button"
-                        className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-lg cursor-pointer inline-flex items-center justify-center transition-colors"
+                        className="p-1.5 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-100 rounded-lg cursor-pointer inline-flex items-center justify-center"
                         onClick={() => setEditingWorker(worker)}
                         aria-label={`Editar ${worker.first_names} ${worker.last_names}`}
                       >

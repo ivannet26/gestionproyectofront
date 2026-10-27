@@ -10,6 +10,7 @@ import TeamDetailPage from "./features/teams/TeamDetailPage";
 import AccountsPage from "./features/accounts/AccountsPage";
 import RecoveryRequestsPage from "./features/recovery-requests/RecoveryRequestsPage";
 import PublicationsPage from "./features/publications/PublicationsPage";
+import SettingsPage from "./features/settings/SettingsPage";
 
 export interface AppRoute {
   path: string;
@@ -71,6 +72,11 @@ export const appRoutes: AppRoute[] = [
   {
     path: "/organizacion",
     Component: OrganizationPage,
+    requiresAdmin: false,
+  },
+  {
+    path: "/configuracion",
+    Component: SettingsPage,
     requiresAdmin: false,
   },
 ];

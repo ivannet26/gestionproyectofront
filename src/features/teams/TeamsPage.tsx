@@ -14,6 +14,8 @@ import TeamForm from "../organization/Teams/TeamForm/TeamForm";
 import type { TeamFormState } from "../organization/Teams/TeamForm/useTeamForm";
 import { useTeams } from "../organization/Teams/useTeams";
 import BriefcaseIcon from "../../shared/icons/BriefcaseIcon";
+import Button from "../../shared/Button/Button";
+import SecondaryButton from "../../shared/Button/SecondaryButton";
 
 const emptyTeam: TeamFormState = { area: "", name: "", active: true };
 
@@ -66,37 +68,38 @@ function TeamsPage() {
   };
 
   return (
-    <main className="min-h-full bg-white text-neutral-800" id="main-content">
+    <main
+      className="min-h-full text-neutral-800 dark:text-neutral-100"
+      id="main-content"
+    >
       <header className="flex flex-wrap items-end justify-between gap-4 mb-8">
         <div className="max-w-2xl">
-          <h1 className="m-0 text-lg font-medium text-neutral-800">Equipos</h1>
-          <p className="m-0 mt-0.5 text-sm text-neutral-600">
+          <h1 className="m-0 text-lg font-medium text-neutral-800 dark:text-neutral-100">
+            Equipos
+          </h1>
+          <p className="m-0 mt-0.5 text-sm text-neutral-600 dark:text-neutral-400">
             Consulta los equipos de la organización y accede a sus integrantes.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 cursor-pointer"
-        >
+        <Button type="button" onClick={() => setCreating(true)} className="inline-flex items-center gap-1.5">
           <PlusIcon className="size-4" />
           Nuevo equipo
-        </button>
+        </Button>
       </header>
 
       <form
         onSubmit={applyFilters}
         className="flex flex-wrap items-center gap-2 mb-6"
       >
-        <h2 className="m-0 mr-auto text-sm font-medium text-neutral-800">
+        <h2 className="m-0 mr-auto text-sm font-medium text-neutral-800 dark:text-neutral-100">
           Equipos{" "}
-          <span className="font-normal text-neutral-600">
+          <span className="font-normal text-neutral-600 dark:text-neutral-400">
             ({visible.length})
           </span>
         </h2>
 
         <div className="relative flex-1 min-w-48 max-w-sm">
-          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600" />
+          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600 dark:text-neutral-400" />
           <input
             type="search"
             value={searchInput}
@@ -104,7 +107,7 @@ function TeamsPage() {
             placeholder="Buscar por nombre o área"
             aria-label="Buscar equipos"
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 pl-8 pr-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none"
+            className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-600 dark:placeholder:text-neutral-500 pl-8 pr-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none"
           />
         </div>
 
@@ -113,37 +116,34 @@ function TeamsPage() {
             value={activeInput}
             aria-label="Filtrar por estado"
             onChange={(e) => setActiveInput(e.target.value)}
-            className="bg-white border border-neutral-200 text-neutral-800 pl-3 pr-8 py-1.5 text-xs rounded-lg appearance-none focus:border-neutral-400 focus:outline-none cursor-pointer"
+            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-100 pl-3 pr-8 py-1.5 text-xs rounded-lg appearance-none focus:border-neutral-400 focus:outline-none cursor-pointer"
           >
             <option value="">Todos</option>
             <option value="true">Activos</option>
             <option value="false">Inactivos</option>
           </select>
-          <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600" />
+          <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600 dark:text-neutral-400" />
         </div>
 
-        <button
-          type="submit"
-          className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer"
-        >
+        <Button type="submit">
           Buscar equipo
-        </button>
+        </Button>
 
         {hasFilters && (
-          <button
+          <SecondaryButton
             type="button"
             onClick={clearFilters}
-            className="text-xs font-medium text-neutral-700 hover:text-neutral-800 px-2 py-1.5 rounded-lg hover:bg-neutral-100 cursor-pointer"
+            className="px-2 py-1.5"
           >
             Limpiar
-          </button>
+          </SecondaryButton>
         )}
       </form>
 
-      <section className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
+      <section className="border border-neutral-200 dark:border-neutral-800 overflow-hidden rounded-xl">
         <div className="w-full overflow-x-auto">
-          <table className="w-full border-collapse text-xs text-neutral-600 text-left">
-            <thead className="border-b border-neutral-200 font-medium text-neutral-700">
+          <table className="w-full border-collapse text-xs text-neutral-600 dark:text-neutral-400 text-left">
+            <thead className="border-b border-neutral-200 dark:border-neutral-800 font-medium text-neutral-700 dark:text-neutral-300">
               <tr>
                 <th scope="col" className="p-3 items-center">
                   <span className="inline-flex items-center gap-1.5">
@@ -181,7 +181,7 @@ function TeamsPage() {
               {visible.map((team) => (
                 <tr
                   key={team.id}
-                  className="border-b border-neutral-200 last:border-b-0 hover:bg-neutral-100"
+                  className="border-b border-neutral-200 dark:border-neutral-800 last:border-b-0 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 >
                   <td className="px-3 py-2.5 items-center">
                     <span className="flex items-center min-w-0 line-clamp-1">
@@ -211,7 +211,7 @@ function TeamsPage() {
                   <td className="px-3 py-2.5 items-center">
                     <Link
                       to={`/equipos/${team.id}`}
-                      className="bg-white border border-neutral-200 text-neutral-800 hover:bg-neutral-100 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer whitespace-nowrap inline-flex items-center"
+                      className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer whitespace-nowrap inline-flex items-center"
                     >
                       Ver detalle
                     </Link>
@@ -224,7 +224,7 @@ function TeamsPage() {
         {visible.length === 0 && (
           <p
             role="status"
-            className="m-0 px-3 py-8 text-xs text-neutral-600 text-center"
+            className="m-0 px-3 py-8 text-xs text-neutral-600 dark:text-neutral-400 text-center"
           >
             {hasFilters
               ? "Sin equipos para los filtros aplicados."
