@@ -1,6 +1,6 @@
 import { useId, useState } from "react";
 import type { Project } from "../types";
-import { avatarFor } from "../../../shared/avatar";
+import { avatarFor } from "../../../shared/Avatar";
 
 export default function AssigneeSelector({ project, value, onChange }: { project: Pick<Project, "participants" | "assignment_teams">; value: number[]; onChange: (value: number[]) => void }) {
   const [source, setSource] = useState<"workers" | "teams">("workers"), [query, setQuery] = useState("");

@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from "react";
 import type { ComponentType } from "react";
-import InitialsAvatar from "../../../shared/InitialsAvatar";
+import Avatar from "../../../shared/Avatar";
 import CalendarIcon from "../../../shared/icons/CalendarIcon";
 import CheckIcon from "../../../shared/icons/CheckIcon";
 import CircleDashedIcon from "../../../shared/icons/CircleDashedIcon";
@@ -428,7 +428,7 @@ export default function TaskCell(props: TaskCellProps) {
     ) : field === "responsible_id" && people.length > 0 ? (
       <span className="flex min-w-0 flex-wrap items-center gap-1">
         {people.slice(0, 3).map((person) => (
-          <InitialsAvatar
+          <Avatar
             key={person.id}
             name={person.name}
             title={person.name}
@@ -481,7 +481,7 @@ export default function TaskCell(props: TaskCellProps) {
             ? people.map((person) => ({
                 label: person.name,
                 content: (
-                  <InitialsAvatar
+                  <Avatar
                     name={person.name}
                     title={person.name}
                     aria-hidden="true"

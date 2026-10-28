@@ -10,7 +10,7 @@ import { PriorityLabel, StateIcon } from "../TaskList/TaskCell";
 import ChevronRightIcon from "../../../shared/icons/ChevronRightIcon";
 import QuickTaskRow from "../TaskList/QuickTaskRow";
 import Tooltip from "../../../shared/Tooltip";
-import { avatarFor } from "../../../shared/avatar";
+import { avatarFor } from "../../../shared/Avatar";
 import { taskAssignees } from "../taskAssignees";
 
 function isSubtaskFinished(task: Task) {

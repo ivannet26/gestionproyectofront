@@ -5,7 +5,6 @@ import type {
   PublicationCatalogs,
   PublicationCreateData,
   PublicationFilters,
-  PublicationStateCode,
   PublicationUpdateData,
 } from "../interfaces/publication.interface";
 
@@ -48,17 +47,6 @@ export async function updatePublication(
   const { data } = await httpClient.patch<Publication>(
     `publications/${publicationId}/`,
     payload,
-  );
-  return data;
-}
-
-export async function changePublicationState(
-  publicationId: number,
-  state: PublicationStateCode,
-): Promise<Publication> {
-  const { data } = await httpClient.post<Publication>(
-    `publications/${publicationId}/state/`,
-    { state },
   );
   return data;
 }

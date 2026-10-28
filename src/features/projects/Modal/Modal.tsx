@@ -2,7 +2,7 @@ import { useEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
 const styles = {
   modal:
-    "m-auto max-h-[90dvh] w-[min(94vw,690px)] overflow-y-auto overscroll-contain rounded-lg bg-white p-0 text-neutral-900 backdrop:bg-neutral-900/50",
+    "m-auto max-h-[90dvh] w-[min(94vw,690px)] overflow-y-auto overscroll-contain rounded-lg bg-white p-0 text-neutral-900 backdrop:bg-neutral-900/50 dark:bg-neutral-900 dark:text-neutral-100",
   wide: "w-[min(94vw,760px)] max-h-[92dvh]",
   taskComposer:
     "w-[min(800px,calc(100vw-32px))] max-h-[calc(100dvh-48px)] overflow-hidden open:flex open:flex-col max-sm:w-[calc(100vw-16px)] max-sm:max-h-[calc(100dvh-16px)]",
@@ -11,9 +11,9 @@ const styles = {
   statusComposer:
     "w-[min(800px,calc(100vw-32px))]! h-[min(760px,calc(100dvh-48px))] max-h-none! overflow-x-hidden! overflow-y-hidden! rounded-xl open:flex open:flex-col max-sm:w-[calc(100vw-16px)]! max-sm:h-[calc(100dvh-16px)]",
   header:
-    "sticky top-0 z-2 flex shrink-0 items-center justify-between gap-4 border-b border-neutral-200 bg-white px-6 py-3 max-sm:px-4 [&_h2]:m-0 [&_h2]:text-[15px] [&_h2]:[&_h2]:break-words",
+    "sticky top-0 z-2 flex shrink-0 items-center justify-between gap-4 border-b border-neutral-200 bg-white px-6 py-3 max-sm:px-4 dark:border-neutral-800 dark:bg-neutral-900 [&_h2]:m-0 [&_h2]:text-[15px] [&_h2]:[&_h2]:break-words",
   close:
-    "min-h-8 min-w-8 rounded-lg border-0 bg-neutral-100 text-xl text-neutral-900 hover:bg-neutral-100 cursor-pointer disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700",
+    "min-h-8 min-w-8 rounded-lg border-0 bg-neutral-100 text-xl text-neutral-900 hover:bg-neutral-100 cursor-pointer disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700",
 };
 
 interface ModalProps {

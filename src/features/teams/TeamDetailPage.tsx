@@ -2,13 +2,14 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import NotAvailable from "../layout/NotAvailable/NotAvailable";
 import EmptyState from "../../shared/EmptyState/EmptyState";
-import { avatarFor } from "../../shared/avatar";
+import { avatarFor } from "../../shared/Avatar";
 import ActivityIcon from "../../shared/icons/ActivityIcon";
-import ChevronDownIcon from "../../shared/icons/ChevronDownIcon";
 import ClockIcon from "../../shared/icons/ClockIcon";
 import DotsIcon from "../../shared/icons/DotsIcon";
 import PlusIcon from "../../shared/icons/PlusIcon";
 import Button from "../../shared/Button/Button";
+import Input from "../../shared/Input/Input";
+import Select from "../../shared/Select/Select";
 import SearchIcon from "../../shared/icons/SearchIcon";
 import TrashIcon from "../../shared/icons/TrashIcon";
 import UserIcon from "../../shared/icons/UserIcon";
@@ -64,26 +65,13 @@ export default function TeamDetailPage() {
         </h2>
         <div className="relative flex-1 min-w-48 max-w-sm">
           <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600 dark:text-neutral-400" />
-          <input
-            type="search"
-            value={search}
-            placeholder="Buscar por nombre"
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-600 dark:placeholder:text-neutral-500 pl-8 pr-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none"
-          />
+          <Input type="search" value={search} placeholder="Buscar por nombre" onChange={(e) => setSearch(e.target.value)} className="!pl-8" />
         </div>
-        <div className="relative">
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-800 dark:text-neutral-100 pl-3 pr-8 py-1.5 text-xs rounded-lg appearance-none focus:border-neutral-400 focus:outline-none cursor-pointer"
-          >
-            <option value="">Todos</option>
-            <option value="activo">Activos</option>
-            <option value="inactivo">Inactivos</option>
-          </select>
-          <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600 dark:text-neutral-400" />
-        </div>
+        <Select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="">Todos</option>
+          <option value="activo">Activos</option>
+          <option value="inactivo">Inactivos</option>
+        </Select>
         <Button type="button" onClick={() => setAdding(true)} className="inline-flex items-center gap-1.5">
           <PlusIcon className="size-4" />
           Añadir integrante

@@ -67,6 +67,7 @@ export interface PublicationCreateData {
   weekly_hours: string;
   opening_date: string;
   closing_date: string;
+  state?: PublicationStateCode;
   requirements: PublicationRequirementWriteData[];
 }
 

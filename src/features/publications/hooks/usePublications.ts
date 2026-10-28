@@ -3,12 +3,10 @@ import type {
   Publication,
   PublicationCreateData,
   PublicationFilters,
-  PublicationStateCode,
   PublicationUpdateData,
 } from "../../../core/interfaces/publication.interface";
 import {
   applyToPublication,
-  changePublicationState,
   createPublication,
   listPublications,
   publicationErrorText,
@@ -84,19 +82,6 @@ export function usePublications({
     [matches],
   );
 
-  const changeState = useCallback(
-    async (publicationId: number, nextState: PublicationStateCode) => {
-      const updated = await changePublicationState(publicationId, nextState);
-      setData((current) =>
-        current
-          .map((item) => (item.id === updated.id ? updated : item))
-          .filter(matches),
-      );
-      return updated;
-    },
-    [matches],
-  );
-
   const apply = useCallback(
     async (publicationId: number) => {
       const updated = await applyToPublication(publicationId);
@@ -110,6 +95,6 @@ export function usePublications({
     [matches],
   );
 
-  return { data, loading, error, refetch, create, update, changeState, apply };
+  return { data, loading, error, refetch, create, update, apply };
 
 }

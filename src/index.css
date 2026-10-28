@@ -29,7 +29,7 @@
 
 @layer components {
   .bg-modal {
-    @apply fixed inset-0 z-50 grid place-items-center bg-black/40;
+    @apply fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm;
   }
 }
 

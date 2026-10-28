@@ -42,7 +42,7 @@ export default function PublicationBoard({
         return (
           <article
             key={publication.id}
-            className="relative flex flex-col rounded-xl border border-neutral-200 bg-white p-4"
+            className="relative flex flex-col rounded-xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900"
           >
             <button
               type="button"
@@ -76,7 +76,7 @@ export default function PublicationBoard({
                     aria-label={`Acciones de ${publication.title}`}
                     aria-haspopup="menu"
                     aria-expanded={menuOpen}
-                    className="cursor-pointer rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"
+                    className="cursor-pointer rounded-lg p-1 text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
                   >
                     <DotsIcon className="size-4" />
                   </button>
@@ -84,7 +84,7 @@ export default function PublicationBoard({
                   {menuOpen && (
                     <div
                       role="menu"
-                      className="absolute right-0 top-full z-30 mt-1 w-44 rounded-lg border border-neutral-200 bg-white p-1"
+                      className="absolute right-0 top-full z-30 mt-1 w-44 rounded-lg border border-neutral-200 bg-white p-1 dark:border-neutral-800 dark:bg-neutral-900"
                     >
                       <button
                         type="button"
@@ -93,7 +93,7 @@ export default function PublicationBoard({
                           setOpenMenu(null);
                           onOpen(publication);
                         }}
-                        className="block w-full cursor-pointer rounded-md px-2.5 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100"
+                        className="block w-full cursor-pointer rounded-md px-2.5 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
                       >
                         Ver detalle
                       </button>
@@ -105,7 +105,7 @@ export default function PublicationBoard({
                             setOpenMenu(null);
                             onEdit(publication);
                           }}
-                          className="block w-full cursor-pointer rounded-md px-2.5 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100"
+                          className="block w-full cursor-pointer rounded-md px-2.5 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
                         >
                           Editar publicación
                         </button>
@@ -116,18 +116,18 @@ export default function PublicationBoard({
               </div>
 
               <div className="flex flex-col gap-0.5">
-                <h3 className="line-clamp-1 text-sm font-medium text-neutral-800">
+                <h3 className="line-clamp-1 text-sm font-medium text-neutral-800 dark:text-neutral-100">
                   {publication.title}
                 </h3>
-                <p className="truncate text-xs text-neutral-500">
+                <p className="truncate text-xs text-neutral-500 dark:text-neutral-400">
                   {publication.project.name}
                 </p>
               </div>
-              <p className="line-clamp-1 text-xs leading-relaxed text-neutral-600">
+              <p className="line-clamp-1 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400">
                 {publication.description}
               </p>
 
-              <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-2 text-xs text-neutral-600">
+              <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 pt-2 text-xs text-neutral-600 dark:text-neutral-400">
                 <span className="inline-flex items-center gap-1.5">
                   <UserIcon className="size-4 text-neutral-400" />
                   {publication.available_vacancies}{" "}

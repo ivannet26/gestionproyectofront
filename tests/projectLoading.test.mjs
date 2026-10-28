@@ -117,6 +117,7 @@ async function shellHarness() {
       getProjectCatalogs: () => { const item = deferred(); catalogs.push(item); return item.promise; },
     },
     "../NotAvailable/NotAvailable": { default: Empty }, "../Sidebar/Sidebar": { default: Sidebar },
+    "../../publications/PublicationsPage": { default: Empty },
   });
   const user = { role: "ADMINISTRADOR", permissions: { manage_accounts: true } };
   const tree = () => harness.render(() => AppShell({ user, onLogout() {}, logoutError: "" }));
