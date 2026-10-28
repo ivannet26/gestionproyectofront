@@ -50,8 +50,9 @@ export function groupTasks(
   function descriptors(task: Task): Descriptor[] {
     switch (preferences.mode) {
       case "state": {
-        const state = stateByCode.get(task.state_code);
-        return [{ key: task.state_code, name: state?.name ?? task.state_name, rank: state?.rank ?? states.length, stateCode: task.state_code, tokens: [] }];
+        const root = hierarchy.rootById.get(task.id) ?? task;
+        const state = stateByCode.get(root.state_code);
+        return [{ key: root.state_code, name: state?.name ?? root.state_name, rank: state?.rank ?? states.length, stateCode: root.state_code, tokens: [] }];
       }
       case "priority": {
         const priority = task.priority === null ? undefined : priorityByCode.get(task.priority);

@@ -8,7 +8,7 @@ assert.ok(process.env.GM_QA_SECRETS_PATH && process.env.GM_BROWSER_REPORT_DIR);
 const credentials = JSON.parse(await readFile(process.env.GM_QA_SECRETS_PATH, 'utf8'));
 const context = credentials.context;
 assert.ok(context.grandchild && context.date_cases);
-const output = path.join(process.env.GM_BROWSER_REPORT_DIR, 'list-presentation-20261027');
+const output = path.join(process.env.GM_BROWSER_REPORT_DIR, 'list-pointer-20261027');
 await mkdir(output, { recursive: true });
 const profile = await mkdtemp(path.join(tmpdir(), 'gm-list-presentation-'));
 const chrome = spawn('C:/Program Files/Google/Chrome/Application/chrome.exe', [
@@ -62,10 +62,29 @@ try {
   const manual = async (id, state) => { await click(row(id) + ' button[aria-label^="Estado"]'); await wait('document.querySelector(":popover-open")'); await act(`Array.from(document.querySelector(':popover-open').querySelectorAll('button')).find(e=>e.querySelector('[data-state="${state}"]'))`); await button('Guardar', `document.querySelector(':popover-open')`); await wait('!document.querySelector(":popover-open")'); await wait(`document.querySelector('${row(id)} [data-state="${state}"]')`); assert.equal((await snapshot(id)).state_code, state); };
   const closeDetail = async () => { await click('button[aria-label="Cerrar detalle de tarea"]'); await wait('!document.querySelector("dialog[open]")'); };
   capture = async filename => { const result = await send('Page.captureScreenshot', { format: 'png' }); await writeFile(path.join(output, filename), Buffer.from(result.data, 'base64')); };
-  const begin = async id => { const p = await point(`document.querySelector('${row(id)} [data-task-drag-surface]')`); assert.ok(p); await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...p }); await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...p, button: 'left', buttons: 1, clickCount: 1 }); await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: p.x + 10, y: p.y + 2, buttons: 1 }); await wait('document.querySelector("[data-task-preview]")'); };
-  const over = async (selector, ratio = .5) => { const p = await evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();return{x:r.x+Math.min(170,r.width/2),y:r.y+r.height*${ratio}}})()`); await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...p, buttons: 1 }); await pause(100); return p; };
-  const release = async p => { await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...p, button: 'left', clickCount: 1 }); await wait('!document.querySelector("[data-task-preview]")'); await wait('!document.querySelector(".gm-task-list[aria-busy=true]")'); };
-  const drag = async (id, selector, ratio = .5, filename) => { const before = moves().length; await begin(id); const p = await over(selector, ratio); await wait('document.querySelector(".gm-task-insertion")'); assert.equal(await evaluate('document.querySelectorAll(".gm-task-insertion").length'), 1); assert.equal(await evaluate(`document.querySelectorAll('${row(id)}').length`), 1); if (filename) await capture(filename); await release(p); for (let n = 0; n < 100 && moves().length === before; n++) await pause(50); assert.equal(moves().length, before + 1); assert.equal(moves().at(-1).status, 200); };
+  const surfacePoint = async (id, surface) => {
+    if (surface !== 'background') return point(`document.querySelector(${JSON.stringify(row(id) + ' ' + surface)})`);
+    return evaluate(`(()=>{const e=document.querySelector('${row(id)} td');e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();return{x:r.x+3,y:r.y+r.height/2}})()`);
+  };
+  const begin = async (id, surface = '[data-task-drag-surface]') => { const p = await surfacePoint(id, surface); assert.ok(p); await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...p }); await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...p, button: 'left', buttons: 1, clickCount: 1 }); await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: p.x + 10, y: p.y + 2, button: 'left', buttons: 1 }); await wait('document.querySelector(".gm-task-list[data-moving=true]")'); };
+  const over = async (selector, ratio = .5) => { const p = await evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();return{x:r.x+Math.min(170,r.width/2),y:r.y+r.height*${ratio}}})()`); await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...p, button: 'left', buttons: 1 }); await pause(100); return p; };
+  const release = async p => { await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...p, button: 'left', clickCount: 1 }); await wait('!document.querySelector(".gm-task-list[data-moving=true]")'); await wait('!document.querySelector(".gm-task-list[aria-busy=true]")'); };
+  const drag = async (id, selector, ratio = .5, filename, surface) => {
+    const before = moves().length;
+    const dimensions = await evaluate(`Array.from(document.querySelector('${row(id)}').cells,e=>({width:e.getBoundingClientRect().width,height:e.getBoundingClientRect().height}))`);
+    await begin(id, surface); const p = await over(selector, ratio);
+    await wait('document.querySelector(".gm-task-insertion")');
+    assert.equal(await evaluate('document.querySelectorAll(".gm-task-insertion").length'), 1);
+    assert.equal(await evaluate('document.querySelectorAll(".gm-task-row[data-dragging=true]").length'), 1);
+    assert.equal(await evaluate('document.querySelectorAll("[data-task-preview]").length'), 1);
+    assert.ok(await evaluate('Array.from(document.querySelectorAll(\'body > [role="tooltip"]\')).every(e=>getComputedStyle(e).visibility==="hidden")'));
+    assert.deepEqual(await evaluate(`Array.from(document.querySelector('${row(id)}').cells,e=>({width:e.getBoundingClientRect().width,height:e.getBoundingClientRect().height}))`), dimensions);
+    if (filename) await capture(filename);
+    await release(p);
+    for (let n = 0; n < 100 && moves().length === before; n++) await pause(50);
+    assert.equal(moves().length, before + 1); assert.equal(moves().at(-1).status, 200);
+    assert.equal(await evaluate('Boolean(document.querySelector("dialog[open],:popover-open"))'), false, 'Clic residual después del arrastre');
+  };
   const login = async role => { token = undefined; await send('Network.clearBrowserCookies'); await navigate('http://localhost:5189/proyectos'); await wait('document.querySelector("#login-email")'); await input('#login-email', credentials[role].email); await input('#login-password', credentials[role].password); await click('form button[type="submit"]'); await wait('document.querySelector("aside")'); for (let n = 0; n < 100 && !token; n++) await pause(50); assert.ok(token); };
   await send('Page.enable'); await send('Runtime.enable'); await send('Network.enable');
   await send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 1000, deviceScaleFactor: 1, mobile: false });
@@ -105,10 +124,11 @@ try {
   assert.equal(mutations(), beforeGrouping);
   assert.deepEqual(await tasks(), persisted);
   for (const state of new Set(persisted.map(item => item.state_code))) {
-    const count = persisted.filter(item => item.state_code === state).length;
+    const byId = new Map(persisted.map(item => [item.id, item]));
+    const count = persisted.filter(item => { let root = item; while (root.parent_id !== null && byId.has(root.parent_id)) root = byId.get(root.parent_id); return root.state_code === state; }).length;
     assert.ok((await evaluate(`document.querySelector('${group(state)} h2').innerText`)).includes(`${count} ${count === 1 ? 'tarea' : 'tareas'}`));
   }
-  checks.push('Cinco agrupaciones conservadas sin escrituras; contadores por estado real y arrastre desactivado fuera de Estado');
+  checks.push('Cinco agrupaciones conservadas sin escrituras; contadores por árbol de raíz y arrastre desactivado fuera de Estado');
 
   const [early, valid, same] = context.date_cases;
   for (const [id, startRed, dueRed] of [[early, true, false], [valid, false, false], [same, false, false]]) {
@@ -173,7 +193,7 @@ try {
   await drag(context.child, group('EN_CURSO') + ' h2');
   await list(); await expand(context.task); await expand(context.child);
   assert.equal((await snapshot(context.child)).state_code, 'EN_CURSO');
-  checks.push('Arrastre repetido a estados vacíos y contraídos, vista previa y línea única; solo cambia la subtarea y persiste el padre');
+  checks.push('Arrastre repetido a estados vacíos y contraídos, origen discreto y una línea sin textos flotantes; solo cambia la subtarea y persiste el padre');
 
   await drag(same, row(context.task), .2);
   let order = (await tasks()).filter(item => item.parent_id === null && item.state_code === 'PENDIENTE').map(item => item.id);
@@ -188,7 +208,7 @@ try {
 
   const beforeCancel = moves().length;
   await begin(context.grandchild); const rejectedPoint = await over(row(early));
-  await wait('document.querySelector("[data-task-preview][data-invalid=true]")');
+  await wait('document.querySelector(".gm-task-list[data-moving=true][data-drop-valid=false]")');
   assert.equal(await evaluate('Boolean(document.querySelector(".gm-task-insertion"))'), false);
   await capture('04_destino_incompatible.png'); await release(rejectedPoint); assert.equal(moves().length, beforeCancel);
   await begin(early); const cancelPoint = await over(group('EN_REVISION') + ' h2');
@@ -199,17 +219,90 @@ try {
   const beforeScroll = moves().length;
   await begin(early);
   const edge = await evaluate(`(()=>{const e=document.querySelector('[aria-label="Tabla de tareas con desplazamiento horizontal"]');const r=e.getBoundingClientRect();return{x:r.left+140,y:r.bottom-9,scroll:e.scrollTop}})()`);
-  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: edge.x, y: edge.y, buttons: 1 }); await pause(250);
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: edge.x, y: edge.y, button: 'left', buttons: 1 }); await pause(250);
   assert.ok(await evaluate('document.querySelector(\'[aria-label="Tabla de tareas con desplazamiento horizontal"]\').scrollTop') > edge.scroll);
   await key('Escape'); await release(edge); assert.equal(moves().length, beforeScroll);
   checks.push('Autoscroll en el borde durante el arrastre, cancelado sin escritura');
 
-  await click(row(early) + ' button[aria-label^="Estado"]'); await wait('document.querySelector(":popover-open select[name=move_before]")');
-  await evaluate(`(()=>{const e=document.querySelector(':popover-open select[name=move_before]');e.value=${JSON.stringify(String(valid))};e.dispatchEvent(new Event('change',{bubbles:true}));})()`);
-  await button('Confirmar movimiento', `document.querySelector(':popover-open')`);
-  await wait('!document.querySelector(".gm-task-list[aria-busy=true]")');
-  assert.equal(moves().at(-1).status, 200);
-  checks.push('Movimiento accesible disponible en el editor de Estado sin recrear el menú final');
+  const beforeState = moves().length;
+  await click(row(early) + ' button[aria-label^="Estado"]'); await wait('document.querySelector(":popover-open")');
+  assert.equal(await evaluate('Boolean(document.querySelector(":popover-open select"))'), false);
+  assert.equal(await evaluate('document.querySelector(":popover-open").innerText.includes("Posición entre hermanos")'), false);
+  await capture('05_estado_sin_posicion.png'); await key('Escape');
+  await manual(early, 'EN_REVISION'); await manual(early, 'PENDIENTE');
+  assert.equal(moves().length, beforeState);
+  assert.ok(requests.filter(item => item.method === 'POST' && item.path.endsWith('/state/')).every(item => Object.keys(item.payload).join(',') === 'state_code'));
+  checks.push('Editor de Estado sin posiciones ni sección Mover tarea; solo envía state_code al endpoint de estado');
+
+  const surfaces = [
+    ['título', '[data-task-drag-surface]'], ['fondo', 'background'],
+    ['responsable', 'button[aria-label^="Persona asignada"]'],
+    ['inicio', 'button[aria-label^="Fecha de inicio"]'], ['límite', 'button[aria-label^="Fecha límite"]'],
+    ['prioridad', 'button[aria-label^="Prioridad"]'], ['estado', 'button[aria-label^="Estado"]'],
+    ['etiquetas', 'button[aria-label^="Etiquetas"]'],
+  ];
+  for (const [name, surface] of surfaces) {
+    const beforeClick = moves().length;
+    if (surface === 'background') {
+      const p = await surfacePoint(early, surface);
+      await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...p });
+      await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...p, button: 'left', clickCount: 1 });
+      await send('Input.dispatchMouseEvent', { type: 'mouseReleased', ...p, button: 'left', clickCount: 1 });
+    } else await click(row(early) + ' ' + surface);
+    assert.equal(await evaluate('Boolean(document.querySelector(".gm-task-list[data-moving=true]"))'), false);
+    if (name === 'título' || name === 'fondo') { await wait('document.querySelector("dialog[open]")'); await closeDetail(); }
+    else {
+      await wait('document.querySelector(":popover-open")');
+      const editorInput = await evaluate('Boolean(document.querySelector(":popover-open input:not([disabled])"))');
+      if (editorInput) { await input(':popover-open input:not([disabled])', 'QA'); assert.equal(await evaluate('document.querySelector(":popover-open input:not([disabled])").value'), 'QA'); }
+      const p = await point('document.querySelector(\':popover-open input:not([disabled]), :popover-open button:not([disabled])\')');
+      await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...p });
+      await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...p, button: 'left', buttons: 1, clickCount: 1 });
+      await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: p.x + 12, y: p.y, button: 'left', buttons: 1 });
+      assert.equal(await evaluate('Boolean(document.querySelector(".gm-task-list[data-moving=true]"))'), false, 'Contenido del editor: ' + name);
+      await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: p.x + 12, y: p.y, button: 'left', clickCount: 1 });
+      await key('Escape'); await wait('!document.querySelector(":popover-open")');
+    }
+    assert.equal(moves().length, beforeClick, 'Clic habitual: ' + name);
+    const current = await snapshot(early), target = current.state_code === 'PENDIENTE' ? 'EN_REVISION' : 'PENDIENTE';
+    await drag(early, group(target) + ' h2', .5, name === 'responsable' ? '06_arrastre_desde_responsable.png' : undefined, surface);
+    assert.equal((await snapshot(early)).state_code, target, 'Arrastre desde ' + name);
+  }
+  checks.push('Clic y arrastre desde título, fondo, responsable, inicio, límite, prioridad, estado y etiquetas; sin clic residual ni editores accidentales');
+  checks.push('Inputs y botones de popovers abiertos conservan edición y gestos propios, sin mover la tarea subyacente');
+
+  const statePoint = await surfacePoint(early, 'button[aria-label^="Estado"]'), beforeHold = moves().length;
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', ...statePoint });
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', ...statePoint, button: 'left', buttons: 1, clickCount: 1 });
+  await pause(250);
+  assert.equal(await evaluate('Boolean(document.querySelector(".gm-task-list[data-moving=true],:popover-open"))'), false);
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: statePoint.x + 3, y: statePoint.y + 3, button: 'left', buttons: 1 });
+  assert.equal(await evaluate('Boolean(document.querySelector(".gm-task-list[data-moving=true]"))'), false);
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: statePoint.x + 3, y: statePoint.y + 3, button: 'left', clickCount: 1 });
+  await wait('document.querySelector(":popover-open")'); await key('Escape');
+  assert.equal(moves().length, beforeHold);
+  checks.push('Mantener pulsado y mover menos de seis píxeles conserva el clic de Estado sin iniciar movimiento');
+
+  const expander = 'button[aria-label*="subtareas de"]';
+  const expanded = await evaluate(`document.querySelector('${row(context.task)} ${expander}').getAttribute('aria-expanded')`);
+  await click(row(context.task) + ' ' + expander);
+  assert.notEqual(await evaluate(`document.querySelector('${row(context.task)} ${expander}').getAttribute('aria-expanded')`), expanded);
+  await click(row(context.task) + ' ' + expander);
+  await drag(context.task, group('EN_REVISION') + ' h2', .5, undefined, expander);
+  assert.equal(await evaluate(`document.querySelector('${row(context.task)} ${expander}').getAttribute('aria-expanded')`), expanded);
+  assert.equal((await snapshot(context.child)).state_code, 'EN_CURSO');
+  assert.equal((await snapshot(context.grandchild)).state_code, 'BLOQUEADA');
+  await drag(context.task, group('PENDIENTE') + ' h2', .5, undefined, 'background');
+  await list(); await expand(context.task); await expand(context.child);
+  assert.equal((await snapshot(context.grandchild)).parent_id, context.child);
+  checks.push('El expansor distingue clic de arrastre; mover al padre no propaga estados y la jerarquía persiste al recargar');
+
+  const beforePropertyCancel = moves().length;
+  await begin(early, 'button[aria-label^="Prioridad"]'); const cancelProperty = await over(group('EN_REVISION') + ' h2');
+  await key('Escape'); await release(cancelProperty);
+  assert.equal(moves().length, beforePropertyCancel);
+  assert.equal(await evaluate('Boolean(document.querySelector("dialog[open],:popover-open"))'), false);
+  checks.push('Escape al arrastrar desde una propiedad cancela sin escritura ni clic residual');
 
   const external = await snapshot(context.related);
   assert.equal((await request(`${context.project}/tasks/${context.related}/move/`, { method: 'POST', body: JSON.stringify({ state_code: 'BLOQUEADA', before_id: null, expected_revision: external.move_revision }) })).status, 200);

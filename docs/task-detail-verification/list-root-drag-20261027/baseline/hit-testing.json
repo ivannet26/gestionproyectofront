@@ -1,0 +1,178 @@
+[
+  {
+    "name": "left",
+    "x": 312.2,
+    "y": 292,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"px-3 py-1\"><div class=\"flex min-w-0 items-center gap-2\" style=\"padding-inline-start: 0px;\"><button class=\"inline-flex size-5 shrink-0 curso"
+    },
+    "active": "1"
+  },
+  {
+    "name": "right",
+    "x": 1565.8,
+    "y": 292,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><div class=\"min-w-0 flex-1\"><div class=\"min-w-0 max-w-full\" data-property-appeara"
+    },
+    "active": "1"
+  },
+  {
+    "name": "top",
+    "x": 320,
+    "y": 266.7,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"px-3 py-1\"><div class=\"flex min-w-0 items-center gap-2\" style=\"padding-inline-start: 0px;\"><button class=\"inline-flex size-5 shrink-0 curso"
+    },
+    "active": "1"
+  },
+  {
+    "name": "bottom",
+    "x": 320,
+    "y": 317.3,
+    "target": {
+      "tag": "TD",
+      "row": "2",
+      "html": "<td class=\"px-3 py-1\"><div class=\"flex min-w-0 items-center gap-2\" style=\"padding-inline-start: 20px;\"><button class=\"inline-flex size-5 shrink-0 curs"
+    },
+    "active": "2"
+  },
+  {
+    "name": "padding-0",
+    "x": 313,
+    "y": 269.5,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"px-3 py-1\"><div class=\"flex min-w-0 items-center gap-2\" style=\"padding-inline-start: 0px;\"><button class=\"inline-flex size-5 shrink-0 curso"
+    },
+    "active": "1"
+  },
+  {
+    "name": "cell-edge-0",
+    "x": 800.8625,
+    "y": 292,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><span class=\"gm-row-labels inline-flex w-8 shrink-0 items-center justify-center\">"
+    },
+    "active": "1"
+  },
+  {
+    "name": "padding-1",
+    "x": 802.0625,
+    "y": 269.5,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><span class=\"gm-row-labels inline-flex w-8 shrink-0 items-center justify-center\">"
+    },
+    "active": "1"
+  },
+  {
+    "name": "cell-edge-1",
+    "x": 963.878125,
+    "y": 292,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><div class=\"min-w-0 flex-1\"><div class=\"min-w-0 max-w-full\" data-property-appeara"
+    },
+    "active": "1"
+  },
+  {
+    "name": "padding-2",
+    "x": 965.078125,
+    "y": 269.5,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><div class=\"min-w-0 flex-1\"><div class=\"min-w-0 max-w-full\" data-property-appeara"
+    },
+    "active": "1"
+  },
+  {
+    "name": "cell-edge-2",
+    "x": 1126.89375,
+    "y": 292,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><div class=\"min-w-0 flex-1\"><div class=\"min-w-0 max-w-full\" data-property-appeara"
+    },
+    "active": "1"
+  },
+  {
+    "name": "padding-3",
+    "x": 1128.09375,
+    "y": 269.5,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><div class=\"min-w-0 flex-1\"><div class=\"min-w-0 max-w-full\" data-property-appeara"
+    },
+    "active": "1"
+  },
+  {
+    "name": "cell-edge-3",
+    "x": 1289.909375,
+    "y": 292,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><div class=\"min-w-0 flex-1\"><div class=\"min-w-0 max-w-full\" data-property-appeara"
+    },
+    "active": "1"
+  },
+  {
+    "name": "padding-4",
+    "x": 1291.109375,
+    "y": 269.5,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><div class=\"min-w-0 flex-1\"><div class=\"min-w-0 max-w-full\" data-property-appeara"
+    },
+    "active": "1"
+  },
+  {
+    "name": "cell-edge-4",
+    "x": 1415.3,
+    "y": 292,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><div class=\"min-w-0 flex-1\"><div class=\"min-w-0 max-w-full\" data-property-appeara"
+    },
+    "active": "1"
+  },
+  {
+    "name": "padding-5",
+    "x": 1416.5,
+    "y": 269.5,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><div class=\"min-w-0 flex-1\"><div class=\"min-w-0 max-w-full\" data-property-appeara"
+    },
+    "active": "1"
+  },
+  {
+    "name": "cell-edge-5",
+    "x": 1565.8,
+    "y": 292,
+    "target": {
+      "tag": "TD",
+      "row": "1",
+      "html": "<td class=\"py-1 px-1.5\"><div class=\"flex min-w-0 items-center gap-1\"><div class=\"min-w-0 flex-1\"><div class=\"min-w-0 max-w-full\" data-property-appeara"
+    },
+    "active": "1"
+  }
+]

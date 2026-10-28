@@ -169,10 +169,10 @@ test("project day uses America/Lima without UTC date shifts at midnight", () => 
 
 test("subtasks keep real ancestors as non-counted context instead of becoming orphans", () => {
   const tasks = [task(1), task(2, { parent_id: 1, state_code: "COMPLETADA" }), task(3, { parent_id: 2, priority: 1 })];
-  const result = groups(tasks);
-  const completed = result.find((group) => group.stateCode === "COMPLETADA");
-  assert.deepEqual(members(completed), [2]);
-  assert.deepEqual(Array.from(completed.visible), [2, 1]);
+  const result = groups(tasks, { mode: "priority" });
+  const completed = result.find((group) => group.priority === 1);
+  assert.deepEqual(members(completed), [3]);
+  assert.deepEqual(Array.from(completed.visible), [3, 2, 1]);
   assert.deepEqual(Array.from(completed.roots, (task) => task.id), [1]);
   assert.equal(completed.members.has(1), false);
   assert.equal(new Set(result.flatMap((group) => members(group))).size, 3);

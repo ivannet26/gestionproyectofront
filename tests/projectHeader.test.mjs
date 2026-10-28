@@ -52,7 +52,7 @@ const { default: TaskList } = await load("../src/features/projects/TaskList/Task
   "./QuickTaskRow": { default: () => null },
   "./stateInk": { stateInk: () => "#000000" },
   "./TaskCell": { default: () => null, StateIcon: Icon, StateBadge: Icon, StateLabel: ({ name }) => React.createElement("span", null, name) },
-  "./taskStatePresentation": await load("../src/features/projects/TaskList/taskStatePresentation.ts"),
+  "./taskDragSurface": await load("../src/features/projects/TaskList/taskDragSurface.ts"),
   "../../../shared/icons/ChevronDownIcon": { default: Icon },
   "../../../shared/icons/PlusIcon": { default: Icon },
   "../../../shared/icons/RelationIcon": { default: Icon },

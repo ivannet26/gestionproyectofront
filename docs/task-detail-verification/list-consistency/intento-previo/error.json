@@ -1,0 +1,280 @@
+{
+  "message": "Error: Control ausente: document.querySelector(\"dialog button[aria-label=\\\"Cerrar modal\\\"]\")\n    at <anonymous>:1:96\n    at <anonymous>:1:311",
+  "checks": [
+    "Subtarea ida/vuelta repetida por arrastre y selector; padre intacto y referencia compacta sin propiedades ni doble conteo"
+  ],
+  "errors": [],
+  "page": "Inicio\nTrabajadores\nEquipos\nOrganización\nCuentas y accesos\nRecuperaciones\nProyectos\nI\nIngeniería · pruebas aisladas\nScrum · categoría funcional\nProyecto de solo lectura\nDetalle de tareas · QA\nLista de tareas\nAD\nAdministrador de pruebas admin\nAdministrador\nDetalle de tareas · QA\n5 tareas\n08 oct. 26\n→\n21 nov. 26\nIngeniería · pruebas aisladas\nDetalle de tareas · QA\nLista\nLista\nTablero\nGantt\n\nGuardado: Verificar estructura\n\nLista de trabajo\nTarea\nPENDIENTE\n4 tareas\nNombre\tPersona asignada\tFecha de inicio\tFecha límite\tPrioridad\tEstado\n\nRevisión de planos\n1\n\t\nÁQ\nJQ\n\t\n08 oct. 26\n· Fecha anterior a hoy\n\t\nSin fecha\n\t\nBaja\n\t\nPENDIENTE\n\n\nInforme técnico\n\t\n\t\n08 oct. 26\n· Fecha anterior a hoy\n\t\nSin fecha\n\t\nNormal\n\t\nPENDIENTE\n\n\nTransición con motivo\n\t\nÁQ\n\t\n08 oct. 26\n· Fecha anterior a hoy\n\t\nSin fecha\n\t\nNormal\n\t\nPENDIENTE\n+\nAñadir tarea\n· PENDIENTE\nEN CURSO\n0 tareas\nNombre\tPersona asignada\tFecha de inicio\tFecha límite\tPrioridad\tEstado\n+\nAñadir tarea\n· EN CURSO\nCERRADO\n1 tarea\nNombre\tPersona asignada\tFecha de inicio\tFecha límite\tPrioridad\tEstado\n\nSubtareas de Revisión de planos\n\nSubtarea asignada\nCálculo aprobado\n\t\nÁQ\n\t\n08 oct. 26\n· Fecha anterior a hoy\n\t\nSin fecha\n\t\nNormal\n\t\nCERRADO\n+\nAñadir tarea\n· CERRADO\nBLOQUEADA\n0 tareas\nNombre\tPersona asignada\tFecha de inicio\tFecha límite\tPrioridad\tEstado\n+\nAñadir tarea\n· BLOQUEADA\nCANCELADA\n0 tareas\nNombre\tPersona asignada\tFecha de inicio\tFecha límite\tPrioridad\tEstado\n+\nAñadir tarea\n· CANCELADA\nEN_REVISION\n0 tareas\nNombre\tPersona asignada\tFecha de inicio\tFecha límite\tPrioridad\tEstado\n+\nAñadir tarea\n· EN_REVISION\nOBSERVADA\n0 tareas\nNombre\tPersona asignada\tFecha de inicio\tFecha límite\tPrioridad\tEstado\n+\nAñadir tarea\n· OBSERVADA\nDetalle de tarea\nIngeniería · pruebas aisladas\n/\nDetalle de tareas · QA\n/\nTareas\nCreado el 22 oct. 2026, 10:25 p. m.\n×\n\nSubtarea de Revisión de planos\n\nVerificar estructura\nEstado\nPENDIENTE\nAsignados\nÁQ\nÁngela QA worker\nFechas\n08 oct. 26\n· Fecha anterior a hoy\n→\nSin fecha\nPrioridad\nNormal\nDuración estimada\nAñadir estimación\nEtiquetas\nAñadir etiquetas\nSubtareas\nCompletadas: 0 de 0\n\nEsta tarea aún no tiene subtareas.\n\n+ Añadir tarea\nRelacionar elementos o añadir dependencias\nActivity\n•\n\nAdministrador de pruebas admin creó esta tarea.\n\n22 oct. 2026, 10:25 p. m.\n•\n\nAdministrador de pruebas admin cambió el estado de PENDIENTE a EN_CURSO.\n\n22 oct. 2026, 10:26 p. m.\nMostrar más (1)\n•\n\nAdministrador de pruebas admin cambió el estado de EN_CURSO a PENDIENTE.\n\n22 oct. 2026, 10:26 p. m.\n•\n\nAdministrador de pruebas admin cambió el estado de PENDIENTE a EN_CURSO.\n\n22 oct. 2026, 10:26 p. m.\n•\n\nAdministrador de pruebas admin cambió el estado de EN_CURSO a PENDIENTE.\n\n22 oct. 2026, 10:26 p. m.\n•\n\nAdministrador de pruebas admin cambió el estado de PENDIENTE a EN_CURSO.\n\n22 oct. 2026, 10:26 p. m.\n•\n\nAdministrador de pruebas admin cambió el estado de EN_CURSO a PENDIENTE.\n\n22 oct. 2026, 10:26 p. m.\n•\n\nAdministrador de pruebas admin cambió el estado de PENDIENTE a EN_CURSO.\n\n22 oct. 2026, 10:26 p. m.\n•\n\nAdministrador de pruebas admin cambió el estado de EN_CURSO a PENDIENTE.\n\n22 oct. 2026, 10:26 p. m.\nEstado: PENDIENTE",
+  "requests": [
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/login/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/move/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/2/move/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/move/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/move/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/move/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/state/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/2/state/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/state/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/state/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/1/move/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/1/move/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/1/state/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/1/state/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/2/subtasks/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/2/activity/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/2/relations/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/2/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/subtasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/activity/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/relations/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/state/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/subtasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/activity/",
+      "method": "GET",
+      "status": 200
+    }
+  ]
+}

@@ -1,0 +1,802 @@
+{
+  "checks": [
+    "Tres niveles con estados reales diferentes, filas únicas y expansión sin escrituras",
+    "Cambio manual de padre e hijo independiente, jerarquía y estados persistidos tras recargar",
+    "Cinco agrupaciones conservadas sin escrituras; contadores por estado real y arrastre desactivado fuera de Estado",
+    "Fechas: creada 26/10 con 22/10 roja; creada 20/10 con 22/10 normal; 26/10 igual normal; inicio y límite independientes",
+    "Edición histórica evalúa el valor actual contra creación, permite corregirlo y conserva created_at y el color independiente del límite",
+    "Hover de una sola propiedad, foco visible y editor abierto sin cambios de medidas; clic normal abre detalle",
+    "Icono histórico de etiquetas antes del responsable, edición y foco; sin menú final ni columna residual",
+    "Arrastre repetido a estados vacíos y contraídos, origen discreto y una línea sin textos flotantes; solo cambia la subtarea y persiste el padre",
+    "Posición inicial, intermedia y final conserva el orden confirmado entre hermanos",
+    "Destino de otro padre rechazado con feedback y sin línea; Escape no escribe y el clic posterior abre detalle",
+    "Autoscroll en el borde durante el arrastre, cancelado sin escritura",
+    "Editor de Estado sin posiciones ni sección Mover tarea; solo envía state_code al endpoint de estado",
+    "Clic y arrastre desde título, fondo, responsable, inicio, límite, prioridad, estado y etiquetas; sin clic residual ni editores accidentales",
+    "Inputs y botones de popovers abiertos conservan edición y gestos propios, sin mover la tarea subyacente",
+    "Mantener pulsado y mover menos de seis píxeles conserva el clic de Estado sin iniciar movimiento",
+    "El expansor distingue clic de arrastre; mover al padre no propaga estados y la jerarquía persiste al recargar",
+    "Escape al arrastrar desde una propiedad cancela sin escritura ni clic residual",
+    "409 real conserva la confirmación del servidor, sin replay, y permite actualizar explícitamente",
+    "Detalle y Tablero conservados, sin motivos ni excepciones de ejecución",
+    "Trabajador en proyecto de lectura conserva estado deshabilitado y carece de arrastre"
+  ],
+  "requests": [
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/login/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/state/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/2/state/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_REVISION"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/1/state/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/1/state/",
+      "method": "POST",
+      "payload": {
+        "state_code": "BLOQUEADA"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/1/state/",
+      "method": "POST",
+      "payload": {
+        "state_code": "PENDIENTE"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/state/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_CURSO"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/11/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/11/",
+      "method": "PATCH",
+      "payload": {
+        "start_date": "2026-10-19"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/11/",
+      "method": "PATCH",
+      "payload": {
+        "start_date": "2026-10-22"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/subtasks/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/activity/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/relations/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/subtasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/activity/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/relations/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/",
+      "method": "PATCH",
+      "payload": {
+        "specialty_ids": [
+          2
+        ],
+        "retained_label_ids": []
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/move/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/2/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_REVISION",
+        "before_id": null,
+        "expected_revision": "815d70b805c86a68b3c03447b7178751a126b93c883c4f0f314d6714ae80d083"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_CURSO",
+        "before_id": null,
+        "expected_revision": "9280f8574ee2aaf6afe460c89f86b1b1fd63ca13728fb5e783106b0512bb24ba"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_REVISION",
+        "before_id": null,
+        "expected_revision": "3adefbb16a39c81f9e7bbc81326d7d716deb4a6e989cb4f3bc102f6cc7c6c250"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/2/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_CURSO",
+        "before_id": null,
+        "expected_revision": "bbacb65afbac103e6808243891f4064c1c53baa931388f3c2ce4502bb2e571b4"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/12/move/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/12/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "PENDIENTE",
+        "before_id": 1,
+        "expected_revision": "0808daefd054412eda72f2a092c3678a265fa4e9716be8f2da35a833b1a27338"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/12/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "PENDIENTE",
+        "before_id": 11,
+        "expected_revision": "d0ce122c210720418511fb6f2312909d9da2d89a2b9528a1e965a13b3eeb9ea9"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/12/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "PENDIENTE",
+        "before_id": null,
+        "expected_revision": "0c9f94ce0e0923435f74f319744e857179773a06a864817908b51800932f3e05"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/subtasks/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/activity/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/relations/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/subtasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/activity/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/relations/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/state/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/state/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_REVISION"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/state/",
+      "method": "POST",
+      "payload": {
+        "state_code": "PENDIENTE"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/subtasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/activity/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/relations/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/move/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_REVISION",
+        "before_id": null,
+        "expected_revision": "cff54bca2e183c73b2ac9d0573fea91d18951457bb5f2019406dd53d60828eb9"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/subtasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/activity/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/relations/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "PENDIENTE",
+        "before_id": 1,
+        "expected_revision": "6dd5495a3e632b5df928c45666c6ee6b6452d08928fb01c9abd45b622e3a6f18"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_REVISION",
+        "before_id": null,
+        "expected_revision": "3f20bf3de5c16d6b443cf5b1b2797d0ab08db7d15a451983df7d7b6a384a4b57"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "PENDIENTE",
+        "before_id": 1,
+        "expected_revision": "cd73dae12bac0d24e1ffa53ff8449bf023ccdaffbf68886284ccc6388afda034"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_REVISION",
+        "before_id": null,
+        "expected_revision": "4fa3cf9f88e2bcd57fc504044e793d2bc6221e3bb336876d5c21e77e7e95e94f"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "PENDIENTE",
+        "before_id": 1,
+        "expected_revision": "dcf5afbda0f62dcd76420dfdc13f47b53100cfb7d8863d425683b472b0f7e409"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/move/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/10/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_REVISION",
+        "before_id": null,
+        "expected_revision": "a2f5a306c321cdba577ad48620bd61c1a490be837fd628046eb4e7eb0d4717f5"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/10/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "PENDIENTE",
+        "before_id": 1,
+        "expected_revision": "59206dec34c0381dafaeb0ab48b1620a13f9444b7139f2da6f4c7f95f23be99a"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/1/move/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/1/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_REVISION",
+        "before_id": null,
+        "expected_revision": "3cc67b03137411817ef49c59947762e464af157ba7e32b070bec03af87c78625"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/1/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "PENDIENTE",
+        "before_id": 10,
+        "expected_revision": "05585b9c7fc65bc06dab8c5f29083785b5ea02c447764eff704bdac5629fe719"
+      },
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/4/move/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/4/move/",
+      "method": "POST",
+      "payload": {
+        "state_code": "EN_REVISION",
+        "before_id": null,
+        "expected_revision": "7f75c1c799f3b97675804bfb6b576a47ae97bdff9643c3b830a21db45557395a"
+      },
+      "status": 409
+    },
+    {
+      "path": "/api/projects/1/tasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/1/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/1/subtasks/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/1/activity/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/1/relations/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/1/tasks/1/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/1/subtasks/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/1/activity/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/1/tasks/1/relations/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/login/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/auth/refresh/",
+      "method": "POST",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/2/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/2/tasks/",
+      "method": "OPTIONS",
+      "status": 204
+    },
+    {
+      "path": "/api/projects/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/catalogs/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/2/",
+      "method": "GET",
+      "status": 200
+    },
+    {
+      "path": "/api/projects/2/tasks/",
+      "method": "GET",
+      "status": 200
+    }
+  ],
+  "errors": []
+}

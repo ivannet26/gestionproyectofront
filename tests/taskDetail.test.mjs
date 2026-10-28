@@ -31,7 +31,7 @@ const { StateIcon } = await load('../src/features/projects/TaskList/TaskCell.tsx
   '../labelSelection': { labelSelection() {} }, '../ResponsiblePicker/AssigneeSelector': { default: Empty },
   '../stateGroups': stateGroups, '../taskAssignees': { taskAssignees: () => [] },
   '../TaskForm/PriorityOptions': { default: Empty }, '../TaskForm/priorityTones': { priorityTones: {} }, '../TaskForm/taskDates': { isBeforeTaskCreation: () => false, taskCreationDay: () => null },
-  '../TaskForm/TaskIcon': { default: Empty }, './TaskMoveControl': { default: Empty },
+  '../TaskForm/TaskIcon': { default: Empty },
   '../TaskForm/TaskDateValue': { default: Empty }, '../TaskForm/TaskProperty': { default: Empty }, './taskHierarchy': hierarchy,
 });
 

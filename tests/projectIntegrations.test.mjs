@@ -98,7 +98,12 @@ test("creation-day comparison uses America Lima across UTC midnight without shif
 });
 
 async function movementHarness() {
-  const values = [], requests = [], accepted = [], effects = [];
+  const values = [], requests = [], accepted = [], effects = [], frames = [];
+  let reads = 0, focus = 0;
+  const sourceTasks = [task, { ...task, id: 9, state_code: "ACTIVE" }];
+  let serverTasks = sourceTasks;
+  const document = Object.assign(new EventTarget(), { body: {}, querySelector: () => ({ focus() { focus++; } }) });
+  document.activeElement = document.body;
   let index = 0, effectIndex = 0;
   const react = {
     useState(initial) { const slot = index++; if (!(slot in values)) values[slot] = initial; return [values[slot], next => { values[slot] = typeof next === "function" ? next(values[slot]) : next; }]; },
@@ -107,12 +112,12 @@ async function movementHarness() {
   };
   const { useTaskMove } = await load("../src/features/projects/TaskList/useTaskMove.ts", {
     react, "../../auth/api": { errorText: error => error.message },
-    "../services": { moveTask(id, task, payload) { return new Promise((resolve, reject) => requests.push({ id, task, payload, resolve, reject })); }, getTasks: async () => [] },
-  });
+    "../services": { moveTask(id, task, payload) { return new Promise((resolve, reject) => requests.push({ id, task, payload, resolve, reject })); }, getTasks: async () => { reads++; return serverTasks; } },
+  }, { document, window: new EventTarget(), requestAnimationFrame: callback => frames.push(callback), cancelAnimationFrame() {} });
   const region = { current: null };
-  return { requests, accepted, render() { index = 0; effectIndex = 0; return useTaskMove({ id: 42 }, result => accepted.push(result), region); }, unmount() { for (const effect of effects) effect.cleanup?.(); } };
+  return { requests, accepted, render() { index = 0; effectIndex = 0; return useTaskMove({ id: 42 }, result => accepted.push(result), region, sourceTasks); }, reads: () => reads, focus: () => focus, flushFrames() { for (const frame of frames.splice(0)) frame(); }, setServerTasks(value) { serverTasks = value; }, unmount() { for (const effect of effects) effect.cleanup?.(); } };
 }
-const task = { id: 8, state_code: "OPEN", move_revision: "a".repeat(64), move_targets: ["ACTIVE", "BLOCKED"], permissions: { state: true }, transitions: [{ target: "ACTIVE", reason_required: false }, { target: "BLOCKED", reason_required: true }, { target: "INVALID", reason_required: false }] };
+const task = { id: 8, parent_id: null, state_code: "OPEN", move_revision: "a".repeat(64), move_targets: ["ACTIVE", "BLOCKED"], permissions: { state: true }, transitions: [{ target: "ACTIVE", reason_required: false }, { target: "BLOCKED", reason_required: true }, { target: "INVALID", reason_required: false }] };
 
 test("move applies immediately without a reason dialog while prohibited targets never write", async () => {
   const hook = await movementHarness();
@@ -139,11 +144,60 @@ test("movement guards duplicate requests, keeps original list on conflict, and d
   assert.equal(hook.requests.length, 1);
   assert.equal(hook.accepted.length, 0);
   hook.requests[0].reject(new Error("Conflicto 409")); await new Promise(resolve => setImmediate(resolve));
-  assert.equal(hook.render().error, "Conflicto 409");
+  assert.match(hook.render().error, /Conflicto 409/);
+  assert.match(hook.render().error, /Se detuvo un/);
+  assert.equal(hook.reads(), 0);
   assert.equal(hook.accepted.length, 0);
+  hook.setServerTasks([{ ...task, move_revision: "fresh-after-conflict" }, { ...task, id: 9, state_code: "ACTIVE" }]);
   hook.render().propose(task, "ACTIVE", 9);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(hook.reads(), 1);
   assert.equal(hook.requests[1].payload.before_id, 9);
-  assert.equal(hook.requests[1].payload.expected_revision, task.move_revision);
+  assert.equal(hook.requests[1].payload.expected_revision, "fresh-after-conflict");
   hook.unmount(); hook.requests[1].resolve([{ ...task, state_code: "ACTIVE" }]); await new Promise(resolve => setImmediate(resolve));
-  assert.equal(hook.accepted.length, 0);
+  assert.equal(hook.accepted.length, 1);
+});
+
+
+test("consecutive movements are serialized with the confirmed revision and never cancel a newer gesture", async () => {
+  const hook = await movementHarness();
+  hook.render().propose(task, "ACTIVE", null);
+  hook.render().prepare(); hook.render().start(task, 10, 10);
+  hook.render().propose(task, "BLOCKED", null);
+  assert.equal(hook.requests.length, 1); assert.equal(hook.render().queued, 1);
+  const confirmed = [{ ...task, state_code: "ACTIVE", move_revision: "confirmed-b" }];
+  hook.requests[0].resolve(confirmed); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(hook.requests.length, 2);
+  assert.equal(hook.requests[1].payload.expected_revision, "confirmed-b");
+  assert.equal(hook.render().dragging.id, task.id);
+  hook.flushFrames(); assert.equal(hook.focus(), 0);
+  hook.requests[1].resolve([{ ...task, state_code: "BLOCKED", move_revision: "confirmed-c" }]);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(hook.render().busy, false); assert.equal(hook.accepted.length, 2);
+  hook.unmount();
+});
+
+test("a failed write stops waiting movements explicitly and a new drop reads the server before saving", async () => {
+  const hook = await movementHarness();
+  hook.render().propose(task, "ACTIVE", null); hook.render().propose(task, "BLOCKED", null);
+  hook.render().start(task, 20, 20);
+  hook.requests[0].reject(new Error("Red interrumpida")); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(hook.requests.length, 1); assert.equal(hook.render().queued, 0);
+  assert.equal(hook.render().busy, false); assert.equal(hook.render().dragging.id, task.id);
+  assert.match(hook.render().error, /Se detuvo un/); assert.equal(hook.reads(), 0);
+  hook.render().end(); hook.render().start(task, 25, 25);
+  assert.match(hook.render().error, /Red interrumpida/);
+  hook.setServerTasks([{ ...task, move_revision: "server-after-ambiguous-write" }]);
+  hook.render().propose(task, "BLOCKED", null); await new Promise(resolve => setImmediate(resolve));
+  assert.equal(hook.requests[1].payload.expected_revision, "server-after-ambiguous-write");
+  hook.unmount(); hook.requests[1].resolve([]); await new Promise(resolve => setImmediate(resolve));
+});
+
+test("a queued anchor which changed state is rejected instead of moving to an arbitrary position", async () => {
+  const hook = await movementHarness();
+  hook.render().propose(task, "ACTIVE", null); hook.render().propose(task, "ACTIVE", 9);
+  hook.requests[0].resolve([{ ...task, state_code: "ACTIVE", move_revision: "new" }, { ...task, id: 9, state_code: "BLOCKED" }]);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(hook.requests.length, 1); assert.match(hook.render().error, /posición de destino cambió/);
+  hook.unmount();
 });

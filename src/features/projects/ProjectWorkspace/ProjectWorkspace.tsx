@@ -431,6 +431,7 @@ export default function ProjectWorkspace({
           {view === "lista" ? (
             <div className="flex min-h-0 min-w-0 flex-1 flex-col">
               <TaskList
+                key={project.id}
                 project={project}
                 tasks={tasks}
                 catalogs={catalogs}

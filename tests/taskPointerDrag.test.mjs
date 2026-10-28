@@ -8,35 +8,44 @@ class Surface extends EventTarget {
   constructor(tag = "div", parent = null, attributes = {}) {
     super(); Object.assign(this, { tag, parent, ...attributes });
     this.listeners = new Map();
+    this.children = []; this.dataset ??= {}; this.captures = new Set();
+    this.rect ??= { left: 0, right: 200, top: 0, bottom: 40 };
+    parent?.children.push(this);
   }
   addEventListener(type, handler, options) {
     const listeners = this.listeners.get(type) ?? new Set();
     listeners.add(handler); this.listeners.set(type, listeners);
-    super.addEventListener(type, handler, options);
+    super.addEventListener(type, handler, typeof options === "boolean" ? { capture: options } : options);
   }
   removeEventListener(type, handler, options) {
     this.listeners.get(type)?.delete(handler);
-    super.removeEventListener(type, handler, options);
+    super.removeEventListener(type, handler, typeof options === "boolean" ? { capture: options } : options);
   }
   get listenerCount() { return [...this.listeners.values()].reduce((total, items) => total + items.size, 0); }
   closest(selector) {
+    const selectors = selector.split(",").map(value => value.trim());
     for (let node = this; node; node = node.parent) {
-      if (selector.startsWith("[popover]")) { if (node.popover || node.editable) return node; }
-      else if (["button", "input", "textarea", "select", "a", "summary"].includes(node.tag)) return node;
+      if (selectors.includes(node.tag) || (selectors.includes('tr[data-task-id]') && node.tag === 'tr' && node.dataset.taskId) || (selectors.includes("[popover]") && node.popover) || (selector.includes("[contenteditable]") && node.editable) || selectors.includes(`[role=${node.role}]`)) return node;
     }
     return null;
   }
-  matches() { return this.tag === "button" && this.dragSurface === true; }
   contains(element) { for (let node = element; node; node = node.parent) if (node === this) return true; return false; }
+  getBoundingClientRect() { return this.rect; }
+  getClientRects() { return this.hidden ? [] : [this.rect]; }
+  querySelectorAll() { return this.children.flatMap(child => [...(child.tag === 'tr' && child.dataset.dragEnabled === 'true' ? [child] : []), ...child.querySelectorAll()]); }
+  setPointerCapture(id) { this.captures.add(id); }
+  hasPointerCapture(id) { return this.captures.has(id); }
+  releasePointerCapture(id) { this.captures.delete(id); }
 }
 
-async function harness() {
+async function harness(timers = {}) {
   const document = new Surface(), window = new Surface(), scroller = new Surface();
   document.getSelection = () => ({ removeAllRanges() {} });
   const region = { current: scroller }, row = new Surface("tr", scroller);
   const slots = [];
   let index = 0, drop = { state: "ACTIVE", before: 9, top: 10, left: 0, width: 200 };
   const calls = { start: [], track: [], over: [], end: [], propose: [], refresh: [] };
+  const previews = [];
   let movement = Object.fromEntries(Object.keys(calls).map(name => [name, (...args) => calls[name].push(args)]));
   let locate = (x, y, task) => ({ ...drop, x, y, task: task.id });
   const react = {
@@ -51,16 +60,20 @@ async function harness() {
   const source = ts.transpileModule(readFileSync(new URL("../src/features/projects/TaskList/useTaskPointerDrag.ts", import.meta.url), "utf8"), {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 },
   }).outputText;
-  const context = vm.createContext({ document, window, Element: Surface, setTimeout, clearTimeout });
+  const context = vm.createContext({ document, window, Element: Surface, setTimeout, clearTimeout, ...timers });
   const module = new vm.SourceTextModule(source, { context });
   await module.link(name => {
+    if (name === "./taskDragPreview") return new vm.SyntheticModule(["taskDragPreview"], function () { this.setExport("taskDragPreview", (row, origin) => {
+      const preview = { row, origin, moves: [], removed: 0 }; previews.push(preview);
+      return { move: (...point) => preview.moves.push(point), remove: () => preview.removed++ };
+    }); }, { context });
     assert.equal(name, "react");
     return new vm.SyntheticModule(Object.keys(react), function () { for (const [key, value] of Object.entries(react)) this.setExport(key, value); }, { context });
   });
   await module.evaluate();
   const task = { id: 4, parent_id: 2 };
   const render = () => { index = 0; return module.namespace.useTaskPointerDrag({ movement, locate, region }); };
-  const down = (target = row, props = {}) => render().onPointerDown({ target, currentTarget: row, pointerId: 1, pointerType: "mouse", isPrimary: true, button: 0, clientX: 10, clientY: 10, ...props }, task, props.enabled ?? true);
+  const down = (target = row, props = {}) => render().onPointerDown({ target, currentTarget: row, pointerId: 1, pointerType: "mouse", isPrimary: true, button: 0, clientX: 10, clientY: 10, ...props }, task, props.enabled ?? true, row);
   const dispatch = (type, props = {}, target = document) => {
     const event = new Event(type, { cancelable: true });
     Object.assign(event, { pointerId: 1, buttons: type === "pointerup" ? 0 : 1, clientX: 16, clientY: 10, ...props });
@@ -70,7 +83,8 @@ async function harness() {
     const event = { detail, prevented: false, stopped: false, preventDefault() { this.prevented = true; }, stopPropagation() { this.stopped = true; } };
     render().onClickCapture(event); return event;
   };
-  return { calls, row, document, window, scroller, task, render, down, dispatch, click,
+  return { calls, previews, row, document, window, scroller, task, render, down, dispatch, click,
+    nativeClick(props = {}) { return dispatch("click", { detail: 1, ...props }); },
     setDrop(value) { drop = value; }, setMovement(value) { movement = value; render(); }, setLocate(value) { locate = value; render(); },
     unmount() { for (const slot of slots) slot?.cleanup?.(); },
   };
@@ -95,21 +109,86 @@ test("a normal click remains a click and six pixels activates one confirmed move
   hook.unmount();
 });
 
-test("interactive fields, non-primary pointers and touch never start drag; the explicit title surface may drag", async () => {
+test("preview is created only at the threshold, follows the original grab point and is removed with pointer capture", async () => {
+  for (const finish of ['pointerup', 'pointercancel', 'lostpointercapture', 'unmount']) {
+    const hook = await harness();
+    hook.down(new Surface('button', hook.row));
+    hook.dispatch('pointermove', { clientX: 12 });
+    assert.equal(hook.previews.length, 0);
+    hook.dispatch('pointermove', { clientX: 18, clientY: 20 });
+    assert.equal(hook.previews.length, 1);
+    assert.equal(hook.previews[0].row, hook.row);
+    assert.deepEqual({ ...hook.previews[0].origin }, { x: 10, y: 10 });
+    assert.deepEqual(hook.previews[0].moves, [[18, 20]]);
+    assert.ok(hook.scroller.hasPointerCapture(1));
+    hook.dispatch('pointermove', { clientX: 200, clientY: 70 });
+    assert.deepEqual(hook.previews[0].moves.at(-1), [200, 70]);
+    if (finish === 'unmount') hook.unmount();
+    else { if (finish === 'lostpointercapture') hook.scroller.releasePointerCapture(1); hook.dispatch(finish, {}, finish === 'lostpointercapture' ? hook.scroller : hook.document); }
+    assert.equal(hook.previews[0].removed, 1);
+    assert.equal(hook.scroller.hasPointerCapture(1), false);
+    assert.equal(hook.calls.propose.length, finish === 'pointerup' ? 1 : 0);
+    hook.unmount();
+  }
+});
+
+test("row hit testing covers collapsed borders once, respects the native row owner and excludes portals and popovers", async () => {
+  const context = vm.createContext({ Element: Surface });
+  const source = ts.transpileModule(readFileSync(new URL('../src/features/projects/TaskList/taskDragSurface.ts', import.meta.url), 'utf8'), {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 },
+  }).outputText;
+  const module = new vm.SourceTextModule(source, { context });
+  await module.link(() => { throw Error('Unexpected dependency'); }); await module.evaluate();
+  const resolve = module.namespace.taskDragSurface;
+  const region = new Surface(), table = new Surface('table', region), body = new Surface('tbody', table);
+  const first = new Surface('tr', body, { dataset: { taskId: '1', dragEnabled: 'true' }, rect: { left: 10, right: 200, top: 10, bottom: 60 } });
+  const second = new Surface('tr', body, { dataset: { taskId: '2', dragEnabled: 'true' }, rect: { left: 10, right: 200, top: 60, bottom: 110 } });
+  const button = new Surface('button', second);
+  assert.equal(resolve(region, body, 10, 59.99), first);
+  assert.equal(resolve(region, table, 199.99, 60), second);
+  assert.equal(resolve(region, body, 200, 60), null);
+  assert.equal(resolve(region, button, 10, 59.99), second, 'Native hit testing owns a shared border');
+  second.dataset.dragEnabled = 'false';
+  assert.equal(resolve(region, button, 100, 75), null);
+  assert.equal(resolve(region, body, 100, 75), null);
+  assert.equal(resolve(region, new Surface('button'), 100, 25), null, 'Portal outside the row');
+  const popup = new Surface('div', first, { popover: true });
+  assert.equal(resolve(region, new Surface('button', popup), 100, 25), null);
+  first.hidden = true;
+  assert.equal(resolve(region, body, 100, 25), null);
+});
+
+test("buttons and property triggers distinguish ordinary clicks from threshold drags across the whole row", async () => {
   const hook = await harness();
-  for (const tag of ["button", "input", "textarea", "select", "a", "summary"]) {
+  for (const tag of ["button", "a", "summary", "span"]) {
+    const trigger = new Surface(tag, hook.row);
+    hook.down(new Surface("svg", trigger));
+    hook.dispatch("pointermove", { clientX: 14, clientY: 11 }); hook.dispatch("pointerup", { clientX: 14, clientY: 11 });
+    assert.equal(hook.nativeClick().defaultPrevented, false);
+    hook.down(new Surface("svg", trigger)); hook.dispatch("pointermove"); hook.dispatch("pointerup");
+    assert.equal(hook.nativeClick().defaultPrevented, true);
+  }
+  assert.equal(hook.calls.start.length, 4); assert.equal(hook.calls.propose.length, 4);
+  hook.down(); await new Promise(resolve => setTimeout(resolve, 30)); hook.dispatch("pointerup", { clientX: 10 });
+  assert.equal(hook.calls.start.length, 4);
+  assert.equal(hook.nativeClick().defaultPrevented, false);
+  hook.unmount();
+});
+
+test("editing fields, open popup content, non-primary pointers and touch keep their own interactions", async () => {
+  const hook = await harness();
+  for (const tag of ["input", "textarea", "select", "dialog"]) {
     hook.down(new Surface(tag, hook.row)); hook.dispatch("pointermove"); hook.dispatch("pointerup");
   }
-  for (const attributes of [{ popover: true }, { editable: true }]) {
-    hook.down(new Surface("span", hook.row, attributes)); hook.dispatch("pointermove"); hook.dispatch("pointerup");
+  for (const attributes of [{ popover: true }, { editable: true }, { role: "dialog" }, { role: "menu" }]) {
+    hook.down(new Surface("button", new Surface("span", hook.row, attributes))); hook.dispatch("pointermove"); hook.dispatch("pointerup");
   }
+  hook.down(new Surface("button")); hook.dispatch("pointermove"); hook.dispatch("pointerup");
   for (const props of [{ pointerType: "touch" }, { button: 2 }, { isPrimary: false }, { enabled: false }]) {
     hook.down(hook.row, props); hook.dispatch("pointermove"); hook.dispatch("pointerup");
   }
   assert.equal(hook.calls.start.length, 0);
-  const title = new Surface("button", hook.row, { dragSurface: true });
-  hook.down(new Surface("span", title)); hook.dispatch("pointermove"); hook.dispatch("pointerup");
-  assert.equal(hook.calls.start.length, 1); assert.equal(hook.calls.propose.length, 1);
+  assert.equal(hook.nativeClick().defaultPrevented, false);
   hook.unmount();
 });
 
@@ -121,8 +200,9 @@ test("Escape, pointer cancellation and blur cancel without writing or blocking t
     else hook.dispatch(kind, {}, kind === "blur" ? hook.window : hook.document);
     hook.dispatch("pointerup");
     assert.equal(hook.calls.propose.length, 0); assert.equal(hook.calls.end.length, 1);
-    assert.equal(hook.document.listenerCount + hook.window.listenerCount + hook.scroller.listenerCount, 0);
     assert.equal(hook.click(0).prevented, false);
+    assert.equal(hook.nativeClick().defaultPrevented, kind !== "blur");
+    assert.equal(hook.document.listenerCount + hook.window.listenerCount + hook.scroller.listenerCount, 0);
     hook.down(); hook.dispatch("pointerup"); assert.equal(hook.click(1).prevented, false);
     hook.unmount();
   }
@@ -139,6 +219,7 @@ test("stationary pointer scrolling and release recalculate position using curren
   assert.equal(hook.document.listenerCount, listeners);
   hook.dispatch("pointerup", { clientX: 40, clientY: 100 });
   assert.deepEqual(hook.calls.propose[0].slice(1), ["CLOSED", null]);
+  assert.equal(hook.nativeClick().defaultPrevented, true);
   assert.equal(hook.document.listenerCount, 0);
   hook.unmount();
 });
@@ -164,6 +245,66 @@ test("returning after a release outside the document cancels the gesture without
   hook.down(); hook.dispatch("pointermove");
   hook.dispatch("pointermove", { buttons: 0 }); hook.dispatch("pointerup");
   assert.equal(hook.calls.propose.length, 0); assert.equal(hook.calls.end.length, 1);
+  assert.equal(hook.nativeClick().defaultPrevented, true);
   assert.equal(hook.document.listenerCount + hook.window.listenerCount + hook.scroller.listenerCount, 0);
   hook.unmount();
+});
+
+test("residual click is blocked at document capture even outside the source row, without swallowing the next gesture", async () => {
+  const hook = await harness();
+  hook.down(new Surface("button", hook.row)); hook.dispatch("pointermove"); hook.dispatch("pointerup");
+  assert.equal(hook.nativeClick({ detail: 0 }).defaultPrevented, false);
+  assert.equal(hook.nativeClick().defaultPrevented, true);
+  assert.equal(hook.nativeClick().defaultPrevented, false);
+  hook.down(); hook.dispatch("pointermove"); hook.dispatch("keydown", { key: "Escape" });
+  hook.dispatch("pointerdown");
+  assert.equal(hook.nativeClick().defaultPrevented, false);
+  hook.unmount();
+});
+
+
+test("late cancellation callbacks from a finished gesture cannot end or detach the next gesture", async () => {
+  const hook = await harness();
+  hook.down(); hook.dispatch("pointermove");
+  const lateKeydown = [...hook.document.listeners.get("keydown")][0];
+  const lateCancel = [...hook.scroller.listeners.get("lostpointercapture")][0];
+  hook.dispatch("keydown", { key: "Escape" }); hook.dispatch("pointerup");
+  hook.down();
+  hook.dispatch("lostpointercapture", {}, hook.scroller);
+  hook.dispatch("pointermove");
+  assert.equal(hook.calls.start.length, 2);
+  lateKeydown({ key: "Escape", preventDefault() {}, stopPropagation() {} });
+  lateCancel({ type: "lostpointercapture", pointerId: 1, target: hook.scroller });
+  assert.equal(hook.calls.end.length, 1);
+  assert.equal(hook.previews[1].removed, 0);
+  hook.dispatch("lostpointercapture", {}, hook.scroller);
+  assert.equal(hook.previews[1].removed, 0, "A stale loss cannot cancel currently owned capture");
+  hook.dispatch("pointerup"); assert.equal(hook.calls.propose.length, 1);
+  assert.equal(hook.nativeClick().defaultPrevented, true);
+  hook.unmount();
+});
+
+test("many cancellations and releases restart immediately without accumulating listeners or swallowing clicks", async () => {
+  const hook = await harness();
+  for (let n = 0; n < 20; n++) {
+    hook.down(); hook.dispatch("pointermove"); hook.dispatch("keydown", { key: "Escape" }); hook.dispatch("pointerup");
+    hook.down(new Surface("button", hook.row)); hook.dispatch("pointermove"); hook.dispatch("pointerup");
+    assert.equal(hook.nativeClick().defaultPrevented, true);
+    assert.equal(hook.document.listenerCount + hook.window.listenerCount + hook.scroller.listenerCount, 0);
+  }
+  hook.down(); hook.dispatch("pointerup", { clientX: 10 }); assert.equal(hook.nativeClick().defaultPrevented, false);
+  assert.equal(hook.calls.start.length, 40); hook.unmount();
+});
+
+
+test("a queued click-guard cleanup belongs only to its ended gesture and cannot leak the next guard", async () => {
+  const timers = [];
+  const hook = await harness({ setTimeout(callback) { timers.push(callback); return timers.length; }, clearTimeout() {} });
+  hook.down(); hook.dispatch("pointermove"); hook.dispatch("pointerup");
+  const late = timers[0];
+  hook.down(); hook.dispatch("pointermove");
+  late();
+  assert.equal(hook.click(1).prevented, true);
+  hook.unmount();
+  assert.equal(hook.document.listenerCount + hook.window.listenerCount + hook.scroller.listenerCount, 0);
 });

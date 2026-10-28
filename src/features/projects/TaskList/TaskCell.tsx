@@ -26,7 +26,6 @@ import PriorityOptions from "../TaskForm/PriorityOptions";
 import { priorityTones } from "../TaskForm/priorityTones";
 import { isBeforeTaskCreation, taskCreationDay } from "../TaskForm/taskDates";
 import TaskIcon from "../TaskForm/TaskIcon";
-import TaskMoveControl from "./TaskMoveControl";
 import TaskDateValue from "../TaskForm/TaskDateValue";
 import StatusIcon from "../../../shared/icons/StatusIcon";
 import TaskProperty from "../TaskForm/TaskProperty";
@@ -74,7 +73,6 @@ interface TaskCellProps extends TaskChanges {
   project: Project;
   catalogs: ProjectCatalogs;
   parent?: Task;
-  movement?: { tasks: Task[]; disabled: boolean; onMove: (task: Task, state: string, before: number | null) => void };
 }
 const labels: Record<Field, string> = {
   state_code: "Estado",
@@ -188,7 +186,6 @@ function Editor({
   parent,
   onPatch,
   onState,
-  movement,
   close,
 }: TaskCellProps & { close: () => void }) {
   const [value, setValue] = useState(String(task[field] ?? ""));
@@ -358,7 +355,6 @@ function Editor({
           />
         )}
       </fieldset>
-      {field === "state_code" && movement && <TaskMoveControl key={`${task.id}:${value}`} task={task} state={value} tasks={movement.tasks} disabled={busy || movement.disabled} onMove={movement.onMove} onClose={close} />}
       {error && (
         <p
           ref={errorMessage}

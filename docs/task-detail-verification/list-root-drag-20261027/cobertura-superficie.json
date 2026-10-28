@@ -1,0 +1,548 @@
+[
+  {
+    "name": "borde",
+    "x": 312.01,
+    "y": 266.51,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 312.25,
+    "y": 266.51,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 313,
+    "y": 266.51,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565,
+    "y": 266.51,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565.75,
+    "y": 266.51,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565.99,
+    "y": 266.51,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 312.01,
+    "y": 266.75,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 312.25,
+    "y": 266.75,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 313,
+    "y": 266.75,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565,
+    "y": 266.75,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565.75,
+    "y": 266.75,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565.99,
+    "y": 266.75,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 312.01,
+    "y": 267.25,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 312.25,
+    "y": 267.25,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 313,
+    "y": 267.25,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565,
+    "y": 267.25,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565.75,
+    "y": 267.25,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565.99,
+    "y": 267.25,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 312.01,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 312.25,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 313,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565.75,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 1565.99,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "borde",
+    "x": 312.01,
+    "y": 316.75,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 312.25,
+    "y": 316.75,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 313,
+    "y": 316.75,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 1565,
+    "y": 316.75,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 1565.75,
+    "y": 316.75,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 1565.99,
+    "y": 316.75,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 312.01,
+    "y": 317.25,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 312.25,
+    "y": 317.25,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 313,
+    "y": 317.25,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 1565,
+    "y": 317.25,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 1565.75,
+    "y": 317.25,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 1565.99,
+    "y": 317.25,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 312.01,
+    "y": 317.49,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 312.25,
+    "y": 317.49,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 313,
+    "y": 317.49,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 1565,
+    "y": 317.49,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 1565.75,
+    "y": 317.49,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "borde",
+    "x": 1565.99,
+    "y": 317.49,
+    "owner": "2",
+    "actual": "2"
+  },
+  {
+    "name": "celda",
+    "x": 312.01,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 312.25,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 313,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 800.0625,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 800.8125,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 801.0525,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 801.0725,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 801.3125,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 802.0625,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 963.078125,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 963.828125,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 964.068125,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 964.088125,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 964.328125,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 965.078125,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1126.09375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1126.84375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1127.08375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1127.10375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1127.34375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1128.09375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1289.109375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1289.859375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1290.099375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1290.119375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1290.359375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1291.109375,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1414.5,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1415.25,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1415.49,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1415.51,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1415.75,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1416.5,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1565,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1565.75,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  },
+  {
+    "name": "celda",
+    "x": 1565.99,
+    "y": 292,
+    "owner": "1",
+    "actual": "1"
+  }
+]

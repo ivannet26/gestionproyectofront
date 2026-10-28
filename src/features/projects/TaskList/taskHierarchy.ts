@@ -4,7 +4,20 @@ export function taskHierarchy(tasks: Task[], search = "") {
   const byId = new Map(tasks.map((task) => [task.id, task]));
   const children = new Map<number, Task[]>();
   const roots: Task[] = [];
+  const rootById = new Map<number, Task>();
   for (const task of byId.values()) {
+    if (!rootById.has(task.id)) {
+      const path: Task[] = [], seen = new Set<number>();
+      let anchor = task;
+      while (!rootById.has(anchor.id) && !seen.has(anchor.id)) {
+        path.push(anchor); seen.add(anchor.id);
+        const parent = anchor.parent_id === null ? undefined : byId.get(anchor.parent_id);
+        if (!parent) break;
+        anchor = parent;
+      }
+      const root = rootById.get(anchor.id) ?? anchor;
+      for (const item of path) rootById.set(item.id, root);
+    }
     if (task.parent_id !== null && byId.has(task.parent_id)) {
       const branch = children.get(task.parent_id) ?? [];
       branch.push(task);
@@ -28,7 +41,7 @@ export function taskHierarchy(tasks: Task[], search = "") {
     return (children.get(id) ?? []).filter((task) => allowed.has(task.id))
       .reduce((count, task) => count + 1 + descendants(task.id, visited, allowed), 0);
   }
-  return { roots: roots.filter((task) => visible.has(task.id)), children, visible, descendants };
+  return { roots: roots.filter((task) => visible.has(task.id)), rootById, children, visible, descendants };
 }
 
 export function formatTaskDate(value: string | null | undefined): string {

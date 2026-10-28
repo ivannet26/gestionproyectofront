@@ -69,7 +69,7 @@ test("global action handles open, closed and mixed groups without changing subtr
     "../../../shared/icons/RelationIcon": { default: Icon },
     "../TaskForm/TaskIcon": { default: Icon },
     "./TaskCell": { default: Marker, StateIcon: Icon, StateBadge: Icon },
-    "./taskStatePresentation": await load("../src/features/projects/TaskList/taskStatePresentation.ts"),
+    "./taskDragSurface": await load("../src/features/projects/TaskList/taskDragSurface.ts"),
     "./QuickTaskRow": { default: Marker },
     "./stateInk": { stateInk: () => "#000000" },
     "./TaskGroupingControl": { default: Marker },
