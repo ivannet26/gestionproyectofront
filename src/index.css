@@ -1,8 +1,45 @@
+@font-face {
+  font-display: swap;
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400;
+  src: url("/fonts/inter-v20-latin-regular.woff2") format("woff2");
+}
+@font-face {
+  font-display: swap;
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 500;
+  src: url("/fonts/inter-v20-latin-500.woff2") format("woff2");
+}
+@font-face {
+  font-display: swap;
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  src: url("/fonts/inter-v20-latin-600.woff2") format("woff2");
+}
+
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  html.dark {
+    background-color: #171717;
+    color: #e5e5e5;
+  }
+
   body {
-    font-family: "Inter Tight";
+    font-family: "Inter";
   }
 
   h1,
@@ -14,16 +51,11 @@
 
 @layer components {
   .bg-modal {
-    @apply fixed inset-0 z-50 grid place-items-center bg-black/40;
+    @apply fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm;
   }
 }
 
 @layer base {
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: #d4d4d4 transparent;
-  }
-
   *::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -31,14 +63,5 @@
 
   *::-webkit-scrollbar-track {
     background: transparent;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    background-color: #d4d4d4;
-    border-radius: 9999px;
-  }
-
-  *::-webkit-scrollbar-thumb:hover {
-    background-color: #a3a3a3;
   }
 }

@@ -1,23 +1,24 @@
 import { useEffect, useState } from "react";
+import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
 import { Link } from "react-router";
 import { projectPath } from "../../../routes";
-import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
 import PlusIcon from "../../../shared/icons/PlusIcon";
 import ProjectsIcon from "../../../shared/icons/ProjectsIcon";
 import type { ProjectNavigationProps } from "../types";
 import { projectCreateActionClassName } from "./navigationClasses";
+
 const styles = {
   projects: "m-0 p-0 list-none flex flex-col gap-2",
   children:
-    "m-0 ml-7 mt-1 list-none p-0 hidden:hidden [&_a]:block [&_a]:rounded-lg [&_a]:px-3 [&_a]:py-1.5 [&_a]:text-xs [&_a]:text-neutral-600 [&_a]:no-underline [&_a]:cursor-pointer [&_a:hover]:bg-neutral-100 [&_a[aria-current=page]]:bg-neutral-100 [&_a[aria-current=page]]:text-neutral-800 [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-offset-[-2px] [&_a:focus-visible]:outline-neutral-700",
+    "m-0 ml-7 mt-1 list-none p-0 hidden:hidden [&_a]:block [&_a]:rounded-lg [&_a]:px-3 [&_a]:py-1.5 [&_a]:text-xs [&_a]:text-neutral-600 dark:[&_a]:text-neutral-400 [&_a]:no-underline [&_a]:cursor-pointer [&_a:hover]:bg-neutral-100 dark:[&_a:hover]:bg-neutral-800 [&_a[aria-current=page]]:bg-neutral-100 dark:[&_a[aria-current=page]]:bg-neutral-800 [&_a[aria-current=page]]:text-neutral-800 dark:[&_a[aria-current=page]]:text-neutral-100 [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-offset-[-2px] [&_a:focus-visible]:outline-neutral-700",
   heading:
-    "group/project relative flex min-w-0 items-center rounded-lg hover:bg-neutral-100",
+    "group/project relative flex min-w-0 items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800",
   project:
-    "flex min-w-0 flex-1 items-center gap-2 rounded-lg border-0 bg-transparent px-3 py-1.5 text-left text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700",
+    "flex min-w-0 flex-1 items-center gap-2 rounded-lg border-0 bg-transparent px-3 py-1.5 text-xs no-underline cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700",
   message:
-    "mx-2 mb-2 mt-1 text-xs leading-relaxed text-neutral-600 [overflow-wrap:anywhere]",
+    "mx-2 mb-2 mt-1 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400 [overflow-wrap:anywhere]",
   retry:
-    "rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 mx-2 mb-3",
+    "rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-xs text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 mx-2 mb-3",
 };
 
 export default function ProjectNavigation({
@@ -46,9 +47,7 @@ export default function ProjectNavigation({
           [activeProjectId]: true,
         }));
     });
-    return () => {
-      current = false;
-    };
+    return () => { current = false; };
   }, [activeProjectId, currentPath]);
   return (
     <div aria-busy={loading}>
@@ -92,7 +91,7 @@ export default function ProjectNavigation({
             <li key={project.id}>
               <div className={styles.heading}>
                 <button
-                  className={`${styles.project} ${active ? "text-neutral-800" : "text-neutral-600"}`}
+                  className={`${styles.project} ${active ? "text-neutral-800 dark:text-neutral-100" : "text-neutral-600 dark:text-neutral-400"}`}
                   type="button"
                   aria-expanded={expanded}
                   aria-controls={childrenId}

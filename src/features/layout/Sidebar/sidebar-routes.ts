@@ -6,6 +6,7 @@ import KeyIcon from "../../../shared/icons/KeyIcon";
 import TeamsIcon from "../../../shared/icons/TeamsIcon";
 import type { IconProps } from "../../../shared/icons/types";
 import BriefcaseIcon from "../../../shared/icons/BriefcaseIcon";
+import TablerIcon from "../../../shared/icons/TablerIcon";
 
 export interface NavigationEntry {
   label: string;
@@ -16,6 +17,12 @@ export interface NavigationEntry {
 
 export const navigation: NavigationEntry[] = [
   { label: "Inicio", path: "/", icon: HomeIcon, requiresAdmin: false },
+  {
+    label: "Publicaciones",
+    path: "/publicaciones",
+    icon: TablerIcon,
+    requiresAdmin: false,
+  },
   {
     label: "Trabajadores",
     path: "/trabajadores",

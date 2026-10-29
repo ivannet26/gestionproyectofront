@@ -33,7 +33,8 @@ async function revealArea(client,container,name){
   await container.locator('button[aria-label*=" área "]').first().waitFor();
   for(let attempt=0;attempt<6;attempt++){
     const button=areaButton(container,name);if(await button.count()){await button.scrollIntoViewIfNeeded();return button;}
-    const end=container.getByText("Más áreas al desplazarte…",{exact:true});await end.waitFor();
+    const end=container.getByText("Más áreas al desplazarte…",{exact:true});await button.or(end).first().waitFor();
+    if(await button.count()){await button.scrollIntoViewIfNeeded();return button;}
     const count=await container.locator('button[aria-label*=" área "]').count();
     await end.scrollIntoViewIfNeeded();
     await container.locator('button[aria-label*=" área "]').nth(count).waitFor();

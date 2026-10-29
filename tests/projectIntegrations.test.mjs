@@ -25,10 +25,10 @@ async function load(path, dependencies = {}, globals) {
 }
 
 const labels = await load("../src/features/projects/labelSelection.ts");
-const avatar = await load("../src/shared/avatar.ts");
+const avatar = await load("../src/shared/avatarInitials.ts");
 const labelList = await load("../src/features/projects/LabelList/LabelList.tsx");
 const { default: LabelEditor } = await load("../src/features/projects/LabelEditor/LabelEditor.tsx", { "../LabelList/LabelList": labelList });
-const { default: AssigneeSelector } = await load("../src/features/projects/ResponsiblePicker/AssigneeSelector.tsx", { "../../../shared/avatar": avatar });
+const { default: AssigneeSelector } = await load("../src/features/projects/ResponsiblePicker/AssigneeSelector.tsx", { "../../../shared/avatarInitials": avatar, "./useAssignmentTeams": { useAssignmentTeams: () => ({ teams: [], error: "", loading: false, retry() {} }) } });
 const assignees = await load("../src/features/projects/taskAssignees.ts");
 const grouping = await load("../src/features/projects/TaskList/taskGrouping.ts", { "../taskAssignees": assignees });
 const dates = await load("../src/features/projects/TaskForm/taskDates.ts", { "../TaskList/taskGrouping": grouping });

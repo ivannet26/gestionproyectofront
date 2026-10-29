@@ -1,27 +1,41 @@
-import { useParams } from "react-router";
+import { useLocation, useParams } from "react-router";
+import { getProjectCatalogs } from "../../../core/services/projectService";
+import { useRemoteResource } from "../../../hooks/useRemoteResource";
 import NotAvailable from "../../layout/NotAvailable/NotAvailable";
 import ProjectWorkspace from "../ProjectWorkspace/ProjectWorkspace";
 import type { ProjectCatalogs, TaskCreationRequest } from "../types";
 
 export interface ProjectRouteProps {
-  catalogs: ProjectCatalogs;
-  catalogLoading: boolean;
-  catalogError: string;
-  onRetryCatalogs: () => void;
+  catalogs?: ProjectCatalogs;
+  catalogLoading?: boolean;
+  catalogError?: string;
+  onRetryCatalogs?: () => void;
   taskCreationRequest?: TaskCreationRequest | null;
   onTaskCreationHandled?: (sequence: number) => void;
 }
 
+const defaultCatalogs: ProjectCatalogs = {
+  areas: [],
+  states: [],
+  priorities: [],
+};
+
 export default function ProjectRoute({
-  catalogs,
-  catalogLoading,
-  catalogError,
+  catalogs: propCatalogs,
+  catalogLoading: propCatalogLoading = false,
+  catalogError: propCatalogError = "",
   onRetryCatalogs,
   taskCreationRequest,
   onTaskCreationHandled,
 }: ProjectRouteProps) {
   const { projectId } = useParams();
   const id = Number(projectId);
+  const location = useLocation();
+  const routedRequest = (
+    location.state as { taskCreationRequest?: TaskCreationRequest } | null
+  )?.taskCreationRequest;
+  const creationRequest = taskCreationRequest ?? routedRequest;
+  const resource = useRemoteResource(getProjectCatalogs, "project-catalogs", propCatalogs === undefined);
 
   if (
     !projectId ||
@@ -36,14 +50,12 @@ export default function ProjectRoute({
     <ProjectWorkspace
       key={projectId}
       projectId={id}
-      catalogs={catalogs}
-      catalogLoading={catalogLoading}
-      catalogError={catalogError}
-      onRetryCatalogs={onRetryCatalogs}
+      catalogs={propCatalogs ?? resource.value ?? defaultCatalogs}
+      catalogLoading={propCatalogs ? propCatalogLoading : resource.pending}
+      catalogError={propCatalogs ? propCatalogError : resource.error}
+      onRetryCatalogs={onRetryCatalogs ?? resource.refetch}
       taskCreationSequence={
-        taskCreationRequest?.projectId === id
-          ? taskCreationRequest.sequence
-          : undefined
+        creationRequest?.projectId === id ? creationRequest.sequence : undefined
       }
       onTaskCreationHandled={onTaskCreationHandled}
     />

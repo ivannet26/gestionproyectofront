@@ -43,9 +43,11 @@ async function clients(adapter, fetchAuth, base = "https://isolated.invalid/gm//
     if (reply.status >= 400) throw new axios.AxiosError("Synthetic HTTP failure", "ERR_BAD_RESPONSE", config, null, reply);
     return reply;
   };
-  const services = await load("../src/features/projects/services.ts", { "../../core/api/httpClient": { httpClient } });
+  const projects = await load("../src/core/services/projectService.ts", { "../api/httpClient": { httpClient } });
+  const services = await load("../src/features/projects/services.ts", { "../../core/api/httpClient": { httpClient }, "../../core/services/projectService": projects });
+  const publications = await load("../src/core/services/publicationService.ts", { axios: { default: axios }, "../api/httpClient": { httpClient }, "../../features/auth/api": api });
   const accounts = await load("../src/core/services/accountService.ts", { "../api/httpClient": { httpClient } });
-  return { api, httpClient, services, accounts, seen, authCalls, events, get refreshes() { return refreshes; }, get expired() { return expired; },
+  return { api, httpClient, services, accounts, publications, seen, authCalls, events, get refreshes() { return refreshes; }, get expired() { return expired; },
     login: () => api.login("synthetic@example.invalid", "synthetic"),
   };
 }
@@ -285,4 +287,22 @@ test("project navigation preserves shared default GETs and carries cancellable s
   assert.equal(client.seen[0].url,"projects/?project_id=7&associated=true");
   const abort=new AbortController();await client.services.getProjectAreas({associated:false},"QA cursor",abort.signal);
   const sent=client.seen[1];assert.equal(sent.url,"projects/areas/?associated=false&cursor=QA+cursor");assert.equal(sent.config.signal,abort.signal);assert.equal(sent.authorization,"Bearer initial");assert.equal(sent.config.withCredentials,true);
+});
+
+
+test("integrated publication services preserve ApiError fields and never replay validation, permission or conflict mutations", async () => {
+  let status = 400;
+  const client = await clients(async () => ({ status, data: { vacancies: ["Vacantes no válidas"] } }));
+  await client.login();
+  for (status of [400, 403, 409]) {
+    await assert.rejects(client.publications.updatePublication(9, { vacancies: 0 }), failure => {
+      assert.ok(failure instanceof client.api.ApiError);
+      assert.equal(failure.status, status);
+      assert.equal(JSON.stringify(client.publications.publicationFieldErrors(failure, { vacancies: "vacancies-input" })), JSON.stringify({ "vacancies-input": "Vacantes no válidas" }));
+      assert.equal(client.publications.publicationErrorText(failure), "Vacantes no válidas");
+      return true;
+    });
+  }
+  assert.equal(client.seen.length, 3);
+  assert.equal(client.refreshes, 0);
 });

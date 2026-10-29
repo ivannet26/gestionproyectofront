@@ -10,13 +10,14 @@ async function load(path, dependencies = {}) {
   const source = ts.transpileModule(readFileSync(new URL(path, import.meta.url), "utf8"), {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
-  const module = new vm.SourceTextModule(source);
+  const context = vm.createContext({ window: new EventTarget(), Promise });
+  const module = new vm.SourceTextModule(source, { context });
   await module.link(name => {
     const exports = { react: React, "react/jsx-runtime": jsxRuntime, ...dependencies }[name];
     assert.ok(exports, `Unexpected import ${name}`);
     return new vm.SyntheticModule(Object.keys(exports), function () {
       for (const [key, value] of Object.entries(exports)) this.setExport(key, value);
-    });
+    }, { context });
   });
   await module.evaluate();
   return module.namespace;
@@ -101,13 +102,16 @@ async function shellHarness() {
   const Empty = () => null, ProjectRoute = () => null, Sidebar = () => null;
   let pathname = "/proyectos/42", active = 0, bootReleased = false;
   const loading = { hideLoading() { bootReleased = true; }, startLoading() { active++; let open = true; return () => { if (open) { open = false; active--; } }; } };
+  const resource = await load("../src/hooks/useRemoteResource.ts", {
+    react: harness.react, "../features/auth/api": { errorText: error => error.message, sessionVersion: () => 1 },
+  });
   const { default: AppShell } = await load("../src/features/layout/AppShell/AppShell.tsx", {
     react: harness.react,
     "react-router": { Route: Empty, Routes: Empty, useLocation: () => ({ pathname }), useNavigate: () => () => {} },
-    "../../../routes": { appRoutes: [{ path: "/proyectos/:projectId", Component: ProjectRoute }], projectPath: id => `/proyectos/${id}` },
+    "../../../routes": { appRoutes: [{ path: "/proyectos/:projectId", Component: ProjectRoute }], DashboardPage: () => null, ProjectList: () => null, ProjectRoute, PublicationsPage: () => null, projectPath: id => `/proyectos/${id}` },
     "../../auth/api": { errorText: error => error.message },
     "../../../hooks/useLoading": { useLoading: () => loading },
-    "../../../hooks/useRemoteResource": { useRemoteResource: () => ({ value: null }) },
+    "../../../hooks/useRemoteResource": resource,
     "../../projects/projectDirectoryEvents": { projectDirectoryChanged() {} },
     "../../projects/useProjectDirectory": { useProjectDirectory: (filters, enabled = true) => {
       const [data, setData] = harness.react.useState([]);
@@ -140,6 +144,7 @@ async function shellHarness() {
       getProjectCatalogs: () => { const item = deferred(); catalogs.push(item); return item.promise; },
     },
     "../NotAvailable/NotAvailable": { default: Empty }, "../Sidebar/Sidebar": { default: Sidebar },
+    "../../publications/PublicationsPage": { default: Empty },
   });
   const user = { role: "ADMINISTRADOR", permissions: { manage_accounts: true } };
   const tree = () => harness.render(() => AppShell({ user, onLogout() {}, logoutError: "" }));
@@ -149,7 +154,7 @@ async function shellHarness() {
 
 test("catalog requests stay independent of lazy project navigation and retain errors and retry", async () => {
   const shell = await shellHarness();
-  assert.equal(shell.route().catalogLoading, true);
+  assert.equal(shell.route().catalogLoading, true); await flush();
   assert.equal(shell.projects.length, 0); assert.equal(shell.catalogs.length, 1);
   assert.equal(shell.active, 0);
   assert.equal(shell.bootReleased, true);
@@ -160,7 +165,7 @@ test("catalog requests stay independent of lazy project navigation and retain er
   assert.equal(failed.catalogError, "Catálogos no disponibles");
   assert.equal(failed.catalogLoading, false);
   assert.equal(shell.active, 0);
-  failed.onRetryCatalogs();
+  failed.onRetryCatalogs(); await flush();
   assert.equal(shell.route().catalogLoading, true);
   assert.equal(shell.projects.length, 0); assert.equal(shell.catalogs.length, 2);
   const confirmed = { areas: [{ id: 1 }], states: [{ code: "OPEN" }], priorities: [] };
@@ -175,11 +180,11 @@ test("catalog requests stay independent of lazy project navigation and retain er
 
 test("late catalog responses from a departed route are discarded and a returning route can retry", async () => {
   const shell = await shellHarness();
-  shell.route();
+  shell.route(); await flush();
   shell.navigate("/inicio");
   shell.catalogs[0].resolve({ areas: [{ id: 99 }], states: [], priorities: [] });
   await flush();
-  shell.navigate("/proyectos/42");
+  shell.navigate("/proyectos/42"); await flush();
   assert.equal(shell.catalogs.length, 2);
   assert.equal(shell.route().catalogs.areas.length, 0);
   assert.equal(shell.route().catalogLoading, true);
@@ -191,9 +196,15 @@ test("late catalog responses from a departed route are discarded and a returning
 
 test("project route forwards catalog loading, errors and retry without disguising failure as an empty catalog", async () => {
   const Workspace = () => null, Missing = () => null;
-  let projectId = "42";
+  let projectId = "42", locationState = null;
   const { default: ProjectRoute } = await load("../src/features/projects/ProjectRoute/ProjectRoute.tsx", {
-    "react-router": { useParams: () => ({ projectId }) },
+    "react-router": {
+      useParams: () => ({ projectId }),
+      useLocation: () => ({ state: locationState }),
+    },
+    "../../../hooks/useRemoteResource": { useRemoteResource: () => ({ value: null }) },
+    "../../../hooks/useToast": { useToast: () => ({ addToast() {} }) },
+    "../../../core/services/projectService": { getProjectCatalogs: async () => ({ areas: [], states: [], priorities: [] }) },
     "../../layout/NotAvailable/NotAvailable": { default: Missing },
     "../ProjectWorkspace/ProjectWorkspace": { default: Workspace },
   });
@@ -202,6 +213,9 @@ test("project route forwards catalog loading, errors and retry without disguisin
   assert.equal(result.type, Workspace); assert.equal(result.props.projectId, 42);
   assert.equal(result.props.catalogLoading, false); assert.equal(result.props.catalogError, "Sin conexión");
   assert.equal(result.props.onRetryCatalogs, props.onRetryCatalogs);
+  assert.equal(result.props.taskCreationSequence, undefined);
+  locationState = { taskCreationRequest: { projectId: 42, sequence: 7 } };
+  assert.equal(ProjectRoute(props).props.taskCreationSequence, 7);
   projectId = "invalid";
   assert.equal(ProjectRoute(props).type, Missing);
 });
@@ -209,7 +223,7 @@ test("project route forwards catalog loading, errors and retry without disguisin
 
 test("optional directory failure cannot block login or add sidebar retry controls", async () => {
   const shell = await shellHarness();
-  shell.route(); assert.equal(shell.bootReleased, true); assert.equal(shell.projects.length, 0);
+  shell.route(); await flush(); assert.equal(shell.bootReleased, true); assert.equal(shell.projects.length, 0);
   shell.navigate("/proyectos"); assert.equal(shell.projects.length, 1);
   shell.projects[0].reject(Error("Listado no disponible")); await flush();
   assert.equal(shell.bootReleased, true); assert.equal("onRetryProjects" in shell.sidebar(), false);

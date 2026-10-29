@@ -1,6 +1,6 @@
 import type { IconProps } from "./types";
 
-function XIcon({ className, fill = true }: IconProps) {
+function XIcon({ className, fill = false }: IconProps) {
   if (fill) {
     return (
       <svg

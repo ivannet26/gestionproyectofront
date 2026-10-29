@@ -59,8 +59,8 @@ export default function TaskOptionalProperties({
       {canAssign ? (
         <ResponsiblePicker
           compact={compact}
+          projectId={project.id}
           participants={project.participants}
-          teams={project.assignment_teams}
           value={responsible}
           error={errors["task-responsible"]}
           onChange={onResponsible}

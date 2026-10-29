@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useParams } from "react-router";
 import NotAvailable from "../layout/NotAvailable/NotAvailable";
 import EmptyState from "../../shared/EmptyState/EmptyState";
-import { avatarFor } from "../../shared/avatar";
+import { avatarFor } from "../../shared/avatarInitials";
 import ActivityIcon from "../../shared/icons/ActivityIcon";
-import ChevronDownIcon from "../../shared/icons/ChevronDownIcon";
 import ClockIcon from "../../shared/icons/ClockIcon";
 import DotsIcon from "../../shared/icons/DotsIcon";
 import PlusIcon from "../../shared/icons/PlusIcon";
+import Button from "../../shared/Button/Button";
+import Input from "../../shared/Input/Input";
+import Select from "../../shared/Select/Select";
 import SearchIcon from "../../shared/icons/SearchIcon";
 import TrashIcon from "../../shared/icons/TrashIcon";
 import UserIcon from "../../shared/icons/UserIcon";
@@ -48,67 +50,47 @@ function TeamDetail({ teamId, canManage }: { teamId: number; canManage: boolean 
   };
 
   return (
-    <main className="min-h-full text-neutral-800">
+    <main className="min-h-full text-neutral-800 dark:text-neutral-100">
       <header className="mb-8">
         <div className="flex items-center gap-2.5">
-          <h1 className="text-lg font-medium text-neutral-800">{team.name}</h1>
+          <h1 className="text-lg font-medium text-neutral-800 dark:text-neutral-100">{team.name}</h1>
           <span
             className={`text-xs font-medium ${team.active ? "text-green-500" : "text-red-600"}`}
           >
             {team.active ? "Activo" : "Inactivo"}
           </span>
         </div>
-        <p className="mt-0.5 text-sm text-neutral-600">
+        <p className="mt-0.5 text-sm text-neutral-600 dark:text-neutral-400">
           {team.area_name} · {people.ready ? `${members.length} ${members.length === 1 ? "integrante" : "integrantes"}` : "Integrantes pendientes"}
         </p>
       </header>
 
       <div className="flex flex-wrap items-center gap-2 mb-6">
-        <h2 className="mr-auto text-sm font-medium text-neutral-800">
+        <h2 className="mr-auto text-sm font-medium text-neutral-800 dark:text-neutral-100">
           Integrantes{" "}
-          <span className="font-normal text-neutral-600">
+          <span className="font-normal text-neutral-600 dark:text-neutral-400">
             ({visible.length})
           </span>
         </h2>
         <div className="relative flex-1 min-w-48 max-w-sm">
-          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600" />
-          <input
-            type="search"
-            value={search}
-            placeholder="Buscar por nombre"
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 pl-8 pr-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none"
-          />
+          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600 dark:text-neutral-400" />
+          <Input type="search" value={search} placeholder="Buscar por nombre" onChange={(e) => setSearch(e.target.value)} className="!pl-8" />
         </div>
-        <div className="relative">
-          <select
-            aria-label="Filtrar integrantes por estado"
-            disabled={removing}
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="bg-white border border-neutral-200 text-neutral-800 pl-3 pr-8 py-1.5 text-xs rounded-lg appearance-none focus:border-neutral-400 focus:outline-none cursor-pointer"
-          >
-            <option value="">Todos</option>
-            <option value="activo">Activos</option>
-            <option value="inactivo">Inactivos</option>
-          </select>
-          <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600" />
-        </div>
-        {canManage && <button
-          type="button"
-          disabled={people.pending || Boolean(people.error)}
-          onClick={() => setAdding(true)}
-          className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer inline-flex items-center gap-1.5"
-        >
+        <Select aria-label="Filtrar integrantes por estado" disabled={removing} value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="">Todos</option>
+          <option value="activo">Activos</option>
+          <option value="inactivo">Inactivos</option>
+        </Select>
+        {canManage && <Button disabled={people.pending || Boolean(people.error)} type="button" onClick={() => setAdding(true)} className="inline-flex items-center gap-1.5">
           <PlusIcon className="size-4" />
           Añadir integrante
-        </button>}
+        </Button>}
       </div>
 
       <ResourceStatus label="equipo" {...detail} />
       <ResourceStatus label="integrantes" {...people} />
       {mutationError && <p role="alert" className="text-xs text-red-700">{mutationError}</p>}
-      <section aria-busy={people.pending} className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
+      <section aria-busy={people.pending} className="border border-neutral-200 dark:border-neutral-800 overflow-hidden rounded-xl">
         {people.ready && !people.pending && !people.error && visible.length === 0 ? (
           <EmptyState
             iconName="teams"
@@ -120,8 +102,8 @@ function TeamDetail({ teamId, canManage }: { teamId: number; canManage: boolean 
           />
         ) : (
           <div className="w-full overflow-x-auto">
-            <table className="w-full border-collapse text-xs text-neutral-600 text-left">
-              <thead className="border-b border-neutral-200 font-medium text-neutral-700">
+            <table className="w-full border-collapse text-xs text-neutral-600 dark:text-neutral-400 text-left">
+              <thead className="border-b border-neutral-200 dark:border-neutral-800 font-medium text-neutral-700 dark:text-neutral-300">
                 <tr>
                   <th className="p-3">
                     <span className="inline-flex items-center gap-1.5">
@@ -155,7 +137,7 @@ function TeamDetail({ teamId, canManage }: { teamId: number; canManage: boolean 
                   return (
                     <tr
                       key={member.id}
-                      className="border-b border-neutral-200 last:border-b-0 hover:bg-neutral-100"
+                      className="border-b border-neutral-200 dark:border-neutral-800 last:border-b-0 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                     >
                       <td className="px-3 py-2">
                         <span className="flex items-center gap-2 min-w-0">
@@ -165,7 +147,7 @@ function TeamDetail({ teamId, canManage }: { teamId: number; canManage: boolean 
                           >
                             {avatarFor(member.worker_name)}
                           </span>
-                          <span className="min-w-0 truncate text-neutral-800">
+                          <span className="min-w-0 truncate text-neutral-800 dark:text-neutral-100">
                             {member.worker_name}
                           </span>
                         </span>
@@ -182,7 +164,7 @@ function TeamDetail({ teamId, canManage }: { teamId: number; canManage: boolean 
                           disabled={removing || people.pending || Boolean(people.error)}
                           onClick={() => void handleRemove(member.id)}
                           aria-label={`Quitar a ${member.worker_name}`}
-                          className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-lg cursor-pointer inline-flex items-center"
+                          className="p-1.5 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 hover:text-neutral-800 dark:hover:text-neutral-100 rounded-lg cursor-pointer inline-flex items-center"
                         >
                           <TrashIcon className="size-4" />
                         </button>}

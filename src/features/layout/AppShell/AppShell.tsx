@@ -1,17 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 import type { AppRoute } from "../../../routes";
 import { appRoutes, projectPath } from "../../../routes";
 import type { SessionUser } from "../../auth/api";
-import { errorText } from "../../auth/api";
+import { useRemoteResource } from "../../../hooks/useRemoteResource";
 import { useLoading } from "../../../hooks/useLoading";
 import { useProjectDirectory } from "../../projects/useProjectDirectory";
 import { projectDirectoryChanged } from "../../projects/projectDirectoryEvents";
-import CreateProjectModal from "../../projects/CreateProjectModal/CreateProjectModal";
-import DashboardPage from "../../dashboard/DashboardPage/DashboardPage";
 import Modal from "../../projects/Modal/Modal";
-import ProjectList from "../../projects/ProjectList/ProjectList";
-import ProjectRoute from "../../projects/ProjectRoute/ProjectRoute";
 import { getProjectCatalogs } from "../../projects/services";
 import type {
   Project,
@@ -22,23 +18,16 @@ import type {
 import NotAvailable from "../NotAvailable/NotAvailable";
 import Sidebar from "../Sidebar/Sidebar";
 
+const CreateProjectModal = lazy(() => import("../../projects/CreateProjectModal/CreateProjectModal"));
+
 interface AppShellProps {
   user: SessionUser;
   onLogout: () => void;
-  logoutError: string;
+  logoutError?: string;
 }
 
-function AppShell({ user, onLogout, logoutError }: AppShellProps) {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [catalogs, setCatalogs] = useState<ProjectCatalogs>({
-    areas: [],
-    states: [],
-    priorities: [],
-  });
+export default function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const [creating, setCreating] = useState(false);
-  const [catalogsReady, setCatalogsReady] = useState(false);
-  const [catalogError, setCatalogError] = useState("");
-  const [catalogReload, setCatalogReload] = useState(0);
   const [taskCreationRequest, setTaskCreationRequest] =
     useState<TaskCreationRequest | null>(null);
   const taskCreationSequence = useRef(0);
@@ -56,31 +45,12 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const creationDisabled = false;
   const projectWorkspace = /^\/proyectos\/\d+$/.test(pathname);
   const needsCatalogs = creating || projectWorkspace;
-  const catalogLoading = needsCatalogs && !catalogsReady && !catalogError;
-
-  useEffect(() => {
-    if (!needsCatalogs || catalogsReady) return;
-    let current = true;
-    void getProjectCatalogs()
-      .then((options) => {
-        if (current) {
-          setCatalogs(options);
-          setCatalogsReady(true);
-          setCatalogError("");
-        }
-      })
-      .catch((failure: unknown) => {
-        if (current) setCatalogError(errorText(failure));
-      });
-    return () => {
-      current = false;
-    };
-  }, [needsCatalogs, catalogsReady, catalogReload]);
-
-  function retryCatalogs() {
-    setCatalogError("");
-    setCatalogReload((current) => current + 1);
-  }
+  const catalogResource = useRemoteResource(getProjectCatalogs, "project-catalogs", needsCatalogs);
+  const catalogs: ProjectCatalogs = catalogResource.value ?? { areas: [], states: [], priorities: [] };
+  const catalogsReady = catalogResource.ready;
+  const catalogLoading = catalogResource.pending;
+  const catalogError = catalogResource.error;
+  const retryCatalogs = catalogResource.refetch;
 
   function openProjectCreation() {
     if (canCreateProject && !creationDisabled) setCreating(true);
@@ -111,7 +81,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
 
   function routeRoute(route: AppRoute) {
     if (route.requiresAdmin && !canViewAdmin) return <NotAvailable />;
-    if (route.Component === DashboardPage) {
+    if (route.path === "/") {
       return (
         <route.Component
           onCreateProject={canCreateProject ? openProjectCreation : undefined}
@@ -119,7 +89,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         />
       );
     }
-    if (route.Component === ProjectList) {
+    if ((route.path === "/proyectos" || route.path === "/proyectos/resumen")) {
       return (
         <route.Component
           directory={mainDirectory}
@@ -131,7 +101,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         />
       );
     }
-    if (route.Component === ProjectRoute) {
+    if (route.path === "/proyectos/:projectId") {
       return (
         <route.Component
           catalogs={catalogs}
@@ -143,18 +113,16 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         />
       );
     }
-    if (route.path === "/equipos" || route.path === "/equipos/:teamId") return <route.Component canManage={user.role === "ADMINISTRADOR"} />;
+    if (route.path === "/publicaciones" || route.path === "/equipos" || route.path === "/equipos/:teamId") return <route.Component canManage={user.role === "ADMINISTRADOR"} />;
+    if (route.path === "/configuracion") return <route.Component user={user} />;
     return <route.Component />;
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-neutral-900 md:h-screen md:flex-row">
+    <div className="flex min-h-screen flex-col bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100 md:h-screen md:flex-row">
       <Sidebar
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed((current) => !current)}
         user={user}
         onLogout={onLogout}
-        currentPath={pathname}
         canCreateProject={canCreateProject}
         projectCreationDisabled={creationDisabled}
         onCreateProject={openProjectCreation}
@@ -162,24 +130,32 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         onCreateTask={openTaskCreation}
       />
       <div
-        className={`min-w-0 w-full flex-1 bg-white pb-0! p-3 md:p-6 ${projectWorkspace ? "md:overflow-hidden" : "md:overflow-y-auto"}`}
+        className={`min-w-0 w-full flex-1 bg-white dark:bg-neutral-900 pb-0! p-3 md:p-6 ${
+          projectWorkspace ? "md:overflow-hidden" : "md:overflow-y-auto"
+        }`}
       >
         {logoutError && (
-          <p role="alert" className="mb-4 text-sm text-neutral-800">
+          <p
+            role="alert"
+            className="mb-4 text-sm text-neutral-800 dark:text-neutral-200"
+          >
             {logoutError}
           </p>
         )}
-        <Routes>
-          {appRoutes.map((route) => (
-            <Route
-              key={route.path}
-              path={route.path}
-              element={routeRoute(route)}
-            />
-          ))}
-          <Route path="*" element={<NotAvailable />} />
-        </Routes>
+        <Suspense fallback={<p role="status" className="text-xs text-neutral-600 dark:text-neutral-400">Cargando…</p>}>
+          <Routes>
+            {appRoutes.map((route) => (
+              <Route
+                key={route.path}
+                path={route.path}
+                element={routeRoute(route)}
+              />
+            ))}
+            <Route path="*" element={<NotAvailable />} />
+          </Routes>
+        </Suspense>
       </div>
+      <Suspense fallback={<p role="status">Cargando formulario…</p>}>
       {creating &&
         canCreateProject &&
         (catalogsReady ? (
@@ -197,7 +173,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
             {catalogError ? (
               <>
                 <p role="alert">{catalogError}</p>
-                <button type="button" onClick={retryCatalogs}>
+                <button type="button" onClick={() => { void retryCatalogs(); }}>
                   Reintentar catálogos
                 </button>
               </>
@@ -206,8 +182,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
             )}
           </Modal>
         ))}
+      </Suspense>
     </div>
   );
 }
-
-export default AppShell;

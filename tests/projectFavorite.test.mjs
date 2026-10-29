@@ -114,6 +114,7 @@ test("preference state is not shared between user or project mounts", async () =
 test("favorite service uses central Axios transport and idempotent methods", async () => {
   const calls = [];
   const { setProjectFavorite } = await loadModule("../src/features/projects/services.ts", {
+    "../../core/services/projectService": { getProjects() {}, getProjectAreas() {}, getProjectCatalogs() {} },
     "../../core/api/httpClient": { httpClient: { request: async (options) => { calls.push(options); return { data: { is_favorite: true } }; } } },
   });
   assert.equal((await setProjectFavorite(42, true)).is_favorite, true);

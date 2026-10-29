@@ -12,9 +12,9 @@ export function useRemoteResource<T>(load: () => Promise<T>, scope: string, enab
   const flight = useRef<{ identity: Identity<T>; promise: Promise<void> } | null>(null);
   const isCurrent = useCallback(() => active.current === identity && identity.epoch === sessionVersion(), [identity]);
 
-  const refetch = useCallback((): Promise<void> => {
+  const refetch = useCallback((invalidate = false): Promise<void> => {
     if (!isCurrent() || !identity.enabled) return Promise.resolve();
-    if (flight.current?.identity === identity) return flight.current.promise;
+    if (!invalidate && flight.current?.identity === identity) return flight.current.promise;
     const request = ++sequence.current;
     const valid = () => isCurrent() && request === sequence.current;
     setState((previous) => ({

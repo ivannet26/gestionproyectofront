@@ -32,6 +32,7 @@ function App() {
 
 function AppContent() {
   const { hideLoading, isLoading } = useLoading();
+
   const [user, setUser] = useState<SessionUser | null>(null);
   const [logoutError, setLogoutError] = useState("");
   const navigate = useNavigate();

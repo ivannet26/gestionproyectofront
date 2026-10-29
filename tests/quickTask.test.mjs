@@ -3,14 +3,15 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 import ts from "typescript";
+import * as jsxRuntime from "react/jsx-runtime";
 
 async function load(path, dependencies = {}) {
   const compiled = ts.transpileModule(readFileSync(new URL(path, import.meta.url), "utf8"), {
-    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 },
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const module = new vm.SourceTextModule(compiled);
   await module.link((name) => {
-    const exports = dependencies[name];
+    const exports = { "react/jsx-runtime": jsxRuntime, ...dependencies }[name];
     assert.ok(exports, `Unexpected import ${name}`);
     return new vm.SyntheticModule(Object.keys(exports), function () {
       for (const [key, value] of Object.entries(exports)) this.setExport(key, value);
@@ -19,7 +20,7 @@ async function load(path, dependencies = {}) {
   await module.evaluate();
   return module.namespace;
 }
-const avatar = await load("../src/shared/avatar.ts");
+const avatar = await load("../src/shared/avatarInitials.ts");
 const { stateInk } = await load("../src/features/projects/TaskList/stateInk.ts");
 const state = await load("../src/features/projects/TaskList/quickTaskState.ts");
 const labelSelection = await load("../src/features/projects/labelSelection.ts");

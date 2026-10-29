@@ -240,3 +240,19 @@ test("team member active filter reloads only members and discards older filter r
   assert.equal(render().members[0].id, 3); assert.equal(details.calls.length, 1);
   h.unmount();
 });
+
+
+test("confirmed mutation invalidates an older in-flight read without replaying it or replacing newer data", async () => {
+  const h = harness(), q = queued(), { useRemoteResource } = await h.resource();
+  const render = () => h.render(() => useRemoteResource(q.run, "mutated-list"));
+  render(); await flush(); q.calls[0].resolve([{ id: 1 }]); await flush();
+  const old = render().refetch(); await flush();
+  const confirmed = render().refetch(true); await flush();
+  assert.equal(q.calls.length, 3);
+  q.calls[2].resolve([{ id: 2 }]); await confirmed;
+  q.calls[1].resolve([{ id: 99 }]); await old;
+  assert.equal(render().value[0].id, 2);
+  assert.equal(render().pending, false);
+  assert.equal(q.calls.length, 3);
+  h.unmount();
+});

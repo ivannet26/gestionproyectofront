@@ -29,7 +29,7 @@ const Empty = () => null;
 const stateGroups = await load('../src/features/projects/stateGroups.ts');
 const { StateIcon } = await load('../src/features/projects/TaskList/TaskCell.tsx', {
   ...Object.fromEntries(['CalendarIcon', 'CheckIcon', 'CircleDashedIcon', 'CircleDotIcon', 'CircleHalfIcon', 'CircleMinusIcon', 'FlagIcon', 'HashIcon', 'SuccessIcon', 'UserIcon', 'XIcon', 'StatusIcon'].map(name => ['../../../shared/icons/'+name, { default: () => React.createElement('i', { 'data-icon': ['CheckIcon', 'SuccessIcon'].includes(name) ? 'check' : 'state' }) }])),
-  '../../../shared/InitialsAvatar': { default: Empty }, '../../auth/api': { errorText: String },
+  '../../../shared/Avatar': { default: Empty }, '../../auth/api': { errorText: String },
   '../CreateProjectModal/ProjectEndDateSelector': { Calendar: Empty }, '../LabelEditor/LabelEditor': { default: Empty },
   '../labelSelection': { labelSelection() {} }, '../ResponsiblePicker/AssigneeSelector': { default: Empty },
   '../stateGroups': stateGroups, '../taskAssignees': { taskAssignees: () => [] },
@@ -90,7 +90,7 @@ test('subtask finished indicator uses category, not a Scrum display name; global
     '../../../shared/icons/ChevronRightIcon': { default: Empty },
     '../TaskForm/TaskIcon': { default: ({ name }) => React.createElement('i', { 'data-icon': name }) },
     '../TaskList/QuickTaskRow': { default: Empty }, '../../../shared/Tooltip': { default: Empty },
-    '../../../shared/avatar': { avatarFor: String }, '../taskAssignees': { taskAssignees: () => [] },
+    '../../../shared/avatarInitials': { avatarFor: String }, '../taskAssignees': { taskAssignees: () => [] },
   });
   const task = { id: 1, permissions: { create_child: false } };
   const markup = renderToStaticMarkup(React.createElement(Subtasks, { target: { taskId: 1, projectId: 1 }, task, project: {}, catalogs: { priorities: [] },

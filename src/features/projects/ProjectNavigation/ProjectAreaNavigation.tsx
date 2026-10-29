@@ -26,7 +26,7 @@ export default function ProjectAreaNavigation({ directory, currentPath = "", ass
     return () => { current = false; };
   }, [activeAreaId, currentPath]);
   return <div aria-busy={directory.pending}>
-    {directory.currentError && <p role="alert" className="mx-3 break-words text-xs text-neutral-600">No se pudo consultar el proyecto abierto. <button type="button" className="cursor-pointer rounded px-1 underline focus-visible:outline-2 focus-visible:outline-neutral-700" onClick={() => { void directory.retryCurrent(); }}>Reintentar</button></p>}
+    {directory.currentError && <p role="alert" className="mx-3 break-words text-xs text-neutral-600 dark:text-neutral-400">No se pudo consultar el proyecto abierto. <button type="button" className="cursor-pointer rounded px-1 underline focus-visible:outline-2 focus-visible:outline-neutral-700" onClick={() => { void directory.retryCurrent(); }}>Reintentar</button></p>}
     <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label={organization ? "Áreas de proyectos" : "Áreas con proyectos asociados"}>
       {directory.areas.map((area, index) => {
         const expanded = expandedAreas[area.id] ?? (area.id === activeAreaId || Boolean(organization && index === 0));
@@ -34,9 +34,9 @@ export default function ProjectAreaNavigation({ directory, currentPath = "", ass
         const toggle = (value: boolean) => setExpandedAreas((current) => ({ ...current, [area.id]: value }));
         return <li key={area.id} className="min-w-0">
           <button type="button" aria-expanded={expanded} aria-controls={childrenId} aria-label={`${expanded ? "Contraer" : "Expandir"} área ${area.name}`} title={area.name}
-            className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-medium text-neutral-800 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700"
+            className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-medium text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700"
             onClick={() => toggle(!expanded)} onKeyDown={(event) => { if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); toggle(event.key === "ArrowRight"); } }}>
-            <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center rounded-md bg-neutral-200 text-xs font-semibold text-neutral-800">{Array.from(area.name.trim())[0]?.toLocaleUpperCase("es")}</span>
+            <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center rounded-md bg-neutral-200 dark:bg-neutral-700 text-xs font-semibold text-neutral-800 dark:text-neutral-100">{Array.from(area.name.trim())[0]?.toLocaleUpperCase("es")}</span>
             <span className="min-w-0 flex-1 truncate">{area.name}</span>
             <span aria-hidden="true" className="shrink-0"><ChevronDownIcon className={`size-4 ${expanded ? "" : "-rotate-90"}`} /></span>
           </button>
@@ -47,7 +47,7 @@ export default function ProjectAreaNavigation({ directory, currentPath = "", ass
         </li>;
       })}
     </ul>
-    {directory.ready && !directory.pending && !directory.error && !directory.areas.length && <p role="status" className="mx-3 text-xs text-neutral-600">{organization ? "No hay proyectos registrados." : "No hay proyectos autorizados con trabajadores asociados."}</p>}
+    {directory.ready && !directory.pending && !directory.error && !directory.areas.length && <p role="status" className="mx-3 text-xs text-neutral-600 dark:text-neutral-400">{organization ? "No hay proyectos registrados." : "No hay proyectos autorizados con trabajadores asociados."}</p>}
     <ProjectContinuation {...directory} enabled={enabled} label="áreas" />
   </div>;
 }

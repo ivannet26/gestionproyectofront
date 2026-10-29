@@ -1,10 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import LogoutIcon from "../../../shared/icons/LogoutIcon";
-import SparkleIcon from "../../../shared/icons/SparkleIcon";
-import { avatarFor } from "../../../shared/avatar";
+import SettingsIcon from "../../../shared/icons/SettingsIcon";
+import Avatar from "../../../shared/Avatar";
 import type { SessionUser } from "../../auth/api";
 import { roleLabel } from "../../auth/roles";
-import ProfileModal from "../ProfileModal/ProfileModal";
 
 interface ProfileMenuProps {
   user: SessionUser;
@@ -13,10 +13,10 @@ interface ProfileMenuProps {
 }
 
 function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const [modal, setModal] = useState(false);
   const item =
-    "w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-800 hover:bg-neutral-100 rounded-lg cursor-pointer text-left";
+    "w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg cursor-pointer text-left";
 
   return (
     <div
@@ -28,24 +28,23 @@ function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
         aria-label="Abrir menú de perfil"
         aria-haspopup="menu"
         aria-expanded={open}
-        className={`flex min-w-0 rounded-lg hover:bg-neutral-100 cursor-pointer ${
+        className={`flex min-w-0 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer ${
           isCollapsed
             ? "justify-center p-0"
             : "w-full items-start gap-2.5 p-1 text-left"
         }`}
       >
-        <div
+        <Avatar
+          name={user.name}
+          className="size-8 text-xs"
           aria-hidden="true"
-          className="size-8 inline-flex items-center justify-center rounded-full bg-sky-500 text-xs font-medium text-white"
-        >
-          {avatarFor(user.name)}
-        </div>
+        />
         {!isCollapsed && (
           <div className="flex flex-1 flex-col items-start min-w-0 text-left">
-            <span className="line-clamp-1 text-sm text-neutral-800 leading-tight">
+            <span className="line-clamp-1 text-sm text-neutral-800 dark:text-neutral-100 leading-tight">
               {user.name}
             </span>
-            <span className="line-clamp-1 text-xs text-neutral-600 leading-tight mt-0.5">
+            <span className="line-clamp-1 text-xs text-neutral-600 dark:text-neutral-400 leading-tight mt-0.5">
               {roleLabel(user.role)}
             </span>
           </div>
@@ -60,19 +59,19 @@ function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
           />
           <div
             role="menu"
-            className="absolute bottom-full left-0 z-50 mb-4 w-56 bg-white border border-neutral-200 rounded-xl p-2"
+            className="absolute bottom-full left-0 z-50 mb-4 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-2"
           >
             <button
               type="button"
               role="menuitem"
               onClick={() => {
                 setOpen(false);
-                setModal(true);
+                navigate("/configuracion");
               }}
               className={item}
             >
-              <SparkleIcon className="size-4 flex-none" aria-hidden="true" />
-              Añadir especialidad
+              <SettingsIcon className="size-4 flex-none" aria-hidden="true" />
+              Configuración
             </button>
             <button
               type="button"
@@ -90,7 +89,6 @@ function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
         </>
       )}
 
-      {modal && <ProfileModal onClose={() => setModal(false)} />}
     </div>
   );
 }
