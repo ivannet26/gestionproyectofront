@@ -87,7 +87,12 @@ function Card({
       role="button"
       tabIndex={0}
       aria-label={task.name}
-      onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); onAction("detail", task.id); } else listeners?.onKeyDown?.(event); }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          onAction("detail", task.id);
+        } else listeners?.onKeyDown?.(event);
+      }}
     >
       <div className="font-medium text-neutral-800 leading-snug">
         {task.name}
@@ -153,9 +158,20 @@ function Card({
           {expanded && resolvedChildren.length > 0 && (
             <div className="mt-2 space-y-2 border-l border-neutral-200 pl-2">
               {resolvedChildren.map((child) => (
-                <button key={child.id} type="button" className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100"
-                  onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); onAction("detail", child.id); }}>
-                  <span className="truncate">{child.name}</span><span className="shrink-0 text-[10px] text-neutral-600">{child.state_name}</span>
+                <button
+                  key={child.id}
+                  type="button"
+                  className="flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100"
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onAction("detail", child.id);
+                  }}
+                >
+                  <span className="truncate">{child.name}</span>
+                  <span className="shrink-0 text-[10px] text-neutral-600">
+                    {child.state_name}
+                  </span>
                 </button>
               ))}
             </div>
@@ -350,7 +366,10 @@ export default function TaskBoard({
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={(e) => void handleDragEnd(e)}
-        onDragCancel={() => { setActiveId(null); setOverId(null); }}
+        onDragCancel={() => {
+          setActiveId(null);
+          setOverId(null);
+        }}
         onDragOver={(e) => setOverId(e.over ? String(e.over.id) : null)}
       >
         <div

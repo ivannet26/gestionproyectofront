@@ -1,27 +1,68 @@
-import { useParams } from "react-router";
+import { useEffect, useState } from "react";
+import { useLocation, useParams } from "react-router";
+import { getProjectCatalogs } from "../../../core/services/projectService";
+import { useToast } from "../../../hooks/useToast";
+import { errorText } from "../../auth/api";
 import NotAvailable from "../../layout/NotAvailable/NotAvailable";
 import ProjectWorkspace from "../ProjectWorkspace/ProjectWorkspace";
 import type { ProjectCatalogs, TaskCreationRequest } from "../types";
 
 export interface ProjectRouteProps {
-  catalogs: ProjectCatalogs;
-  catalogLoading: boolean;
-  catalogError: string;
-  onRetryCatalogs: () => void;
+  catalogs?: ProjectCatalogs;
+  catalogLoading?: boolean;
+  catalogError?: string;
+  onRetryCatalogs?: () => void;
   taskCreationRequest?: TaskCreationRequest | null;
   onTaskCreationHandled?: (sequence: number) => void;
 }
 
+const defaultCatalogs: ProjectCatalogs = {
+  areas: [],
+  states: [],
+  priorities: [],
+};
+
 export default function ProjectRoute({
-  catalogs,
-  catalogLoading,
-  catalogError,
+  catalogs: propCatalogs,
+  catalogLoading: propCatalogLoading = false,
+  catalogError: propCatalogError = "",
   onRetryCatalogs,
   taskCreationRequest,
   onTaskCreationHandled,
 }: ProjectRouteProps) {
   const { projectId } = useParams();
   const id = Number(projectId);
+  const location = useLocation();
+  const routedRequest = (
+    location.state as { taskCreationRequest?: TaskCreationRequest } | null
+  )?.taskCreationRequest;
+  const creationRequest = taskCreationRequest ?? routedRequest;
+  const { addToast } = useToast();
+  const [catalogs, setCatalogs] = useState<ProjectCatalogs>(defaultCatalogs);
+  const [catalogError, setCatalogError] = useState(propCatalogError);
+
+  useEffect(() => {
+    if (propCatalogs) return;
+    let active = true;
+    getProjectCatalogs()
+      .then((data) => {
+        if (active) setCatalogs(data);
+      })
+      .catch((err) => {
+        if (active) {
+          const msg = errorText(err);
+          setCatalogError(msg);
+          addToast({
+            icon: "error",
+            title: "Error al cargar catálogos",
+            message: msg,
+          });
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [propCatalogs, addToast]);
 
   if (
     !projectId ||
@@ -36,14 +77,12 @@ export default function ProjectRoute({
     <ProjectWorkspace
       key={projectId}
       projectId={id}
-      catalogs={catalogs}
-      catalogLoading={catalogLoading}
+      catalogs={propCatalogs ?? catalogs}
+      catalogLoading={propCatalogLoading}
       catalogError={catalogError}
-      onRetryCatalogs={onRetryCatalogs}
+      onRetryCatalogs={onRetryCatalogs ?? (() => {})}
       taskCreationSequence={
-        taskCreationRequest?.projectId === id
-          ? taskCreationRequest.sequence
-          : undefined
+        creationRequest?.projectId === id ? creationRequest.sequence : undefined
       }
       onTaskCreationHandled={onTaskCreationHandled}
     />

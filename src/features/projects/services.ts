@@ -1,14 +1,21 @@
 import type { AxiosRequestConfig } from "axios";
 import { httpClient } from "../../core/api/httpClient";
-import type { TaskIdentity, TaskDetailData, SubtaskPage, TaskPage, TaskActivityGroup, TaskRelation, RelationKind } from "./types";
+import { getProjects, getProjectCatalogs } from "../../core/services/projectService";
+import type {
+  TaskIdentity,
+  TaskDetailData,
+  SubtaskPage,
+  TaskPage,
+  TaskActivityGroup,
+  TaskRelation,
+  RelationKind,
+} from "./types";
 import type {
   CreateProjectPayload,
   CreateTaskPayload,
   EditTaskPayload,
   Project,
   ProjectFavoriteState,
-  ProjectCatalogs,
-  ProjectSummary,
   ProjectTaskConfiguration,
   ProjectTaskConfigurationPayload,
   Task,
@@ -18,41 +25,83 @@ import type {
   TeamOption,
 } from "./types";
 
-async function projectRequest<T>(path = "", options?: AxiosRequestConfig): Promise<T> {
+export { getProjects, getProjectCatalogs };
+
+async function projectRequest<T>(
+  path = "",
+  options?: AxiosRequestConfig,
+): Promise<T> {
   const url = `projects/${path}`;
-  const response = options ? await httpClient.request<T>({ url, ...options }) : await httpClient.get<T>(url);
+  const response = options
+    ? await httpClient.request<T>({ url, ...options })
+    : await httpClient.get<T>(url);
   return response.data;
 }
 
-function taskPath(target: TaskIdentity) { return `${target.projectId}/tasks/${target.taskId}/`; }
+function taskPath(target: TaskIdentity) {
+  return `${target.projectId}/tasks/${target.taskId}/`;
+}
+
 export function getTaskDetail(target: TaskIdentity): Promise<TaskDetailData> {
   return projectRequest<TaskDetailData>(taskPath(target));
 }
-export function getTaskSubtasks(target: TaskIdentity, cursor = 0): Promise<SubtaskPage> {
-  return projectRequest<SubtaskPage>(`${taskPath(target)}subtasks/?cursor=${cursor}`);
-}
-export function getTaskActivity(target: TaskIdentity, cursor = 0): Promise<TaskPage<TaskActivityGroup>> {
-  return projectRequest<TaskPage<TaskActivityGroup>>(`${taskPath(target)}activity/?cursor=${cursor}`);
-}
-export function getTaskRelations(target: TaskIdentity, cursor = 0): Promise<TaskPage<TaskRelation>> {
-  return projectRequest<TaskPage<TaskRelation>>(`${taskPath(target)}relations/?cursor=${cursor}`);
-}
-export function searchRelatedTasks(target: TaskIdentity, kind: RelationKind, query: string, cursor = 0): Promise<TaskPage<Task>> {
-  return projectRequest<TaskPage<Task>>(`${taskPath(target)}related-candidates/?${new URLSearchParams({ kind, q: query, cursor: String(cursor) })}`);
-}
-export function createTaskRelation(target: TaskIdentity, targetId: number, name: string): Promise<void> {
-  return projectRequest<void>(`${taskPath(target)}relations/`, { method: "POST", data: { target_id: targetId, name } });
-}
-export function removeTaskRelation(target: TaskIdentity, relationId: number): Promise<void> {
-  return projectRequest<void>(`${taskPath(target)}relations/${relationId}/`, { method: "DELETE" });
+
+export function getTaskSubtasks(
+  target: TaskIdentity,
+  cursor = 0,
+): Promise<SubtaskPage> {
+  return projectRequest<SubtaskPage>(
+    `${taskPath(target)}subtasks/?cursor=${cursor}`,
+  );
 }
 
-export function getProjects(): Promise<ProjectSummary[]> {
-  return projectRequest();
+export function getTaskActivity(
+  target: TaskIdentity,
+  cursor = 0,
+): Promise<TaskPage<TaskActivityGroup>> {
+  return projectRequest<TaskPage<TaskActivityGroup>>(
+    `${taskPath(target)}activity/?cursor=${cursor}`,
+  );
 }
 
-export function getProjectCatalogs(): Promise<ProjectCatalogs> {
-  return projectRequest("catalogs/");
+export function getTaskRelations(
+  target: TaskIdentity,
+  cursor = 0,
+): Promise<TaskPage<TaskRelation>> {
+  return projectRequest<TaskPage<TaskRelation>>(
+    `${taskPath(target)}relations/?cursor=${cursor}`,
+  );
+}
+
+export function searchRelatedTasks(
+  target: TaskIdentity,
+  kind: RelationKind,
+  query: string,
+  cursor = 0,
+): Promise<TaskPage<Task>> {
+  return projectRequest<TaskPage<Task>>(
+    `${taskPath(target)}related-candidates/?${new URLSearchParams({ kind, q: query, cursor: String(cursor) })}`,
+  );
+}
+
+export function createTaskRelation(
+  target: TaskIdentity,
+  targetId: number,
+  name: string,
+): Promise<void> {
+  return projectRequest<void>(`${taskPath(target)}relations/`, {
+    method: "POST",
+    data: { target_id: targetId, name },
+  });
+}
+
+export function removeTaskRelation(
+  target: TaskIdentity,
+  relationId: number,
+): Promise<void> {
+  return projectRequest<void>(`${taskPath(target)}relations/${relationId}/`, {
+    method: "DELETE",
+  });
 }
 
 export function getProject(projectId: number): Promise<Project> {
@@ -88,14 +137,24 @@ export function configureProjectTaskStates(
   });
 }
 
-export function getTaskStatusTemplates(projectId: number): Promise<TaskStatusTemplate[]> {
+export function getTaskStatusTemplates(
+  projectId: number,
+): Promise<TaskStatusTemplate[]> {
   return projectRequest(`${projectId}/state-templates/`);
 }
 
-export function saveTaskStatusTemplate(projectId: number, payload: Pick<TaskStatusTemplate, "name" | "states"> & { revision?: number }, templateId?: number): Promise<TaskStatusTemplate> {
-  return projectRequest(`${projectId}/state-templates/${templateId === undefined ? "" : `${templateId}/`}`, {
-    method: templateId === undefined ? "POST" : "PUT", data: payload,
-  });
+export function saveTaskStatusTemplate(
+  projectId: number,
+  payload: Pick<TaskStatusTemplate, "name" | "states"> & { revision?: number },
+  templateId?: number,
+): Promise<TaskStatusTemplate> {
+  return projectRequest(
+    `${projectId}/state-templates/${templateId === undefined ? "" : `${templateId}/`}`,
+    {
+      method: templateId === undefined ? "POST" : "PUT",
+      data: payload,
+    },
+  );
 }
 
 export function getWorkerCandidates(
@@ -110,12 +169,30 @@ export function createProject(payload: CreateProjectPayload): Promise<Project> {
   return projectRequest("", { method: "POST", data: payload });
 }
 
-export function getProjectTeamCandidates(areaId: number): Promise<TeamOption[]> {
+export function getProjectTeamCandidates(
+  areaId: number,
+): Promise<TeamOption[]> {
   return projectRequest<TeamOption[]>(`teams/?area_id=${areaId}`);
 }
 
-export function moveTask(projectId: number, taskId: number, payload: TaskStatePayload & { before_id: number | null; expected_revision: string }): Promise<Task[]> {
-  return projectRequest<Task[]>(`${projectId}/tasks/${taskId}/move/`, { method: "POST", data: payload });
+export function getProjectAssignmentTeams(
+  projectId: number,
+): Promise<TeamOption[]> {
+  return projectRequest<TeamOption[]>(`${projectId}/assignment-teams/`);
+}
+
+export function moveTask(
+  projectId: number,
+  taskId: number,
+  payload: TaskStatePayload & {
+    before_id: number | null;
+    expected_revision: string;
+  },
+): Promise<Task[]> {
+  return projectRequest<Task[]>(`${projectId}/tasks/${taskId}/move/`, {
+    method: "POST",
+    data: payload,
+  });
 }
 
 export function createTask(

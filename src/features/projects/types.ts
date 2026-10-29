@@ -1,20 +1,26 @@
-export interface ProjectArea {
+export type {
+  ProjectArea,
+  ProjectSummary,
+  ProjectAreaGroup,
+  ProjectCatalogs,
+  ProjectTaskState,
+  StateCategory,
+  TaskStatusTemplate,
+} from "../../core/interfaces/project.interface";
+import type {
+  ProjectSummary,
+  ProjectTaskState,
+  StateCategory,
+} from "../../core/interfaces/project.interface";
+
+export interface Specialty {
   id: number;
   name: string;
 }
-
-export interface ProjectCatalogs {
-  specialties?: Specialty[];
-  task_templates?: TaskStatusTemplate[];
-  creation_date?: string;
-  areas: ProjectArea[];
-  states: ProjectTaskState[];
-  priorities: { code: number; name: string }[];
-}
-
-export interface Specialty { id: number; name: string }
 export interface TeamOption {
-  id: number; name: string; eligible_count: number;
+  id: number;
+  name: string;
+  eligible_count: number;
   members: { id: number; name: string; eligible: boolean; reason: string }[];
 }
 export type LabelKind = "technical" | "nontechnical" | "specialty";
@@ -36,22 +42,6 @@ export interface TaskLabel extends Label {
   requirement_id: number | null;
 }
 
-export interface ProjectSummary {
-  id: number;
-  name: string;
-  description: string;
-  start_date: string | null;
-  end_date: string | null;
-  state_code: string;
-  available: boolean;
-  has_associated_workers: boolean;
-  areas: ProjectArea[];
-  worker_edit: boolean;
-  worker_state: boolean;
-  worker_create: boolean;
-  permissions: { manage: boolean; create_tasks: boolean };
-}
-
 export interface ProjectNavigationProps {
   projects: ProjectSummary[];
   currentPath: string;
@@ -62,23 +52,11 @@ export interface ProjectNavigationProps {
   onRetry?: () => void;
 }
 
-export interface ProjectAreaGroup extends ProjectArea {
-  projects: ProjectSummary[];
-}
-
-export interface ProjectsMenuProps
-  extends Omit<ProjectNavigationProps, "loading" | "error" | "onRetry"> {
-  isCollapsed: boolean;
-  projectsLoading: boolean;
-  projectError: string;
-  onRetryProjects: () => void;
-  canCreateProject: boolean;
-  projectCreationDisabled: boolean;
-  onCreateProject: () => void;
+export interface ProjectsMenuProps {
+  isCollapsed?: boolean;
 }
 
 export interface Project extends ProjectSummary {
-  team_ids?: number[];
   assignment_teams?: TeamOption[];
   is_favorite: boolean;
   participants: { id: number; name: string }[];
@@ -96,23 +74,6 @@ export interface ProjectHeaderProps {
 
 export interface ProjectFavoriteState {
   is_favorite: boolean;
-}
-
-export type StateCategory = "not_started" | "active" | "done" | "closed";
-
-export interface ProjectTaskState {
-  code: string;
-  name: string;
-  category?: StateCategory;
-  color?: string;
-}
-
-export interface TaskStatusTemplate {
-  id: number | string;
-  name: string;
-  preset: boolean;
-  revision: number;
-  states: { name: string; category: StateCategory; color: string }[];
 }
 
 export interface ProjectTaskConfiguration {
@@ -214,27 +175,61 @@ export interface EditTaskPayload {
   responsible_ids?: number[];
 }
 
-export interface TaskIdentity { projectId: number; taskId: number }
-export interface TaskDetailData { task: Task; parent: Task | null }
-export interface TaskPage<T> { items: T[]; next_cursor: number | null }
-export interface SubtaskPage extends TaskPage<Task> { total: number; completed: number }
+export interface TaskIdentity {
+  projectId: number;
+  taskId: number;
+}
+export interface TaskDetailData {
+  task: Task;
+  parent: Task | null;
+}
+export interface TaskPage<T> {
+  items: T[];
+  next_cursor: number | null;
+}
+export interface SubtaskPage extends TaskPage<Task> {
+  total: number;
+  completed: number;
+}
 export type RelationKind = "blocks" | "blocked_by" | "custom";
 export interface TaskRelation {
-  id: string; kind: RelationKind; name: string; target_id: number; target_name: string;
-  relation_id?: number; predecessor_id?: number; successor_id?: number;
+  id: string;
+  kind: RelationKind;
+  name: string;
+  target_id: number;
+  target_name: string;
+  relation_id?: number;
+  predecessor_id?: number;
+  successor_id?: number;
 }
 export interface TaskActivityEvent {
-  id: number; operation_id: string; actor_id: number; actor_name: string; action: string; field: string;
-  old_value: unknown; new_value: unknown; related_task_id: number | null; created_at: string;
+  id: number;
+  operation_id: string;
+  actor_id: number;
+  actor_name: string;
+  action: string;
+  field: string;
+  old_value: unknown;
+  new_value: unknown;
+  related_task_id: number | null;
+  created_at: string;
 }
-export interface TaskActivityGroup { id: string; events: TaskActivityEvent[] }
+export interface TaskActivityGroup {
+  id: string;
+  events: TaskActivityEvent[];
+}
 
 export interface TaskAssignee {
   id: number;
   name: string;
 }
 
-export type TaskGroupingMode = "state" | "assignees" | "priority" | "labels" | "due_date";
+export type TaskGroupingMode =
+  | "state"
+  | "assignees"
+  | "priority"
+  | "labels"
+  | "due_date";
 export type TaskGroupOrder = "asc" | "desc";
 
 export interface TaskGroupingPreferences {
@@ -264,7 +259,9 @@ export interface TaskListGroup {
   roots: Task[];
 }
 
-export interface CreateTaskPayload extends Partial<Omit<EditTaskPayload, "name">> {
+export interface CreateTaskPayload extends Partial<
+  Omit<EditTaskPayload, "name">
+> {
   name: string;
   state_code: string;
   parent_id: number | null;
@@ -278,7 +275,12 @@ export interface TaskStatePayload {
   reason?: string;
 }
 
-export type TaskActionKind = "edit" | "state" | "child" | "dependencies" | "detail";
+export type TaskActionKind =
+  | "edit"
+  | "state"
+  | "child"
+  | "dependencies"
+  | "detail";
 
 export type TaskAction =
   | { kind: "create"; stateCode?: string }

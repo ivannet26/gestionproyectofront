@@ -1,28 +1,24 @@
 import { useId, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { projectPath } from "../../../routes";
 import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
 import PlusIcon from "../../../shared/icons/PlusIcon";
 import ProjectAreaNavigation from "../../projects/ProjectNavigation/ProjectAreaNavigation";
 import { projectCreateActionClassName } from "../../projects/ProjectNavigation/navigationClasses";
 import type { ProjectsMenuProps } from "../../projects/types";
+import { useProjects } from "../../projects/useProjects";
 
-export default function ProjectsMenu({
-  isCollapsed,
-  currentPath,
-  projects,
-  projectsLoading,
-  projectError,
-  onRetryProjects,
-  canCreateProject,
-  projectCreationDisabled,
-  onCreateProject,
-  canCreateTasks,
-  onCreateTask,
-}: ProjectsMenuProps) {
+export default function ProjectsMenu({ isCollapsed }: ProjectsMenuProps) {
   const [open, setOpen] = useState(true);
   const itemsId = useId();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const { projects, refetch } = useProjects();
+
+  if (isCollapsed) return null;
 
   return (
-    <div className="mt-3" hidden={isCollapsed}>
+    <div className="mt-3">
       <div className="group/project relative mb-2 flex items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
         <button
           type="button"
@@ -38,28 +34,31 @@ export default function ProjectsMenu({
             <ChevronDownIcon className={`size-4 ${open ? "" : "-rotate-90"}`} />
           </span>
         </button>
-        {canCreateProject && (
-          <button
-            type="button"
-            aria-label="Crear proyecto"
-            title="Crear proyecto"
-            disabled={projectCreationDisabled}
-            onClick={onCreateProject}
-            className={`${projectCreateActionClassName} absolute right-9`}
-          >
-            <PlusIcon className="size-4" />
-          </button>
-        )}
+        <button
+          type="button"
+          aria-label="Crear proyecto"
+          title="Crear proyecto"
+          onClick={() => navigate("/proyectos")}
+          className={`${projectCreateActionClassName} absolute right-9`}
+        >
+          <PlusIcon className="size-4" />
+        </button>
       </div>
       <div id={itemsId} hidden={!open}>
         <ProjectAreaNavigation
           projects={projects}
-          currentPath={currentPath}
-          loading={projectsLoading}
-          error={projectError}
-          onRetry={onRetryProjects}
-          canCreateTasks={canCreateTasks}
-          onCreateTask={onCreateTask}
+          currentPath={pathname}
+          loading={false}
+          error=""
+          onRetry={refetch}
+          canCreateTasks={true}
+          onCreateTask={(projectId) =>
+            navigate(projectPath(projectId), {
+              state: {
+                taskCreationRequest: { projectId, sequence: Date.now() },
+              },
+            })
+          }
         />
       </div>
     </div>

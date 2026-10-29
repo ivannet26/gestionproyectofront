@@ -169,9 +169,14 @@ test("late catalog responses from a departed route are discarded and a returning
 
 test("project route forwards catalog loading, errors and retry without disguising failure as an empty catalog", async () => {
   const Workspace = () => null, Missing = () => null;
-  let projectId = "42";
+  let projectId = "42", locationState = null;
   const { default: ProjectRoute } = await load("../src/features/projects/ProjectRoute/ProjectRoute.tsx", {
-    "react-router": { useParams: () => ({ projectId }) },
+    "react-router": {
+      useParams: () => ({ projectId }),
+      useLocation: () => ({ state: locationState }),
+    },
+    "../../../hooks/useToast": { useToast: () => ({ addToast() {} }) },
+    "../../../core/services/projectService": { getProjectCatalogs: async () => ({ areas: [], states: [], priorities: [] }) },
     "../../layout/NotAvailable/NotAvailable": { default: Missing },
     "../ProjectWorkspace/ProjectWorkspace": { default: Workspace },
   });
@@ -180,6 +185,9 @@ test("project route forwards catalog loading, errors and retry without disguisin
   assert.equal(result.type, Workspace); assert.equal(result.props.projectId, 42);
   assert.equal(result.props.catalogLoading, false); assert.equal(result.props.catalogError, "Sin conexión");
   assert.equal(result.props.onRetryCatalogs, props.onRetryCatalogs);
+  assert.equal(result.props.taskCreationSequence, undefined);
+  locationState = { taskCreationRequest: { projectId: 42, sequence: 7 } };
+  assert.equal(ProjectRoute(props).props.taskCreationSequence, 7);
   projectId = "invalid";
   assert.equal(ProjectRoute(props).type, Missing);
 });

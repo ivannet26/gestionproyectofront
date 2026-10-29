@@ -1,35 +1,22 @@
-import { Link } from "react-router";
+import { useState } from "react";
+import { Link, useLocation } from "react-router";
 import ChevronsIcon from "../../../shared/icons/ChevronsIcon";
 import type { SessionUser } from "../../auth/api";
 import ProfileMenu from "../../profile/ProfileMenu/ProfileMenu";
-import type { ProjectsMenuProps } from "../../projects/types";
 import ProjectsMenu from "./ProjectsMenu";
 import { navigation } from "./sidebar-routes";
 
-interface SidebarProps extends ProjectsMenuProps {
-  onToggleCollapse: () => void;
+interface SidebarProps {
   user: SessionUser;
   onLogout: () => void;
 }
 
-function Sidebar({
-  isCollapsed,
-  onToggleCollapse,
-  user,
-  onLogout,
-  currentPath,
-  projects,
-  projectsLoading,
-  projectError,
-  onRetryProjects,
-  canCreateProject,
-  projectCreationDisabled,
-  onCreateProject,
-  canCreateTasks,
-  onCreateTask,
-}: SidebarProps) {
+export default function Sidebar({ user, onLogout }: SidebarProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { pathname } = useLocation();
   const isAdmin = user.permissions.manage_accounts;
   const entries = navigation.filter((entry) => !entry.requiresAdmin || isAdmin);
+
   return (
     <aside
       className={`sticky top-0 z-10 flex h-screen min-w-0 shrink-0 flex-col bg-white dark:bg-neutral-900 p-2 pb-4 border-r border-neutral-200 dark:border-neutral-800 max-md:static max-md:h-auto max-md:max-h-[45dvh] max-md:w-full max-md:border-r-0 max-md:border-b ${
@@ -46,7 +33,7 @@ function Sidebar({
         )}
         <button
           type="button"
-          onClick={onToggleCollapse}
+          onClick={() => setIsCollapsed((current) => !current)}
           aria-label={
             isCollapsed ? "Mostrar menú lateral" : "Ocultar menú lateral"
           }
@@ -71,9 +58,8 @@ function Sidebar({
             const Icon = entry.icon;
             const isActive =
               entry.path === "/"
-                ? currentPath === "/"
-                : currentPath === entry.path ||
-                  currentPath.startsWith(`${entry.path}/`);
+                ? pathname === "/"
+                : pathname === entry.path || pathname.startsWith(`${entry.path}/`);
 
             return (
               <Link
@@ -99,19 +85,7 @@ function Sidebar({
             );
           })}
           <div className="mt-3">
-            <ProjectsMenu
-              isCollapsed={isCollapsed}
-              currentPath={currentPath}
-              projects={projects}
-              projectsLoading={projectsLoading}
-              projectError={projectError}
-              onRetryProjects={onRetryProjects}
-              canCreateProject={canCreateProject}
-              projectCreationDisabled={projectCreationDisabled}
-              onCreateProject={onCreateProject}
-              canCreateTasks={canCreateTasks}
-              onCreateTask={onCreateTask}
-            />
+            <ProjectsMenu isCollapsed={isCollapsed} />
           </div>
         </div>
       </nav>
@@ -126,5 +100,3 @@ function Sidebar({
     </aside>
   );
 }
-
-export default Sidebar;

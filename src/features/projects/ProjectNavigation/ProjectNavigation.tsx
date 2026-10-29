@@ -1,19 +1,16 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { projectPath } from "../../../routes";
-import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
 import PlusIcon from "../../../shared/icons/PlusIcon";
 import ProjectsIcon from "../../../shared/icons/ProjectsIcon";
 import type { ProjectNavigationProps } from "../types";
 import { projectCreateActionClassName } from "./navigationClasses";
+
 const styles = {
   projects: "m-0 p-0 list-none flex flex-col gap-2",
-  children:
-    "m-0 ml-7 mt-1 list-none p-0 hidden:hidden [&_a]:block [&_a]:rounded-lg [&_a]:px-3 [&_a]:py-1.5 [&_a]:text-xs [&_a]:text-neutral-600 dark:[&_a]:text-neutral-400 [&_a]:no-underline [&_a]:cursor-pointer [&_a:hover]:bg-neutral-100 dark:[&_a:hover]:bg-neutral-800 [&_a[aria-current=page]]:bg-neutral-100 dark:[&_a[aria-current=page]]:bg-neutral-800 [&_a[aria-current=page]]:text-neutral-800 dark:[&_a[aria-current=page]]:text-neutral-100 [&_a:focus-visible]:outline-2 [&_a:focus-visible]:outline-offset-[-2px] [&_a:focus-visible]:outline-neutral-700",
   heading:
     "group/project relative flex min-w-0 items-center rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800",
   project:
-    "flex min-w-0 flex-1 items-center gap-2 rounded-lg border-0 bg-transparent px-3 py-1.5 text-left text-xs cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700",
+    "flex min-w-0 flex-1 items-center gap-2 rounded-lg border-0 bg-transparent px-3 py-1.5 text-xs no-underline cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700",
   message:
     "mx-2 mb-2 mt-1 text-xs leading-relaxed text-neutral-600 dark:text-neutral-400 [overflow-wrap:anywhere]",
   retry:
@@ -29,27 +26,6 @@ export default function ProjectNavigation({
   onCreateTask,
   onRetry,
 }: ProjectNavigationProps) {
-  const [expandedProjects, setExpandedProjects] = useState<
-    Record<number, boolean>
-  >({});
-  const activeProjectId = projects.find((project) => {
-    const path = projectPath(project.id);
-    return currentPath === path || currentPath.startsWith(`${path}/`);
-  })?.id;
-  useEffect(() => {
-    if (activeProjectId === undefined) return;
-    let current = true;
-    void Promise.resolve().then(() => {
-      if (current)
-        setExpandedProjects((expanded) => ({
-          ...expanded,
-          [activeProjectId]: true,
-        }));
-    });
-    return () => {
-      current = false;
-    };
-  }, [activeProjectId, currentPath]);
   return (
     <div aria-busy={loading}>
       {loading && (
@@ -86,52 +62,25 @@ export default function ProjectNavigation({
           const path = projectPath(project.id);
           const active =
             currentPath === path || currentPath.startsWith(`${path}/`);
-          const expanded = expandedProjects[project.id] ?? active;
-          const childrenId = `project-${project.id}-navigation`;
           return (
             <li key={project.id}>
               <div className={styles.heading}>
-                <button
-                  className={`${styles.project} ${active ? "text-neutral-800 dark:text-neutral-100" : "text-neutral-600 dark:text-neutral-400"}`}
-                  type="button"
-                  aria-expanded={expanded}
-                  aria-controls={childrenId}
+                <Link
+                  to={path}
+                  aria-current={active ? "page" : undefined}
                   title={project.name}
-                  aria-label={`${expanded ? "Contraer" : "Expandir"} proyecto ${project.name}`}
-                  onKeyDown={(event) => {
-                    if (
-                      event.key === "ArrowLeft" ||
-                      event.key === "ArrowRight"
-                    ) {
-                      event.preventDefault();
-                      setExpandedProjects((current) => ({
-                        ...current,
-                        [project.id]: event.key === "ArrowRight",
-                      }));
-                    }
-                  }}
-                  onClick={() =>
-                    setExpandedProjects((current) => ({
-                      ...current,
-                      [project.id]: !expanded,
-                    }))
-                  }
+                  className={`${styles.project} ${active ? "text-neutral-800 dark:text-neutral-100" : "text-neutral-600 dark:text-neutral-400"}`}
                 >
                   <span aria-hidden="true" className="shrink-0">
                     <ProjectsIcon className="size-4" fill={false} />
                   </span>
-                  <span className="min-w-0 flex-1 truncate pr-9">
+                  <span className="min-w-0 flex-1 truncate pr-8">
                     {project.name}
                   </span>
-                  <span aria-hidden="true" className="shrink-0">
-                    <ChevronDownIcon
-                      className={`size-4 ${expanded ? "" : "-rotate-90"}`}
-                    />
-                  </span>
-                </button>
+                </Link>
                 {canCreateTasks && project.permissions.create_tasks && (
                   <button
-                    className={`${projectCreateActionClassName} absolute right-9`}
+                    className={`${projectCreateActionClassName} absolute right-1.5`}
                     type="button"
                     disabled={loading}
                     aria-label={`Crear tarea en ${project.name}`}
@@ -142,21 +91,6 @@ export default function ProjectNavigation({
                   </button>
                 )}
               </div>
-              <ul
-                id={childrenId}
-                className={styles.children}
-                hidden={!expanded}
-              >
-                <li>
-                  <Link
-                    to={path}
-                    aria-label={`Lista de tareas de ${project.name}`}
-                    aria-current={active ? "page" : undefined}
-                  >
-                    Lista de tareas
-                  </Link>
-                </li>
-              </ul>
             </li>
           );
         })}

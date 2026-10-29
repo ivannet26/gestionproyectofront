@@ -1,11 +1,12 @@
 import { useId, useState } from "react";
 import type { Project } from "../types";
 import { avatarFor } from "../../../shared/Avatar";
+import { useAssignmentTeams } from "./useAssignmentTeams";
 
-export default function AssigneeSelector({ project, value, onChange }: { project: Pick<Project, "participants" | "assignment_teams">; value: number[]; onChange: (value: number[]) => void }) {
+export default function AssigneeSelector({ project, value, onChange }: { project: Pick<Project, "id" | "participants" | "assignment_teams">; value: number[]; onChange: (value: number[]) => void }) {
   const [source, setSource] = useState<"workers" | "teams">("workers"), [query, setQuery] = useState("");
   const [teamId, setTeamId] = useState<number | null>(null), id = useId();
-  const teams = project.assignment_teams ?? [];
+  const { teams, error: teamsError, loading: teamsLoading } = useAssignmentTeams(project.id, source === "teams", project.assignment_teams);
   const team = teams.find((item) => item.id === teamId);
   const people = source === "workers" ? project.participants.map((person) => ({ ...person, eligible: true, reason: "" })) : team?.members ?? [];
   const results = people.filter((person) => person.name.toLocaleLowerCase("es").includes(query.trim().toLocaleLowerCase("es")));
@@ -18,7 +19,7 @@ export default function AssigneeSelector({ project, value, onChange }: { project
     </div>
     {source === "teams" && <><label htmlFor={`${id}-team`}>Equipo del área</label><select id={`${id}-team`} name="assignment_team" className="w-full rounded-lg border border-neutral-200 bg-white px-2 py-1.5" value={teamId ?? ""}
       onChange={(event) => setTeamId(event.target.value ? Number(event.target.value) : null)}><option value="">Selecciona un equipo</option>{teams.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.eligible_count} elegibles</option>)}</select>
-      {!teams.length && <p role="status" className="m-0 text-neutral-600">No hay equipos activos disponibles en el área.</p>}</>}
+      {!teams.length && <p role="status" className="m-0 text-neutral-600">{teamsLoading ? "Cargando equipos…" : teamsError || "No hay equipos activos disponibles en el área."}</p>}</>}
     <label htmlFor={id}>Buscar integrante del proyecto</label>
     <input id={id} name="responsible_search" type="search" autoComplete="off" placeholder="Buscar por nombre…" value={query} onChange={(event) => setQuery(event.target.value)} />
     <div className="max-h-48 overflow-y-auto overscroll-contain" role="group" aria-label="Integrantes elegibles">

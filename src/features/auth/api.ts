@@ -184,17 +184,27 @@ export async function getSessionProfile(): Promise<SessionProfile> {
   return apiRequest<SessionProfile>("me/");
 }
 
-export async function refreshSession(): Promise<SessionUser> {  if (!renewal) {
+export async function refreshSession(): Promise<SessionUser> {
+  if (!renewal) {
     const epoch = sessionEpoch;
 
     const operation = (async () => {
-      await prepareCsrf();
+      if (!csrfCookie()) await prepareCsrf();
       checkSession(epoch);
 
-      const response = await rawRequest("refresh/", {
+      let response = await rawRequest("refresh/", {
         method: "POST",
         headers: { "X-CSRFToken": csrfCookie() },
       });
+
+      if (response.status === 403) {
+        csrfToken = "";
+        await prepareCsrf();
+        response = await rawRequest("refresh/", {
+          method: "POST",
+          headers: { "X-CSRFToken": csrfCookie() },
+        });
+      }
 
       const payload = await parseResponse<AuthPayload>(response);
       checkSession(epoch);
@@ -235,7 +245,7 @@ export async function login(
   clearAccess();
   const epoch = sessionEpoch;
 
-  await prepareCsrf();
+  await (csrfCookie() ? Promise.resolve() : prepareCsrf());
   checkSession(epoch);
 
   const response = await rawRequest("login/", {
@@ -256,7 +266,7 @@ export async function login(
 export async function logout(): Promise<void> {
   const epoch = sessionEpoch;
 
-  await prepareCsrf();
+  await (csrfCookie() ? Promise.resolve() : prepareCsrf());
 
   await parseResponse<unknown>(
     await rawRequest("logout/", {

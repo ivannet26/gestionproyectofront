@@ -8,20 +8,17 @@
   <meta name="description" content="Panel de gestión de proyectos de GM Ingenieros y Consultores" />
   <title>GM Ingenieros | Gestión de proyectos</title>
 <script>
-  (function () {
-    try {
-      var theme = localStorage.getItem("gm-theme") || localStorage.getItem("theme") || "light";
-      var dark =
-        theme === "dark" ||
-        (theme === "system" &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches);
-      if (dark) document.documentElement.classList.add("dark");
-    } catch (e) {}
-  })();
+  try {
+    const theme = localStorage.getItem("theme");
+    if (
+      theme === "dark" ||
+      (theme !== "light" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    ) {
+      document.documentElement.classList.add("dark");
+    }
+  } catch {}
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 </head>
 
 <div id="root"></div>

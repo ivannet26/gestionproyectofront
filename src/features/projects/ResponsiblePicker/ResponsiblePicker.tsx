@@ -6,6 +6,7 @@ import { propertyClasses as styles } from "../ProjectForm/formClasses";
 import AssigneeSelector from "./AssigneeSelector";
 
 export default function ResponsiblePicker({
+  projectId,
   participants,
   teams,
   value,
@@ -13,6 +14,7 @@ export default function ResponsiblePicker({
   error,
   compact,
 }: {
+  projectId: number;
   participants: Project["participants"];
   teams?: Project["assignment_teams"];
   value: number[];
@@ -42,7 +44,7 @@ export default function ResponsiblePicker({
       {(close) => (
         <>
           <AssigneeSelector
-            project={{ participants, assignment_teams: teams }}
+            project={{ id: projectId, participants, assignment_teams: teams }}
             value={value}
             onChange={onChange}
           />

@@ -14,7 +14,6 @@ import {
   sessionKey,
 } from "./features/auth/api";
 import { LoadingProvider } from "./context/LoadingContext";
-import { applyInitialTheme } from "./hooks/useTheme";
 import { ToastProvider } from "./context/ToastContext";
 import { useLoading } from "./hooks/useLoading";
 import AppShell from "./features/layout/AppShell/AppShell";
@@ -34,9 +33,6 @@ function App() {
 function AppContent() {
   const { hideLoading, isLoading } = useLoading();
 
-  useEffect(() => {
-    applyInitialTheme();
-  }, []);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [logoutError, setLogoutError] = useState("");
   const navigate = useNavigate();

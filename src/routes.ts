@@ -1,16 +1,29 @@
+import { lazy } from "react";
 import type { ComponentType } from "react";
 
-import DashboardPage from "./features/dashboard/DashboardPage/DashboardPage";
-import ProjectList from "./features/projects/ProjectList/ProjectList";
-import ProjectRoute from "./features/projects/ProjectRoute/ProjectRoute";
-import WorkersPage from "./features/workers/WorkersPage";
-import OrganizationPage from "./features/organization/OrganizationPage";
-import TeamsPage from "./features/teams/TeamsPage";
-import TeamDetailPage from "./features/teams/TeamDetailPage";
-import AccountsPage from "./features/accounts/AccountsPage";
-import RecoveryRequestsPage from "./features/recovery-requests/RecoveryRequestsPage";
-import PublicationsPage from "./features/publications/PublicationsPage";
-import SettingsPage from "./features/settings/SettingsPage";
+export const DashboardPage = lazy(
+  () => import("./features/dashboard/DashboardPage/DashboardPage"),
+);
+export const ProjectList = lazy(
+  () => import("./features/projects/ProjectList/ProjectList"),
+);
+export const ProjectRoute = lazy(
+  () => import("./features/projects/ProjectRoute/ProjectRoute"),
+);
+export const PublicationsPage = lazy(
+  () => import("./features/publications/PublicationsPage"),
+);
+const WorkersPage = lazy(() => import("./features/workers/WorkersPage"));
+const OrganizationPage = lazy(
+  () => import("./features/organization/OrganizationPage"),
+);
+const TeamsPage = lazy(() => import("./features/teams/TeamsPage"));
+const TeamDetailPage = lazy(() => import("./features/teams/TeamDetailPage"));
+const AccountsPage = lazy(() => import("./features/accounts/AccountsPage"));
+const RecoveryRequestsPage = lazy(
+  () => import("./features/recovery-requests/RecoveryRequestsPage"),
+);
+const SettingsPage = lazy(() => import("./features/settings/SettingsPage"));
 
 export interface AppRoute {
   path: string;
