@@ -1,3 +1,4 @@
+import ResourceStatus from "../../shared/ResourceStatus";
 import { useState } from "react";
 import ActivityIcon from "../../shared/icons/ActivityIcon";
 import AtIcon from "../../shared/icons/AtIcon";
@@ -23,19 +24,27 @@ function WorkersPage() {
   const [appliedSearch, setAppliedSearch] = useState("");
   const [disponibleInput, setDisponibleInput] = useState("");
   const [disponible, setDisponible] = useState<boolean | undefined>(undefined);
-  const { data, loading, refetch } = useWorkers({
+  const [areaInput, setAreaInput] = useState("");
+  const [areaId, setAreaId] = useState<number | undefined>();
+  const [activeInput, setActiveInput] = useState("");
+  const [active, setActive] = useState<boolean | undefined>();
+  const resource = useWorkers({
     search: appliedSearch || undefined,
-    disponible,
+    disponible, area_id: areaId, active,
   });
-  const { data: areas } = useAreas();
+  const { data, refetch } = resource;
+  const areaResource = useAreas();
+  const { data: areas } = areaResource;
   const areaNameById = new Map(areas.map((area) => [area.id, area.name]));
   const [editingWorker, setEditingWorker] = useState<Worker | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const hasFilters = appliedSearch !== "" || disponible !== undefined;
+  const hasFilters = appliedSearch !== "" || disponible !== undefined || areaId !== undefined || active !== undefined;
 
   const applyFilters = (e: React.FormEvent) => {
     e.preventDefault();
     setAppliedSearch(searchInput.trim());
+    setAreaId(areaInput ? Number(areaInput) : undefined);
+    setActive(activeInput === "" ? undefined : activeInput === "true");
     setDisponible(
       disponibleInput === "" ? undefined : disponibleInput === "true",
     );
@@ -46,6 +55,7 @@ function WorkersPage() {
     setAppliedSearch("");
     setDisponibleInput("");
     setDisponible(undefined);
+    setAreaInput(""); setAreaId(undefined); setActiveInput(""); setActive(undefined);
   };
 
   const handleSubmit = async (formData: WorkerUpdateData) => {
@@ -109,9 +119,19 @@ function WorkersPage() {
           <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600" />
         </div>
 
+        <select aria-label="Filtrar por área" name="area" value={areaInput} onChange={(event) => setAreaInput(event.target.value)}
+          disabled={!areaResource.ready || Boolean(areaResource.error)}
+          className="cursor-pointer rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs">
+          <option value="">Todas las áreas</option>
+          {areas.map((area) => <option key={area.id} value={area.id}>{area.name}</option>)}
+        </select>
+        <select aria-label="Filtrar por estado" name="active" value={activeInput} onChange={(event) => setActiveInput(event.target.value)}
+          className="cursor-pointer rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs">
+          <option value="">Todos los estados</option><option value="true">Activos</option><option value="false">Inactivos</option>
+        </select>
+
         <button
           type="submit"
-          disabled={loading}
           className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Buscar trabajador
@@ -128,7 +148,10 @@ function WorkersPage() {
         )}
       </form>
 
-      <section className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
+      <ResourceStatus label="trabajadores" {...resource} />
+      <ResourceStatus label="áreas" {...areaResource} />
+      {resource.ready && !resource.pending && !resource.error && !data.length && <p role="status" className="my-3 text-xs text-neutral-600">No hay trabajadores para los filtros aplicados.</p>}
+      <section aria-busy={resource.pending} className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
         <div className="w-full overflow-x-auto">
           <table className="w-full border-collapse text-xs text-neutral-600 text-left">
             <thead className="border-b border-neutral-200 font-medium text-neutral-700">
@@ -224,6 +247,7 @@ function WorkersPage() {
                       <button
                         type="button"
                         className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-lg cursor-pointer inline-flex items-center justify-center transition-colors"
+                        disabled={!areaResource.ready || Boolean(areaResource.error)}
                         onClick={() => setEditingWorker(worker)}
                         aria-label={`Editar ${worker.first_names} ${worker.last_names}`}
                       >

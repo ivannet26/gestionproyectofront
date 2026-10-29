@@ -1,76 +1,30 @@
-import { useCallback, useEffect, useState } from "react";
-import { getSessionProfile } from "../../auth/api";
-import type { SessionProfile } from "../../auth/api";
-import { listSpecialties } from "../../../core/services/organizationService";
-import {
-  addMySpecialty,
-  listMySpecialties,
-  removeMySpecialty,
-} from "../../../core/services/workerService";
-import type { MySpecialty } from "../../../core/interfaces/worker.interface";
-import type { Specialty } from "../../../core/interfaces/organization.interface";
+import { useRef, useState } from "react";
+import { addMySpecialty, listMySpecialties, listMySpecialtyOptions, removeMySpecialty } from "../../../core/services/workerService";
+import { useRemoteResource } from "../../../hooks/useRemoteResource";
 
 export const useProfile = () => {
-  const [profile, setProfile] = useState<SessionProfile | null>(null);
-  const [specialties, setSpecialties] = useState<MySpecialty[]>([]);
-  const [catalog, setCatalog] = useState<Specialty[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const mine = useRemoteResource(listMySpecialties, "profile-specialties");
+  const options = useRemoteResource(listMySpecialtyOptions, "profile-specialty-options");
   const [saving, setSaving] = useState(false);
-
-  const fetch = useCallback(async () => {
+  const pending = useRef(false);
+  async function mutate(write: () => Promise<unknown>) {
+    if (pending.current) throw new Error("Espera a que termine el guardado.");
+    if (!mine.isCurrent() || !mine.ready || mine.pending || mine.error) throw new Error("Actualiza tus especialidades antes de editar.");
+    pending.current = true; setSaving(true);
     try {
-      setLoading(true);
-      const [session, mine, all] = await Promise.all([
-        getSessionProfile(),
-        listMySpecialties(),
-        listSpecialties(),
-      ]);
-      setProfile(session);
-      setSpecialties(mine);
-      setCatalog(all);
-      setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e : new Error("Unknown error"));
+      await write();
+      if (mine.isCurrent()) await mine.refetch();
     } finally {
-      setLoading(false);
+      pending.current = false;
+      if (mine.isCurrent()) setSaving(false);
     }
-  }, []);
-
-  useEffect(() => {
-    Promise.resolve().then(fetch);
-  }, [fetch]);
-
-  const addSpecialty = async (specialtyId: number) => {
-    setSaving(true);
-    try {
-      await addMySpecialty({ specialty_id: specialtyId });
-      await fetch();
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const dropSpecialty = async (specialty: MySpecialty) => {
-    setSaving(true);
-    try {
-      await removeMySpecialty(specialty.id);
-      await fetch();
-    } finally {
-      setSaving(false);
-    }
-  };
-
+  }
+  const specialties = mine.value ?? [];
   return {
-    profile,
-    specialties,
-    catalog: catalog.filter(
-      (item) => !specialties.some((mine) => mine.id === item.id),
-    ),
-    loading,
-    error,
+    mine, options, specialties,
+    catalog: (options.value ?? []).filter((item) => !specialties.some((own) => own.id === item.id)),
     saving,
-    addSpecialty,
-    dropSpecialty,
+    addSpecialty: (id: number) => mutate(() => addMySpecialty({ specialty_id: id })),
+    dropSpecialty: (id: number) => mutate(() => removeMySpecialty(id)),
   };
 };

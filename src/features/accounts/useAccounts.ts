@@ -1,87 +1,33 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  apiRequest,
-  errorText,
-  type Account,
-  type Area,
-  type DetailResult,
-} from "../auth/api";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { errorText, sessionVersion } from "../auth/api";
 import { useToast } from "../../hooks/useToast";
-
-export interface AccountFilters {
-  search?: string;
-  active?: boolean;
-}
+import { useCursorPage } from "../../hooks/useCursorPage";
+import { useRemoteResource } from "../../hooks/useRemoteResource";
+import { listAccounts, listAccountAreas, resendAccountInvitation } from "../../core/services/accountService";
+import type { AccountFilters } from "../../core/interfaces/account.interface";
+export type { AccountFilters } from "../../core/interfaces/account.interface";
 
 export function useAccounts(filters: AccountFilters = {}) {
   const { search = "", active } = filters;
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [areas, setAreas] = useState<Area[]>([]);
-  const [busy, setBusy] = useState(false);
+  const list = useCursorPage(useCallback((cursor: string | null) => listAccounts({ search, active }, cursor), [search, active]),
+    "accounts:" + JSON.stringify([search, active]));
+  const areaResource = useRemoteResource(listAccountAreas, "account-areas");
+  const [busy, setBusy] = useState(false), [mutationError, setMutationError] = useState("");
+  const alive = useRef(true), pending = useRef(false);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
   const { addToast } = useToast();
-
-  const load = useCallback(async () => {
+  async function resendInvitation(id: number) {
+    if (pending.current || !list.isCurrent()) return;
+    const epoch = sessionVersion(), current = () => alive.current && epoch === sessionVersion();
+    pending.current = true; setBusy(true); setMutationError("");
     try {
-      const [accountList, areaList] = await Promise.all([
-        apiRequest<Account[]>("admin/accounts/"),
-        apiRequest<Area[]>("admin/areas/"),
-      ]);
-      setAccounts(accountList);
-      setAreas(areaList);
-    } catch (failure) {
-      addToast({
-        icon: "error",
-        title: "Error al cargar",
-        message: errorText(failure),
-      });
-    }
-  }, [addToast]);
-
-  useEffect(() => {
-    Promise.resolve().then(load);
-  }, [load]);
-
-  const visibleAccounts = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    return accounts.filter((account) => {
-      if (active !== undefined && account.active !== active) return false;
-      if (!term) return true;
-      return (
-        account.name.toLowerCase().includes(term) ||
-        account.email.toLowerCase().includes(term)
-      );
-    });
-  }, [accounts, search, active]);
-
-  const resendInvitation = async (accountId: number) => {
-    setBusy(true);
-    try {
-      const result = await apiRequest<DetailResult>(
-        `admin/accounts/${accountId}/resend-invitation/`,
-        { method: "POST" },
-      );
-      addToast({
-        icon: "success",
-        title: "Invitación reenviada",
-        message: result.detail,
-      });
-    } catch (failure) {
-      addToast({
-        icon: "error",
-        title: "No se pudo reenviar",
-        message: errorText(failure),
-      });
-    } finally {
-      await load();
-      setBusy(false);
-    }
-  };
-
-  return {
-    accounts: visibleAccounts,
-    areas,
-    busy,
-    resendInvitation,
-    reload: load,
-  };
+      const result = await resendAccountInvitation(id);
+      if (current()) {
+        addToast({ icon: "success", title: "Invitación reenviada", message: result.detail });
+        await list.reload();
+      }
+    } catch (failure) { if (current()) setMutationError(errorText(failure)); }
+    finally { pending.current = false; if (current()) setBusy(false); }
+  }
+  return { ...list, accounts: list.data, areas: areaResource.value ?? [], areaResource, busy, mutationError, resendInvitation, reload: list.reload };
 }

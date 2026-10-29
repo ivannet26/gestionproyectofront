@@ -1,3 +1,4 @@
+import ResourceStatus from "../../shared/ResourceStatus";
 import { useState } from "react";
 import { Link } from "react-router";
 import { createTeam } from "../../core/services/organizationService";
@@ -17,9 +18,11 @@ import BriefcaseIcon from "../../shared/icons/BriefcaseIcon";
 
 const emptyTeam: TeamFormState = { area: "", name: "", active: true };
 
-function TeamsPage() {
-  const { data, refetch } = useTeams();
-  const { data: areas } = useAreas();
+function TeamsPage({ canManage = false }: { canManage?: boolean }) {
+  const resource = useTeams();
+  const { data, refetch } = resource;
+  const areaResource = useAreas(canManage);
+  const { data: areas } = areaResource;
   const [searchInput, setSearchInput] = useState("");
   const [appliedSearch, setAppliedSearch] = useState("");
   const [activeInput, setActiveInput] = useState("");
@@ -74,14 +77,15 @@ function TeamsPage() {
             Consulta los equipos de la organización y accede a sus integrantes.
           </p>
         </div>
-        <button
+        {canManage && <button
           type="button"
+          disabled={!areaResource.ready || Boolean(areaResource.error)}
           onClick={() => setCreating(true)}
           className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 cursor-pointer"
         >
           <PlusIcon className="size-4" />
           Nuevo equipo
-        </button>
+        </button>}
       </header>
 
       <form
@@ -140,7 +144,9 @@ function TeamsPage() {
         )}
       </form>
 
-      <section className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
+      <ResourceStatus label="equipos" {...resource} />
+      {canManage && <ResourceStatus label="áreas" {...areaResource} />}
+      <section aria-busy={resource.pending} className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
         <div className="w-full overflow-x-auto">
           <table className="w-full border-collapse text-xs text-neutral-600 text-left">
             <thead className="border-b border-neutral-200 font-medium text-neutral-700">
@@ -221,7 +227,7 @@ function TeamsPage() {
             </tbody>
           </table>
         </div>
-        {visible.length === 0 && (
+        {resource.ready && !resource.pending && !resource.error && visible.length === 0 && (
           <p
             role="status"
             className="m-0 px-3 py-8 text-xs text-neutral-600 text-center"
@@ -233,7 +239,7 @@ function TeamsPage() {
         )}
       </section>
 
-      {creating && (
+      {canManage && creating && (
         <TeamForm
           title="Nuevo equipo"
           submitLabel="Crear"

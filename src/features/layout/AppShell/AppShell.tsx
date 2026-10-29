@@ -1,20 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 import type { AppRoute } from "../../../routes";
 import { appRoutes, projectPath } from "../../../routes";
 import type { SessionUser } from "../../auth/api";
 import { errorText } from "../../auth/api";
+import { useRemoteResource } from "../../../hooks/useRemoteResource";
 import { useLoading } from "../../../hooks/useLoading";
+import { useProjectDirectory } from "../../projects/useProjectDirectory";
 import CreateProjectModal from "../../projects/CreateProjectModal/CreateProjectModal";
 import DashboardPage from "../../dashboard/DashboardPage/DashboardPage";
 import Modal from "../../projects/Modal/Modal";
 import ProjectList from "../../projects/ProjectList/ProjectList";
 import ProjectRoute from "../../projects/ProjectRoute/ProjectRoute";
-import { getProjectCatalogs, getProjects } from "../../projects/services";
+import { getProjectCatalogs, getProject } from "../../projects/services";
 import type {
   Project,
   ProjectCatalogs,
-  ProjectSummary,
   TaskCreationRequest,
 } from "../../projects/types";
 import NotAvailable from "../NotAvailable/NotAvailable";
@@ -28,15 +29,11 @@ interface AppShellProps {
 
 function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [catalogs, setCatalogs] = useState<ProjectCatalogs>({
     areas: [],
     states: [],
     priorities: [],
   });
-  const [projectsLoading, setProjectsLoading] = useState(true);
-  const [projectError, setProjectError] = useState("");
-  const [projectReload, setProjectReload] = useState(0);
   const [creating, setCreating] = useState(false);
   const [catalogsReady, setCatalogsReady] = useState(false);
   const [catalogError, setCatalogError] = useState("");
@@ -44,45 +41,29 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const [taskCreationRequest, setTaskCreationRequest] =
     useState<TaskCreationRequest | null>(null);
   const taskCreationSequence = useRef(0);
-  const hasLoadedProjects = useRef(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { hideLoading, startLoading } = useLoading();
+  const [projectSearch, setProjectSearch] = useState("");
+  const [listSearch, setListSearch] = useState("");
+  const { hideLoading } = useLoading();
+  const directory = useProjectDirectory({ search: projectSearch, associated: true });
+  const mainDirectory = useProjectDirectory({ search: listSearch }, pathname === "/proyectos" || pathname === "/proyectos/resumen");
+  const projects = directory.data, projectsLoading = directory.pending, projectError = directory.error;
+  const activeId = Number(pathname.match(/^\/proyectos\/(\d+)$/)?.[1]);
+  const activeOnPage = projects.find((item) => item.id === activeId);
+  const active = useRemoteResource(useCallback(() => getProject(activeId), [activeId]),
+    "current-project:" + activeId, Number.isSafeInteger(activeId) && activeId > 0 && !activeOnPage);
+  const currentProject = activeOnPage ?? active.value;
+  useEffect(() => { if (!directory.loading) hideLoading(); }, [directory.loading, hideLoading]);
+
   const canViewAdmin = user.permissions.manage_accounts;
   const canCreateProject = user.role === "ADMINISTRADOR";
   const canCreateTasks =
     user.role === "ADMINISTRADOR" || user.role === "TRABAJADOR";
-  const creationDisabled = projectsLoading || Boolean(projectError);
+  const creationDisabled = false;
   const projectWorkspace = /^\/proyectos\/\d+$/.test(pathname);
   const needsCatalogs = creating || projectWorkspace;
   const catalogLoading = needsCatalogs && !catalogsReady && !catalogError;
-
-  useEffect(() => {
-    let current = true;
-    const finishLoading = hasLoadedProjects.current ? () => {} : startLoading();
-    void getProjects()
-      .then((items) => {
-        if (current) {
-          hasLoadedProjects.current = true;
-          setProjects(items);
-          setProjectError("");
-        }
-      })
-      .catch((failure: unknown) => {
-        if (current) setProjectError(errorText(failure));
-      })
-      .finally(() => {
-        finishLoading();
-        if (current) {
-          setProjectsLoading(false);
-          hideLoading();
-        }
-      });
-    return () => {
-      current = false;
-      finishLoading();
-    };
-  }, [projectReload, hideLoading, startLoading]);
 
   useEffect(() => {
     if (!needsCatalogs || catalogsReady) return;
@@ -108,21 +89,13 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
     setCatalogReload((current) => current + 1);
   }
 
-  function retryProjects() {
-    setProjectsLoading(true);
-    setProjectError("");
-    setProjectReload((current) => current + 1);
-  }
-
   function openProjectCreation() {
     if (canCreateProject && !creationDisabled) setCreating(true);
   }
 
   function projectCreated(project: Project) {
-    setProjects((current) => [
-      project,
-      ...current.filter((item) => item.id !== project.id),
-    ]);
+    void directory.reload();
+    void mainDirectory.reload();
     setCreating(false);
     void navigate(projectPath(project.id));
   }
@@ -134,7 +107,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   }
 
   function openTaskCreation(projectId: number) {
-    const project = projects.find((item) => item.id === projectId);
+    const project = projects.find((item) => item.id === projectId) ?? (currentProject?.id === projectId ? currentProject : null);
     if (
       !canCreateTasks ||
       projectsLoading ||
@@ -162,9 +135,9 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
     if (route.Component === ProjectList) {
       return (
         <route.Component
-          projects={projects}
-          loading={projectsLoading}
-          error={projectError}
+          directory={mainDirectory}
+          search={listSearch}
+          onSearch={setListSearch}
           canCreate={canCreateProject}
           creationDisabled={creationDisabled}
           onCreate={openProjectCreation}
@@ -183,6 +156,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         />
       );
     }
+    if (route.path === "/equipos" || route.path === "/equipos/:teamId") return <route.Component canManage={user.role === "ADMINISTRADOR"} />;
     return <route.Component />;
   }
 
@@ -197,7 +171,11 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         projects={projects}
         projectsLoading={projectsLoading}
         projectError={projectError}
-        onRetryProjects={retryProjects}
+        onRetryProjects={directory.refetch}
+        directoryNavigation={directory.navigation}
+        projectSearch={projectSearch}
+        onProjectSearch={setProjectSearch}
+        currentProject={!activeOnPage && currentProject?.has_associated_workers ? currentProject : null}
         canCreateProject={canCreateProject}
         projectCreationDisabled={creationDisabled}
         onCreateProject={openProjectCreation}

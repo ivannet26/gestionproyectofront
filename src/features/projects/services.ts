@@ -1,10 +1,12 @@
 import type { AxiosRequestConfig } from "axios";
+import type { CursorPage } from "../../core/interfaces/pagination.interface";
+import type { ProjectListFilters } from "./types";
 import { httpClient } from "../../core/api/httpClient";
 import type { TaskIdentity, TaskDetailData, SubtaskPage, TaskPage, TaskActivityGroup, TaskRelation, RelationKind } from "./types";
 import type {
   CreateProjectPayload,
   CreateTaskPayload,
-  EditTaskPayload,
+  TaskPatchPayload,
   Project,
   ProjectFavoriteState,
   ProjectCatalogs,
@@ -47,8 +49,14 @@ export function removeTaskRelation(target: TaskIdentity, relationId: number): Pr
   return projectRequest<void>(`${taskPath(target)}relations/${relationId}/`, { method: "DELETE" });
 }
 
-export function getProjects(): Promise<ProjectSummary[]> {
-  return projectRequest();
+export function getProjects(filters: ProjectListFilters = {}, cursor: string | null = null): Promise<CursorPage<ProjectSummary>> {
+  const query = new URLSearchParams();
+  if (filters.search?.trim()) query.set("search", filters.search.trim());
+  for (const key of ["area_id", "state_code", "available", "associated"] as const) {
+    if (filters[key] !== undefined) query.set(key, String(filters[key]));
+  }
+  if (cursor) query.set("cursor", cursor);
+  return projectRequest(query.size ? "?" + query : "");
 }
 
 export function getProjectCatalogs(): Promise<ProjectCatalogs> {
@@ -131,9 +139,14 @@ export function createTask(
 export function updateTask(
   projectId: number,
   taskId: number,
-  payload: Partial<EditTaskPayload>,
+  payload: TaskPatchPayload,
 ): Promise<Task> {
-  return projectRequest(`${projectId}/tasks/${taskId}/`, {
+  const dates = "start_date" in payload || "due_date" in payload;
+  if (dates && (!payload.expected_calendar_revision || !payload.calendar_intent_id))
+    throw new Error("La edición de fechas requiere revisión e intención de calendario.");
+  if (!dates && ("expected_calendar_revision" in payload || "calendar_intent_id" in payload))
+    throw new Error("Las precondiciones de calendario requieren una edición de fechas.");
+  return projectRequest<Task>(`${projectId}/tasks/${taskId}/`, {
     method: "PATCH",
     data: payload,
   });

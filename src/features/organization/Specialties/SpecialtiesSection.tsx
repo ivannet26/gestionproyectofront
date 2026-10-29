@@ -1,3 +1,4 @@
+import ResourceStatus from "../../../shared/ResourceStatus";
 import { useState } from "react";
 import FileIcon from "../../../shared/icons/FileIcon";
 import EditIcon from "../../../shared/icons/EditIcon";
@@ -23,7 +24,8 @@ type SpecialtyModal =
 const emptySpecialty: SpecialtyWriteData = { name: "" };
 
 function SpecialtiesSection() {
-  const { data, refetch } = useSpecialties();
+  const resource = useSpecialties();
+  const { data, refetch } = resource;
   const [modal, setModal] = useState<SpecialtyModal | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -70,7 +72,8 @@ function SpecialtiesSection() {
         </button>
       </div>
 
-      {data.length === 0 ? (
+      <ResourceStatus label="especialidades" {...resource} />
+      {resource.ready && !resource.pending && !resource.error && data.length === 0 ? (
         <EmptyState
           iconName="specialties"
           message="No hay especialidades registradas."

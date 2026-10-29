@@ -5,6 +5,7 @@ import CalendarIcon from "../../../shared/icons/CalendarIcon";
 import ChevronLeftIcon from "../../../shared/icons/ChevronLeftIcon";
 import ChevronRightIcon from "../../../shared/icons/ChevronRightIcon";
 import { projectToday } from "../TaskList/taskGrouping";
+import { calendarDate as readDate, calendarDateKey as dateKey, addCalendarDays } from "../calendarDate";
 const styles = {
   calendar: "grid gap-2",
   caption:
@@ -44,14 +45,6 @@ const weekdays = [
   "viernes",
   "sábado",
 ];
-
-function dateKey(date: Date) {
-  return `${String(date.getFullYear()).padStart(4, "0")}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
-function readDate(value: string) {
-  return new Date(`${value}T12:00:00`);
-}
 
 export function Calendar({
   value,
@@ -136,9 +129,8 @@ export function Calendar({
     )
       return;
     event.preventDefault();
-    const next = new Date(current);
-    if (event.key in offsets) next.setDate(next.getDate() + offsets[event.key]);
-    else {
+    const next = event.key in offsets ? readDate(addCalendarDays(event.target.dataset.date, offsets[event.key])) : new Date(current);
+    if (!(event.key in offsets)) {
       next.setDate(1);
       next.setMonth(next.getMonth() + (event.key === "PageUp" ? -1 : 1));
       const lastDay = new Date(

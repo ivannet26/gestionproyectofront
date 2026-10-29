@@ -1,52 +1,17 @@
-import { useCallback, useEffect, useState } from "react";
-import {
-  getTeamById,
-  listTeamMembers,
-  removeTeamMember,
-} from "../../../core/services/organizationService";
-import type {
-  Team,
-  TeamMember,
-} from "../../../core/interfaces/organization.interface";
+import { useCallback } from "react";
+import { getTeamById, listTeamMembers, removeTeamMember } from "../../../core/services/organizationService";
+import { useRemoteResource } from "../../../hooks/useRemoteResource";
 
-export function useTeamDetail(teamId: number) {
-  const [team, setTeam] = useState<Team | null>(null);
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const fetch = useCallback(async () => {
-    if (!Number.isInteger(teamId) || teamId < 1) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const [detail, detailMembers] = await Promise.all([
-        getTeamById(teamId),
-        listTeamMembers(teamId),
-      ]);
-      setTeam(detail);
-      setMembers(detailMembers);
-      setError("");
-    } catch {
-      setError("No se pudo cargar el equipo.");
-    } finally {
-      setLoading(false);
-    }
-  }, [teamId]);
-
-  useEffect(() => {
-    void fetch();
-  }, [fetch]);
-
-  const removeMember = useCallback(
-    async (memberId: number) => {
-      await removeTeamMember(teamId, memberId);
-      await fetch();
-    },
-    [teamId, fetch],
-  );
-
-  return { team, members, loading, error, refetch: fetch, removeMember };
+export function useTeamDetail(teamId: number, includeInactive = false) {
+  const enabled = Number.isSafeInteger(teamId) && teamId > 0;
+  const detail = useRemoteResource(useCallback(() => getTeamById(teamId), [teamId]), `team:${teamId}`, enabled);
+  const people = useRemoteResource(useCallback(() => listTeamMembers(teamId, includeInactive), [teamId, includeInactive]), `team-members:${teamId}`, enabled);
+  const refreshDetail = detail.refetch, refreshPeople = people.refetch, isCurrent = people.isCurrent;
+  const refetch = useCallback(async () => { await Promise.all([refreshDetail(), refreshPeople()]); }, [refreshDetail, refreshPeople]);
+  const removeMember = useCallback(async (memberId: number) => {
+    if (!isCurrent()) return;
+    await removeTeamMember(teamId, memberId);
+    if (isCurrent()) await refreshPeople();
+  }, [teamId, isCurrent, refreshPeople]);
+  return { team: detail.value, members: people.value ?? [], detail, people, refetch, removeMember, validId: enabled };
 }

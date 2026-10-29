@@ -1,3 +1,4 @@
+import ResourceStatus from "../../../shared/ResourceStatus";
 import { useState } from "react";
 import FolderIcon from "../../../shared/icons/FolderIcon";
 import EditIcon from "../../../shared/icons/EditIcon";
@@ -19,7 +20,8 @@ type AreaModal = { mode: "create" } | { mode: "edit"; area: Area };
 const emptyArea: AreaWriteData = { code: "", name: "", active: true };
 
 function AreasSection() {
-  const { data, refetch } = useAreas();
+  const resource = useAreas();
+  const { data, refetch } = resource;
   const [modal, setModal] = useState<AreaModal | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -56,7 +58,8 @@ function AreasSection() {
         </button>
       </div>
 
-      {data.length === 0 ? (
+      <ResourceStatus label="áreas" {...resource} />
+      {resource.ready && !resource.pending && !resource.error && data.length === 0 ? (
         <EmptyState iconName="areas" message="No hay áreas registradas." />
       ) : (
         <ul className="m-0 p-0 list-none space-y-0.5">

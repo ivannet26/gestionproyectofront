@@ -19,6 +19,7 @@ function Sidebar({
   onLogout,
   currentPath,
   projects,
+  directoryNavigation, projectSearch, onProjectSearch, currentProject,
   projectsLoading,
   projectError,
   onRetryProjects,
@@ -99,6 +100,10 @@ function Sidebar({
               isCollapsed={isCollapsed}
               currentPath={currentPath}
               projects={projects}
+              directoryNavigation={directoryNavigation}
+              projectSearch={projectSearch}
+              onProjectSearch={onProjectSearch}
+              currentProject={currentProject}
               projectsLoading={projectsLoading}
               projectError={projectError}
               onRetryProjects={onRetryProjects}

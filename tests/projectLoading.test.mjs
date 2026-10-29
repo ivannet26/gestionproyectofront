@@ -99,20 +99,42 @@ test("overlapping loading leases survive legacy hide and release each operation 
 async function shellHarness() {
   const harness = hooks(), projects = [], catalogs = [];
   const Empty = () => null, ProjectRoute = () => null, Sidebar = () => null;
-  let pathname = "/proyectos/42", active = 0;
-  const loading = { hideLoading() {}, startLoading() { active++; let open = true; return () => { if (open) { open = false; active--; } }; } };
+  let pathname = "/proyectos/42", active = 0, bootReleased = false;
+  const loading = { hideLoading() { bootReleased = true; }, startLoading() { active++; let open = true; return () => { if (open) { open = false; active--; } }; } };
   const { default: AppShell } = await load("../src/features/layout/AppShell/AppShell.tsx", {
     react: harness.react,
     "react-router": { Route: Empty, Routes: Empty, useLocation: () => ({ pathname }), useNavigate: () => () => {} },
     "../../../routes": { appRoutes: [{ path: "/proyectos/:projectId", Component: ProjectRoute }], projectPath: id => `/proyectos/${id}` },
     "../../auth/api": { errorText: error => error.message },
     "../../../hooks/useLoading": { useLoading: () => loading },
+    "../../../hooks/useRemoteResource": { useRemoteResource: () => ({ value: null }) },
+    "../../projects/useProjectDirectory": { useProjectDirectory: (filters, enabled = true) => {
+      const [data, setData] = harness.react.useState([]);
+      const [pending, setPending] = harness.react.useState(enabled);
+      const [error, setError] = harness.react.useState("");
+      const current = harness.react.useRef(true);
+      const refetch = () => {
+        if (!enabled || !current.current) return Promise.resolve();
+        setPending(true);
+        const item = deferred(); projects.push(item);
+        return item.promise.then((page) => { if (current.current) setData(page); })
+          .catch((failure) => { if (current.current) setError(failure.message); })
+          .finally(() => { if (current.current) setPending(false); });
+      };
+      harness.react.useEffect(() => {
+        current.current = true;
+        if (enabled) void refetch();
+        return () => { current.current = false; };
+      }, [enabled]);
+      return { data, loading: pending && !data.length, pending, error, refetch, reload: refetch, navigation: {} };
+    } },
     "../../projects/CreateProjectModal/CreateProjectModal": { default: Empty },
     "../../dashboard/DashboardPage/DashboardPage": { default: Empty },
     "../../projects/Modal/Modal": { default: Empty },
     "../../projects/ProjectList/ProjectList": { default: Empty },
     "../../projects/ProjectRoute/ProjectRoute": { default: ProjectRoute },
     "../../projects/services": {
+      getProject: async () => ({ id: 42 }),
       getProjects: () => { const item = deferred(); projects.push(item); return item.promise; },
       getProjectCatalogs: () => { const item = deferred(); catalogs.push(item); return item.promise; },
     },
@@ -121,17 +143,19 @@ async function shellHarness() {
   const user = { role: "ADMINISTRADOR", permissions: { manage_accounts: true } };
   const tree = () => harness.render(() => AppShell({ user, onLogout() {}, logoutError: "" }));
   return { projects, catalogs, route: () => find(tree(), ProjectRoute).props, sidebar: () => find(tree(), Sidebar).props,
-    get active() { return active; }, navigate(next) { pathname = next; tree(); }, unmount: harness.unmount };
+    get active() { return active; }, get bootReleased() { return bootReleased; }, navigate(next) { pathname = next; tree(); }, unmount: harness.unmount };
 }
 
 test("catalog requests run alongside projects and failures retain explicit error and retry contracts", async () => {
   const shell = await shellHarness();
   assert.equal(shell.route().catalogLoading, true);
   assert.equal(shell.projects.length, 1); assert.equal(shell.catalogs.length, 1);
-  assert.equal(shell.active, 1);
+  assert.equal(shell.active, 0);
+  assert.equal(shell.bootReleased, false);
   shell.projects[0].resolve([]); shell.catalogs[0].reject(Error("Catálogos no disponibles"));
   await flush();
   const failed = shell.route();
+  assert.equal(shell.bootReleased, true);
   assert.equal(failed.catalogError, "Catálogos no disponibles");
   assert.equal(failed.catalogLoading, false);
   assert.equal(shell.active, 0);
@@ -181,4 +205,17 @@ test("project route forwards catalog loading, errors and retry without disguisin
   assert.equal(result.props.onRetryCatalogs, props.onRetryCatalogs);
   projectId = "invalid";
   assert.equal(ProjectRoute(props).type, Missing);
+});
+
+
+test("initial project failure releases the legacy login overlay and retains explicit retry", async () => {
+  const shell = await shellHarness();
+  shell.route(); assert.equal(shell.bootReleased, false);
+  shell.projects[0].reject(Error("Listado no disponible")); await flush();
+  assert.equal(shell.sidebar().projectError, "Listado no disponible");
+  assert.equal(shell.bootReleased, true);
+  shell.sidebar().onRetryProjects(); shell.route();
+  assert.equal(shell.projects.length, 2);
+  shell.unmount(); shell.projects[1].resolve([]); shell.catalogs[0].resolve({ areas: [], states: [], priorities: [] });
+  await flush();
 });

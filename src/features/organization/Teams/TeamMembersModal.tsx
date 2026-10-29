@@ -1,7 +1,6 @@
 import { useState } from "react";
 import XIcon from "../../../shared/icons/XIcon";
-import { addTeamMember } from "../../../core/services/organizationService";
-import { listWorkers } from "../../../core/services/workerService";
+import { useTeamMemberAddition } from "./useTeamMemberAddition";
 import type { Team } from "../../../core/interfaces/organization.interface";
 
 interface TeamMembersModalProps {
@@ -20,45 +19,17 @@ function todayLocal(): string {
 function TeamMembersModal({ team, onClose, onChanged }: TeamMembersModalProps) {
   const [code, setCode] = useState("");
   const [joinedDate, setJoinedDate] = useState(todayLocal);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = code.trim();
-    if (!trimmed || !joinedDate) return;
-    setBusy(true);
-    try {
-      const matches = await listWorkers({ search: trimmed });
-      const worker =
-        matches.find(
-          (candidate) => candidate.code.toLowerCase() === trimmed.toLowerCase(),
-        ) ?? (matches.length === 1 ? matches[0] : undefined);
-      if (!worker) {
-        setError("No existe un trabajador con ese código.");
-        return;
-      }
-      await addTeamMember(team.id, {
-        worker_id: worker.id,
-        joined_date: joinedDate,
-      });
-      setCode("");
-      setError("");
-      onChanged();
-    } catch (failure) {
-      setError(
-        failure instanceof Error ? failure.message : "No se pudo agregar.",
-      );
-    } finally {
-      setBusy(false);
-    }
+  const { busy, error, add } = useTeamMemberAddition(team.id, onChanged);
+  const handleAdd = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (await add(code, joinedDate)) setCode("");
   };
 
   return (
     <div className="bg-modal">
-      <div className="w-full max-w-md bg-white rounded-xl ">
+      <div role="dialog" aria-modal="true" aria-labelledby="team-members-title" className="w-full max-w-md bg-white rounded-xl ">
         <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
-          <h3 className="m-0 text-sm text-neutral-800">Añadir a {team.name}</h3>
+          <h3 id="team-members-title" className="m-0 text-sm text-neutral-800">Añadir a {team.name}</h3>
           <button
             type="button"
             className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-full cursor-pointer inline-flex items-center justify-center"
@@ -84,6 +55,7 @@ function TeamMembersModal({ team, onClose, onChanged }: TeamMembersModalProps) {
             <input
               id="member-code"
               name="code"
+              disabled={busy}
               type="text"
               required
               value={code}
@@ -100,6 +72,7 @@ function TeamMembersModal({ team, onClose, onChanged }: TeamMembersModalProps) {
             <input
               id="member-date"
               name="joined_date"
+              disabled={busy}
               type="date"
               required
               value={joinedDate}

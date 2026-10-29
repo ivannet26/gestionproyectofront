@@ -27,6 +27,8 @@ export interface WorkerUpdateData {
 }
 
 export interface WorkerFilters {
+  area_id?: number;
+  active?: boolean;
   search?: string;
   disponible?: boolean;
 }

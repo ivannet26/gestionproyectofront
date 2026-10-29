@@ -1,3 +1,4 @@
+import type { PageNavigation } from "../../core/interfaces/pagination.interface";
 export interface ProjectArea {
   id: number;
   name: string;
@@ -75,6 +76,10 @@ export interface ProjectsMenuProps
   canCreateProject: boolean;
   projectCreationDisabled: boolean;
   onCreateProject: () => void;
+  directoryNavigation?: PageNavigation;
+  projectSearch?: string;
+  onProjectSearch?: (value: string) => void;
+  currentProject?: ProjectSummary | null;
 }
 
 export interface Project extends ProjectSummary {
@@ -182,6 +187,8 @@ export interface Task {
   created_at: string;
   start_date: string;
   due_date: string | null;
+  calendar_revision: string;
+  calendar_receipt?: { intent_id: string; applied_revision: string; replayed: boolean };
   estimated_minutes?: number | null;
   responsible_id: number | null;
   responsible_name: string | null;
@@ -213,6 +220,15 @@ export interface EditTaskPayload {
   responsible_id?: number | null;
   responsible_ids?: number[];
 }
+
+export type TaskCalendarPatch = Partial<EditTaskPayload> & {
+  expected_calendar_revision: string;
+  calendar_intent_id: string;
+} & ({ start_date: string; due_date?: string | null } | { start_date?: string; due_date: string | null });
+export type TaskNonCalendarPatch = Partial<Omit<EditTaskPayload, "start_date" | "due_date">> & {
+  start_date?: never; due_date?: never; expected_calendar_revision?: never; calendar_intent_id?: never;
+};
+export type TaskPatchPayload = TaskCalendarPatch | TaskNonCalendarPatch;
 
 export interface TaskIdentity { projectId: number; taskId: number }
 export interface TaskDetailData { task: Task; parent: Task | null }
@@ -271,7 +287,7 @@ export interface CreateTaskPayload extends Partial<Omit<EditTaskPayload, "name">
   reason: string;
 }
 
-export type TaskFormPayload = CreateTaskPayload | EditTaskPayload;
+export type TaskFormPayload = CreateTaskPayload | TaskPatchPayload;
 
 export interface TaskStatePayload {
   state_code: string;
@@ -287,4 +303,13 @@ export type TaskAction =
 export interface TaskCreationRequest {
   projectId: number;
   sequence: number;
+}
+
+
+export interface ProjectListFilters {
+  search?: string;
+  area_id?: number;
+  state_code?: string;
+  available?: boolean;
+  associated?: boolean;
 }

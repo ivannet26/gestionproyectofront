@@ -1,3 +1,4 @@
+import ResourceStatus from "../../../shared/ResourceStatus";
 import { useState } from "react";
 import TeamsIcon from "../../../shared/icons/TeamsIcon";
 import EditIcon from "../../../shared/icons/EditIcon";
@@ -24,8 +25,10 @@ type TeamModal = { mode: "create" } | { mode: "edit"; team: Team };
 const emptyTeam: TeamFormState = { area: "", name: "", active: true };
 
 function TeamsSection() {
-  const { data, refetch } = useTeams();
-  const { data: areas } = useAreas();
+  const resource = useTeams();
+  const { data, refetch } = resource;
+  const areaResource = useAreas();
+  const { data: areas } = areaResource;
   const [modal, setModal] = useState<TeamModal | null>(null);
   const [membersTeam, setMembersTeam] = useState<Team | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -65,6 +68,7 @@ function TeamsSection() {
         <button
           type="button"
           className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs rounded-lg cursor-pointer inline-flex items-center gap-1.5"
+          disabled={!areaResource.ready || Boolean(areaResource.error)}
           onClick={() => setModal({ mode: "create" })}
           aria-label="Nuevo equipo"
         >
@@ -73,7 +77,9 @@ function TeamsSection() {
         </button>
       </div>
 
-      {data.length === 0 ? (
+      <ResourceStatus label="equipos" {...resource} />
+      <ResourceStatus label="áreas para equipos" {...areaResource} />
+      {resource.ready && !resource.pending && !resource.error && data.length === 0 ? (
         <EmptyState iconName="teams" message="No hay equipos registrados." />
       ) : (
         <ul className="m-0 p-0 list-none space-y-0.5">
@@ -107,6 +113,7 @@ function TeamsSection() {
                 <button
                   type="button"
                   className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-lg cursor-pointer inline-flex items-center"
+                  disabled={!areaResource.ready || Boolean(areaResource.error)}
                   onClick={() => setModal({ mode: "edit", team })}
                   aria-label={`Editar ${team.name}`}
                 >

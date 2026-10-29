@@ -88,9 +88,9 @@ export async function removeTeam(id: number): Promise<void> {
   await httpClient.delete(`teams/teams/${id}/`);
 }
 
-export async function listTeamMembers(teamId: number): Promise<TeamMember[]> {
+export async function listTeamMembers(teamId: number, includeInactive = false): Promise<TeamMember[]> {
   const { data } = await httpClient.get<TeamMember[]>(
-    `teams/teams/${teamId}/members/`,
+    `teams/teams/${teamId}/members/${includeInactive ? "?all=1" : ""}`,
   );
   return data;
 }

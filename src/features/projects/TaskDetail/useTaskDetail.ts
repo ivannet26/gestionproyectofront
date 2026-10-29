@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { errorText } from "../../auth/api";
-import { changeTaskState, getTaskActivity, getTaskDetail, getTaskRelations, getTaskSubtasks, updateTask } from "../services";
-import type { EditTaskPayload, Task, TaskIdentity, TaskStatePayload, TaskPage } from "../types";
+import { changeTaskState, getTaskActivity, getTaskDetail, getTaskRelations, getTaskSubtasks } from "../services";
+import { useTaskSync } from "../useTaskSync";
+import type { TaskPatchPayload, Task, TaskIdentity, TaskStatePayload, TaskPage } from "../types";
 
 export function useTaskDetailNavigation() {
   const [target, setTarget] = useState<TaskIdentity | null>(null);
@@ -59,28 +60,37 @@ export function useTaskPage<T, P extends TaskPage<T>>(load: (cursor: number) => 
 
 export function useTaskDetail(target: TaskIdentity, onUpdated: (task: Task) => void, version = 0) {
   const { projectId, taskId } = target;
+  const sync = useTaskSync();
+  useSyncExternalStore(sync.subscribe, sync.getVersion, sync.getVersion);
   const identity = useMemo(() => ({ projectId, taskId, version }), [projectId, taskId, version]);
   const activeIdentity = useRef(identity);
   useEffect(() => { activeIdentity.current = identity; }, [identity]);
-  const detail = useTaskResource(useCallback(() => getTaskDetail(identity), [identity]));
-  const children = useTaskPage(useCallback((cursor: number) => getTaskSubtasks(identity, cursor), [identity]));
-  const activity = useTaskPage(useCallback((cursor: number) => getTaskActivity(identity, cursor), [identity]));
-  const relations = useTaskPage(useCallback((cursor: number) => getTaskRelations(identity, cursor), [identity]));
+  const detail = useTaskResource(useCallback(async () => {
+    const result = await sync.read(() => getTaskDetail(identity));
+    return { task: sync.observe(result.task), parent: result.parent ? sync.observe(result.parent) : null };
+  }, [identity, sync]));
+  const children = useTaskPage(useCallback(async (cursor: number) => {
+    const page = await sync.read(() => getTaskSubtasks(identity, cursor));
+    return { ...page, items: sync.observeMany(page.items) };
+  }, [identity, sync]));
+  const activity = useTaskPage(useCallback((cursor: number) => sync.read(() => getTaskActivity(identity, cursor)), [identity, sync]));
+  const relations = useTaskPage(useCallback((cursor: number) => sync.read(() => getTaskRelations(identity, cursor)), [identity, sync]));
   const [busy, setBusy] = useState(false);
   const pending = useRef(false), mounted = useRef(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
-  async function accept(saved: Task) {
+  async function accept(incoming: Task, confirmed = false) {
+    if (!mounted.current || activeIdentity.current !== identity || !sync.isCurrent()) return;
+    const saved = confirmed ? sync.current(incoming) : sync.confirm(incoming);
     onUpdated(saved);
-    if (!mounted.current || activeIdentity.current !== identity) return;
     if (saved.id === taskId) detail.setValue((current) => current ? { ...current, task: saved } : current);
     void children.refresh(); void activity.refresh();
   }
-  async function mutate(task: Task, data: Partial<EditTaskPayload> | TaskStatePayload) {
+  async function mutate(task: Task, data: TaskPatchPayload | TaskStatePayload) {
     if (pending.current) throw new Error("Espera a que termine el guardado.");
     pending.current = true; setBusy(true);
     try {
-      const saved = "state_code" in data ? await changeTaskState(projectId, task.id, data) : await updateTask(projectId, task.id, data);
-      await accept(saved);
+      const saved = "state_code" in data ? sync.confirm(await changeTaskState(projectId, task.id, data)) : await sync.patch(task.id, data);
+      await accept(saved, true);
     } finally {
       pending.current = false;
       if (mounted.current) setBusy(false);
@@ -89,14 +99,17 @@ export function useTaskDetail(target: TaskIdentity, onUpdated: (task: Task) => v
   async function relationsChanged(otherTaskId: number) {
     void relations.refresh(); void activity.refresh();
     try {
-      const saved = await Promise.all([taskId, otherTaskId].map((id) => getTaskDetail({ projectId, taskId: id })));
-      for (const result of saved) onUpdated(result.task);
-      if (mounted.current && activeIdentity.current === identity) detail.setValue(saved[0]);
+      const saved = await sync.read(() => Promise.all([taskId, otherTaskId].map((id) => getTaskDetail({ projectId, taskId: id }))));
+      if (!mounted.current || activeIdentity.current !== identity || !sync.isCurrent()) return;
+      for (const result of saved) onUpdated(sync.observe(result.task));
+      detail.setValue(saved[0]);
     } catch (failure) {
       if (mounted.current && activeIdentity.current === identity) detail.setError(`El vínculo se guardó. No se pudo actualizar la tarea: ${errorText(failure)}`);
     }
   }
-  return { detail, children, activity, relations, busy, accept, relationsChanged,
-    onPatch: (task: Task, data: Partial<EditTaskPayload>) => mutate(task, data),
+  return { detail: { ...detail, value: detail.value ? { task: sync.current(detail.value.task), parent: detail.value.parent ? sync.current(detail.value.parent) : null } : null },
+    children: { ...children, value: children.value ? { ...children.value, items: children.value.items.map(sync.current) } : null },
+    activity, relations, busy, accept, relationsChanged,
+    onPatch: (task: Task, data: TaskPatchPayload) => mutate(task, data),
     onState: (task: Task, data: TaskStatePayload) => mutate(task, data) };
 }

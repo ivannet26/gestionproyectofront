@@ -1,3 +1,6 @@
+import { Link } from "react-router";
+import ListSearch from "../../../shared/ListSearch";
+import PageNavigation from "../../../shared/PageNavigation";
 import { useId, useState } from "react";
 import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
 import PlusIcon from "../../../shared/icons/PlusIcon";
@@ -9,6 +12,7 @@ export default function ProjectsMenu({
   isCollapsed,
   currentPath,
   projects,
+  directoryNavigation, projectSearch = "", onProjectSearch, currentProject,
   projectsLoading,
   projectError,
   onRetryProjects,
@@ -52,6 +56,14 @@ export default function ProjectsMenu({
         )}
       </div>
       <div id={itemsId} hidden={!open}>
+        <Link to="/proyectos" className="mx-3 block text-xs text-neutral-700 underline">Ver todos los proyectos</Link>
+        {onProjectSearch && <ListSearch label="Buscar proyectos del menú" value={projectSearch} onSearch={onProjectSearch} />}
+        {directoryNavigation && <PageNavigation label="menú de proyectos" navigation={directoryNavigation} />}
+        {currentProject && <div className="mb-3">
+          <p className="mx-3 text-[10px] text-neutral-600">Proyecto actual fuera de esta página</p>
+          <ProjectAreaNavigation projects={[currentProject]} currentPath={currentPath} loading={false} error=""
+            canCreateTasks={canCreateTasks} onCreateTask={onCreateTask} />
+        </div>}
         <ProjectAreaNavigation
           projects={projects}
           currentPath={currentPath}

@@ -13,10 +13,11 @@ import "./taskDetail.css";
 export interface TaskDetailProps {
   version?: number;
   target: TaskIdentity; project: Project; catalogs: ProjectCatalogs;
+  onEdit?: (task: Task) => void;
   onUpdated: (task: Task) => void; onNavigate: (target: TaskIdentity) => void; onClose: () => void;
 }
 
-function DetailContent({ target, project, catalogs, onUpdated, onNavigate, onClose, onBusy, activityVisible, onActivityToggle, version }: TaskDetailProps & { onBusy: (busy: boolean) => void; activityVisible: boolean; onActivityToggle: () => void }) {
+function DetailContent({ target, project, catalogs, onUpdated, onNavigate, onClose, onEdit, onBusy, activityVisible, onActivityToggle, version }: TaskDetailProps & { onBusy: (busy: boolean) => void; activityVisible: boolean; onActivityToggle: () => void }) {
   const model = useTaskDetail(target, onUpdated, version);
   const [quickBusy, setQuickBusy] = useState(false);
   const panel = useRef<HTMLDivElement>(null);
@@ -33,6 +34,8 @@ function DetailContent({ target, project, catalogs, onUpdated, onNavigate, onClo
         {project.areas.map((area) => <li key={area.id} className="break-words">{area.name}</li>)}<li aria-hidden="true">/</li><li className="break-words font-medium">{project.name}</li><li aria-hidden="true">/</li><li>Tareas</li>
       </ol></nav>
       {task && <time dateTime={task.created_at} className="text-[10px] text-neutral-600 max-sm:order-3 max-sm:basis-full">Creado el {formatActivityDate(task.created_at)}</time>}
+      {task?.permissions.edit && onEdit && <button type="button" disabled={busy} onClick={() => onEdit(task)}
+        className="cursor-pointer rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700">Editar datos</button>}
       <button type="button" aria-label="Cerrar detalle de tarea" disabled={busy} className="shrink-0 cursor-pointer rounded-lg px-2 py-1 text-lg text-neutral-700 hover:bg-neutral-100 disabled:cursor-default disabled:opacity-50" onClick={onClose}>×</button>
     </header>
     <div className={`detail-layout grid min-h-0 min-w-0 flex-1 max-md:flex max-md:flex-col max-md:overflow-y-auto ${activityVisible ? "grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]" : "grid-cols-1"}`}>

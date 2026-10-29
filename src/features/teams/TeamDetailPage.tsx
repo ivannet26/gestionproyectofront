@@ -1,3 +1,5 @@
+import ResourceStatus from "../../shared/ResourceStatus";
+import { errorText } from "../auth/api";
 import { useState } from "react";
 import { useParams } from "react-router";
 import NotAvailable from "../layout/NotAvailable/NotAvailable";
@@ -14,16 +16,21 @@ import UserIcon from "../../shared/icons/UserIcon";
 import TeamMembersModal from "../organization/Teams/TeamMembersModal";
 import { useTeamDetail } from "../organization/Teams/useTeamDetail";
 
-export default function TeamDetailPage() {
+export default function TeamDetailPage({ canManage = false }: { canManage?: boolean }) {
   const { teamId } = useParams();
+  return <TeamDetail key={teamId} teamId={Number(teamId)} canManage={canManage} />;
+}
+
+function TeamDetail({ teamId, canManage }: { teamId: number; canManage: boolean }) {
   const [adding, setAdding] = useState(false);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
-  const { team, members, refetch, removeMember } = useTeamDetail(
-    Number(teamId),
-  );
+  const [mutationError, setMutationError] = useState("");
+  const [removing, setRemoving] = useState(false);
+  const { team, members, detail, people, refetch, removeMember, validId } = useTeamDetail(teamId, status !== "activo");
 
-  if (team == null) return <NotAvailable />;
+  if (!validId) return <NotAvailable />;
+  if (team == null) return <main className="text-neutral-800"><ResourceStatus label="equipo" {...detail} /></main>;
 
   const query = search.trim().toLowerCase();
   const visible = members.filter(
@@ -34,7 +41,10 @@ export default function TeamDetailPage() {
   );
 
   const handleRemove = async (memberId: number) => {
-    await removeMember(memberId);
+    setMutationError(""); setRemoving(true);
+    try { await removeMember(memberId); }
+    catch (failure) { setMutationError(errorText(failure)); }
+    finally { setRemoving(false); }
   };
 
   return (
@@ -49,8 +59,7 @@ export default function TeamDetailPage() {
           </span>
         </div>
         <p className="mt-0.5 text-sm text-neutral-600">
-          {team.area_name} · {members.length}{" "}
-          {members.length === 1 ? "integrante" : "integrantes"}
+          {team.area_name} · {people.ready ? `${members.length} ${members.length === 1 ? "integrante" : "integrantes"}` : "Integrantes pendientes"}
         </p>
       </header>
 
@@ -73,6 +82,8 @@ export default function TeamDetailPage() {
         </div>
         <div className="relative">
           <select
+            aria-label="Filtrar integrantes por estado"
+            disabled={removing}
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className="bg-white border border-neutral-200 text-neutral-800 pl-3 pr-8 py-1.5 text-xs rounded-lg appearance-none focus:border-neutral-400 focus:outline-none cursor-pointer"
@@ -83,18 +94,22 @@ export default function TeamDetailPage() {
           </select>
           <ChevronDownIcon className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 size-4 text-neutral-600" />
         </div>
-        <button
+        {canManage && <button
           type="button"
+          disabled={people.pending || Boolean(people.error)}
           onClick={() => setAdding(true)}
           className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer inline-flex items-center gap-1.5"
         >
           <PlusIcon className="size-4" />
           Añadir integrante
-        </button>
+        </button>}
       </div>
 
-      <section className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
-        {visible.length === 0 ? (
+      <ResourceStatus label="equipo" {...detail} />
+      <ResourceStatus label="integrantes" {...people} />
+      {mutationError && <p role="alert" className="text-xs text-red-700">{mutationError}</p>}
+      <section aria-busy={people.pending} className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
+        {people.ready && !people.pending && !people.error && visible.length === 0 ? (
           <EmptyState
             iconName="teams"
             message={
@@ -162,14 +177,15 @@ export default function TeamDetailPage() {
                         {isActive ? "Activo" : "Inactivo"}
                       </td>
                       <td className="px-3 py-2 text-center">
-                        <button
+                        {canManage && isActive && <button
                           type="button"
+                          disabled={removing || people.pending || Boolean(people.error)}
                           onClick={() => void handleRemove(member.id)}
                           aria-label={`Quitar a ${member.worker_name}`}
                           className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-lg cursor-pointer inline-flex items-center"
                         >
                           <TrashIcon className="size-4" />
-                        </button>
+                        </button>}
                       </td>
                     </tr>
                   );
@@ -180,7 +196,7 @@ export default function TeamDetailPage() {
         )}
       </section>
 
-      {adding && (
+      {canManage && adding && (
         <TeamMembersModal
           team={team}
           onClose={() => setAdding(false)}

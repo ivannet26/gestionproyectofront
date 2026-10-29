@@ -1,3 +1,5 @@
+import PageNavigation from "../../shared/PageNavigation";
+import ResourceStatus from "../../shared/ResourceStatus";
 import { useState } from "react";
 
 import InvitationModal from "./InvitationModal/InvitationModal";
@@ -20,10 +22,11 @@ export default function AccountsPage() {
   const [appliedActive, setAppliedActive] = useState<boolean | undefined>(
     undefined,
   );
-  const { accounts, areas, busy, resendInvitation, reload } = useAccounts({
+  const resource = useAccounts({
     search: appliedSearch || undefined,
     active: appliedActive,
   });
+  const { accounts, areas, areaResource, busy, mutationError, resendInvitation, reload } = resource;
   const [inviting, setInviting] = useState(false);
   const hasFilters = appliedSearch !== "" || appliedActive !== undefined;
 
@@ -54,6 +57,7 @@ export default function AccountsPage() {
         </div>
         <button
           type="button"
+          disabled={!areaResource.ready || Boolean(areaResource.error)}
           onClick={() => setInviting(true)}
           className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-700 cursor-pointer"
         >
@@ -69,7 +73,7 @@ export default function AccountsPage() {
         <h2 className="m-0 mr-auto text-sm font-medium text-neutral-800">
           Cuentas{" "}
           <span className="font-normal text-neutral-600">
-            ({accounts.length})
+            ({resource.page?.total ?? "…"})
           </span>
         </h2>
 
@@ -102,6 +106,7 @@ export default function AccountsPage() {
 
         <button
           type="submit"
+          disabled={busy}
           className="bg-neutral-800 text-white hover:bg-neutral-700 px-3 py-1.5 text-xs font-medium rounded-lg cursor-pointer"
         >
           Buscar cuenta
@@ -110,6 +115,7 @@ export default function AccountsPage() {
         {hasFilters && (
           <button
             type="button"
+            disabled={busy}
             onClick={clearFilters}
             className="text-xs font-medium text-neutral-700 hover:text-neutral-800 px-2 py-1.5 rounded-lg hover:bg-neutral-100 cursor-pointer"
           >
@@ -118,7 +124,11 @@ export default function AccountsPage() {
         )}
       </form>
 
-      <section className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
+      <ResourceStatus label="cuentas" {...resource} />
+      <ResourceStatus label="áreas para cuentas" {...areaResource} />
+      {mutationError && <p role="alert" className="text-xs text-red-700">{mutationError}</p>}
+      <PageNavigation label="cuentas" navigation={resource.navigation} busy={busy} />
+      <section aria-busy={resource.pending} className="bg-white border border-neutral-200 overflow-hidden rounded-xl">
         <div className="w-full overflow-x-auto">
           <table className="w-full border-collapse text-xs text-neutral-600 text-left">
             <thead className="border-b border-neutral-200 font-medium text-neutral-700">
@@ -214,7 +224,7 @@ export default function AccountsPage() {
             </tbody>
           </table>
         </div>
-        {accounts.length === 0 && (
+        {resource.ready && !resource.pending && !resource.error && accounts.length === 0 && (
           <p
             role="status"
             className="m-0 px-3 py-8 text-xs text-neutral-600 text-center"

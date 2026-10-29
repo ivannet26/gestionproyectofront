@@ -1,3 +1,4 @@
+import { taskSyncFixture } from "./taskSyncFixture.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
@@ -7,13 +8,15 @@ import * as jsxRuntime from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 
+const syncFixture = taskSyncFixture();
+
 async function load(path, dependencies) {
   const compiled = ts.transpileModule(readFileSync(new URL(path, import.meta.url), "utf8"), {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const module = new vm.SourceTextModule(compiled);
   await module.link((name) => {
-    const exports = { react: React, "react/jsx-runtime": jsxRuntime, ...dependencies }[name];
+    const exports = { "../TaskSyncProvider": { default: ({ children }) => children }, "../useTaskSync": { useTaskSync: () => syncFixture }, react: React, "react/jsx-runtime": jsxRuntime, ...dependencies }[name];
     assert.ok(exports, name);
     return new vm.SyntheticModule(Object.keys(exports), function () {
       for (const [key, value] of Object.entries(exports)) this.setExport(key, value);
@@ -93,7 +96,7 @@ test("Workspace saves announce through the shared overlay and refresh failures r
     "../TaskStatusConfiguration/TaskStatusConfiguration": { default: Empty },
     "../TaskDetail/TaskDetailDialog": { default: Empty },
     "../TaskDetail/useTaskDetail": { useTaskDetailNavigation: () => ({ target: null, openTaskDetail() {}, closeTaskDetail() {} }) },
-    "../taskCollection": { reconcileTasks: (_current, incoming) => incoming },
+    "../taskCollection": await load("../src/features/projects/taskCollection.ts"),
   });
   const render = () => { slot = 0; effects.length = 0; return renderToStaticMarkup(React.createElement(Workspace, { projectId:42, catalogs:{ priorities:[] } })); };
   const markup = render();

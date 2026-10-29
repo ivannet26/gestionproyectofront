@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
 import { projectPath } from "../../../routes";
 import type { ProjectNavigationProps } from "../types";
@@ -14,6 +14,7 @@ export default function ProjectAreaNavigation({
   canCreateTasks,
   onCreateTask,
 }: ProjectNavigationProps) {
+  const navigationId = useId();
   const groups = useMemo(() => groupProjectsByArea(projects), [projects]);
   const [expandedAreas, setExpandedAreas] = useState<Record<number, boolean>>(
     {},
@@ -71,7 +72,7 @@ export default function ProjectAreaNavigation({
       >
         {groups.map((area) => {
           const expanded = expandedAreas[area.id] ?? area.id === activeAreaId;
-          const childrenId = `project-area-${area.id}-navigation`;
+          const childrenId = `project-area-${navigationId}-${area.id}-navigation`;
           return (
             <li key={area.id} className="min-w-0">
               <button

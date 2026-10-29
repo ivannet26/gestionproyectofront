@@ -1,3 +1,4 @@
+import type { Specialty } from "../interfaces/organization.interface";
 import { httpClient } from "../../core/api/httpClient";
 import type {
   MySpecialty,
@@ -13,6 +14,8 @@ export async function listWorkers(filters?: WorkerFilters): Promise<Worker[]> {
   if (search) params.set("search", search);
   if (filters?.disponible !== undefined)
     params.set("disponible", String(filters.disponible));
+  if (filters?.area_id !== undefined) params.set("area_id", String(filters.area_id));
+  if (filters?.active !== undefined) params.set("active", String(filters.active));
   const query = params.toString();
   const { data } = await httpClient.get<Worker[]>(
     query ? `workers/?${query}` : "workers/",
@@ -53,4 +56,9 @@ export async function removeMySpecialty(specialtyId: number): Promise<void> {
   await httpClient.delete("workers/me/specialties/", {
     data: { specialty_id: specialtyId },
   });
+}
+
+export async function listMySpecialtyOptions(): Promise<Specialty[]> {
+  const { data } = await httpClient.get<Specialty[]>("workers/me/specialty-options/");
+  return data;
 }

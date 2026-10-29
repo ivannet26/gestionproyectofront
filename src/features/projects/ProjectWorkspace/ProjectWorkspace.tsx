@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Link, useSearchParams } from "react-router";
 import { errorText } from "../../auth/api";
 import {
@@ -8,10 +8,9 @@ import {
   createTask,
   getProject,
   getTasks,
-  updateTask,
 } from "../services";
 import type {
-  EditTaskPayload,
+  TaskPatchPayload,
   Project,
   ProjectCatalogs,
   ProjectTaskConfiguration,
@@ -36,12 +35,14 @@ import TaskGroupingControl from "../TaskList/TaskGroupingControl";
 import TaskList from "../TaskList/TaskList";
 import type { TaskGroupControls } from "../TaskList/TaskList";
 import TaskGroupExpansionControl from "../TaskList/TaskGroupExpansionControl";
-import { reconcileTasks } from "../taskCollection";
+import { reconcileTask, reconcileTasks } from "../taskCollection";
 import TaskSearch from "../TaskList/TaskSearch";
 import TaskStatusSettingsControl from "../TaskList/TaskStatusSettingsControl";
 import { taskHierarchy } from "../TaskList/taskHierarchy";
 import TaskStateForm from "../TaskStateForm/TaskStateForm";
 import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
+import TaskSyncProvider from "../TaskSyncProvider";
+import { useTaskSync } from "../useTaskSync";
 import ProjectHeader from "./ProjectHeader";
 import ProjectToolbar from "./ProjectToolbar";
 
@@ -55,7 +56,7 @@ interface ProjectWorkspaceProps {
   onTaskCreationHandled?: (sequence: number) => void;
 }
 
-export default function ProjectWorkspace({
+function ProjectWorkspaceContent({
   projectId,
   catalogs,
   catalogLoading,
@@ -65,7 +66,10 @@ export default function ProjectWorkspace({
   onTaskCreationHandled,
 }: ProjectWorkspaceProps) {
   const [project, setProject] = useState<Project | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [storedTasks, setTasks] = useState<Task[]>([]);
+  const sync = useTaskSync();
+  const snapshots = useSyncExternalStore(sync.subscribe, sync.getSnapshot, sync.getSnapshot);
+  const tasks = useMemo(() => storedTasks.map((task) => reconcileTask(task, snapshots.get(task.id) ?? task)), [storedTasks, snapshots]);
   const [action, setAction] = useState<TaskAction | null>(null);
   const [configuringStates, setConfiguringStates] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -100,20 +104,20 @@ export default function ProjectWorkspace({
 
   const loadTasks = useCallback(async () => {
     const version = collectionVersion.current;
-    const items = await getTasks(projectId);
+    const items = sync.observeMany(await sync.read(() => getTasks(projectId)));
     if (mounted.current && version === collectionVersion.current) setTasks((current) => reconcileTasks(current, items, true));
-  }, [projectId]);
+  }, [projectId, sync]);
 
   useEffect(() => {
     let current = true;
     const collection = collectionVersion;
     void Promise.resolve().then(() => { if (current) { setLoading(true); setError(""); } });
 
-    void Promise.all([getProject(projectId), getTasks(projectId)])
+    void sync.read(() => Promise.all([getProject(projectId), getTasks(projectId)]))
       .then(([details, items]) => {
         if (current) {
           setProject(details);
-          setTasks(items);
+          setTasks(sync.observeMany(items));
         }
       })
       .catch((failure: unknown) => {
@@ -134,7 +138,7 @@ export default function ProjectWorkspace({
       current = false;
       collection.current++;
     };
-  }, [projectId, addToast, reload]);
+  }, [projectId, addToast, reload, sync]);
 
   useEffect(() => {
     if (
@@ -195,9 +199,10 @@ export default function ProjectWorkspace({
               : "Editar datos de tarea";
 
   function acceptTask(saved: Task) {
-    if (!mounted.current) return;
+    if (!mounted.current || !sync.isCurrent()) return;
     collectionVersion.current++;
-    setTasks((current) => reconcileTasks(current, [saved]));
+    const confirmed = sync.observe(saved);
+    setTasks((current) => reconcileTasks(current, [confirmed]));
     addToast({ icon: "success", title: "Guardado", message: saved.name });
   }
 
@@ -206,19 +211,19 @@ export default function ProjectWorkspace({
 
     try {
       if (action?.kind === "edit" && activeTask && !("state_code" in data)) {
-        acceptTask(await updateTask(projectId, activeTask.id, data));
+        acceptTask(await sync.patch(activeTask.id, data));
       } else if (
         (action?.kind === "create" || action?.kind === "child") &&
         "state_code" in data
       ) {
-        acceptTask(await createTask(projectId, data));
+        acceptTask(sync.confirm(await createTask(projectId, data)));
       } else {
         throw new Error(
           "La acción ya no está disponible. Vuelve a abrir el formulario.",
         );
       }
 
-      setAction(null);
+      if (action?.kind !== "edit") setAction(null);
     } finally {
       if (mounted.current) setBusy(false);
     }
@@ -232,7 +237,7 @@ export default function ProjectWorkspace({
     setBusy(true);
 
     try {
-      acceptTask(await changeTaskState(projectId, activeTask.id, data));
+      acceptTask(sync.confirm(await changeTaskState(projectId, activeTask.id, data)));
       setAction(null);
     } finally {
       if (mounted.current) setBusy(false);
@@ -272,11 +277,11 @@ export default function ProjectWorkspace({
   }
 
   function configured(configuration: ProjectTaskConfiguration) {
-    if (!mounted.current) return;
+    if (!mounted.current || !sync.isCurrent()) return;
     collectionVersion.current++;
     const { tasks: confirmed, ...flow } = configuration;
     setProject((current) => current ? { ...current, task_states: flow } : current);
-    if (confirmed) setTasks(confirmed);
+    if (confirmed) setTasks(sync.confirmMany(confirmed));
     setConfigurationVersion((value) => value + 1);
     setRefreshError("");
     addToast({ icon: "success", title: "Estados actualizados", message: project?.name ?? "" });
@@ -312,6 +317,7 @@ export default function ProjectWorkspace({
           <TaskForm
             project={currentProject}
             catalogs={catalogs}
+            key={`edit:${activeTask.id}`}
             task={activeTask}
             onSubmit={save}
             onConfigured={configured}
@@ -323,6 +329,7 @@ export default function ProjectWorkspace({
           <TaskForm
             project={currentProject}
             catalogs={catalogs}
+            key={`child:${activeTask.id}`}
             parent={activeTask}
             onSubmit={save}
             onConfigured={configured}
@@ -358,12 +365,12 @@ export default function ProjectWorkspace({
     else setAction({ kind, taskId });
   }
 
-  async function patchTask(task: Task, data: Partial<EditTaskPayload>) {
-    acceptTask(await updateTask(projectId, task.id, data));
+  async function patchTask(task: Task, data: TaskPatchPayload) {
+    acceptTask(await sync.patch(task.id, data));
   }
 
   async function changeState(task: Task, data: TaskStatePayload) {
-    acceptTask(await changeTaskState(projectId, task.id, data));
+    acceptTask(sync.confirm(await changeTaskState(projectId, task.id, data)));
   }
 
   const primaryAction = project.permissions.create_tasks ? (
@@ -437,7 +444,7 @@ export default function ProjectWorkspace({
                 catalogs={catalogs}
                 search={search}
                 preferences={preferences}
-                onMoved={(items) => { collectionVersion.current++; setTasks((current) => reconcileTasks(current, items, true)); }}
+                onMoved={(items) => { if (!sync.isCurrent()) return; const confirmed = sync.confirmMany(items); collectionVersion.current++; setTasks((current) => reconcileTasks(current, confirmed, true)); }}
                 onCountChange={setFilteredCount}
                 onGroupControls={setGroupControls}
                 onAction={openTaskAction}
@@ -493,6 +500,12 @@ export default function ProjectWorkspace({
           catalogs={catalogs}
           target={taskDetail.target}
           onUpdated={acceptTask}
+          onEdit={(task) => {
+            const current = sync.current(task);
+            setTasks((previous) => reconcileTasks(previous, [current]));
+            taskDetail.closeTaskDetail();
+            setAction({ kind: "edit", taskId: task.id });
+          }}
           onNavigate={taskDetail.openTaskDetail}
           onClose={taskDetail.closeTaskDetail}
         />
@@ -513,4 +526,8 @@ export default function ProjectWorkspace({
       )}
     </main>
   );
+}
+
+export default function ProjectWorkspace(props: ProjectWorkspaceProps) {
+  return <TaskSyncProvider projectId={props.projectId}><ProjectWorkspaceContent {...props} /></TaskSyncProvider>;
 }

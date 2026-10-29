@@ -44,7 +44,8 @@ async function clients(adapter, fetchAuth, base = "https://isolated.invalid/gm//
     return reply;
   };
   const services = await load("../src/features/projects/services.ts", { "../../core/api/httpClient": { httpClient } });
-  return { api, httpClient, services, seen, authCalls, events, get refreshes() { return refreshes; }, get expired() { return expired; },
+  const accounts = await load("../src/core/services/accountService.ts", { "../api/httpClient": { httpClient } });
+  return { api, httpClient, services, accounts, seen, authCalls, events, get refreshes() { return refreshes; }, get expired() { return expired; },
     login: () => api.login("synthetic@example.invalid", "synthetic"),
   };
 }
@@ -213,4 +214,63 @@ test("cold Axios and fetch calls use the same renewal promise and same-origin ba
   gate.resolve(); await Promise.all([fromAxios, fromAuth]);
   assert.equal(client.refreshes, 1);
   assert.equal(client.httpClient.defaults.baseURL, "/api/");
+});
+
+
+test("administrative services use central Axios routes, object bodies, filters and shared session", async () => {
+  const client = await clients(async () => ({ data: { results: [], total: 0, cursor: "first", next_cursor: null } }));
+  await client.login();
+  await client.accounts.listAccounts({ search: "QA y BIM", active: false }, "next");
+  await client.accounts.listRecoveryRequests({ search: "QA" });
+  await client.accounts.listAccountAreas();
+  const payload = { first_names: "QA", last_names: "Aislado", email: "qa@example.invalid", role: "TRABAJADOR", all_areas: false, area_ids: [2] };
+  await client.accounts.inviteAccount(payload); await client.accounts.resendAccountInvitation(3); await client.accounts.issueAccountReset(4);
+  assert.equal(client.seen[0].url, "auth/admin/accounts/?search=QA+y+BIM&active=false&cursor=next");
+  assert.equal(client.seen[1].url, "auth/admin/recovery-requests/?search=QA");
+  assert.deepEqual(client.seen[3].data, payload); assert.deepEqual(client.seen[4].data, {});
+  assert.ok(client.seen.every(item => item.authorization === "Bearer initial" && item.config.withCredentials));
+  assert.equal(client.seen[3].config.headers.get("X-CSRFToken"), "synthetic-csrf");
+});
+
+test("mixed administrative and project 401s share one renewal", async () => {
+  const client = await clients(async config => config.headers.get("Authorization") === "Bearer initial"
+    ? { status: 401, data: { detail: "Expirado" } } : { data: {} });
+  await client.login();
+  await Promise.all([client.accounts.listAccounts(), client.accounts.listRecoveryRequests(), client.services.getProjects()]);
+  assert.equal(client.refreshes, 1); assert.equal(client.seen.length, 6);
+});
+
+test("administrative errors retain field payloads, status and persisted-account identity without mutation replay", async () => {
+  let mode = 400;
+  const client = await clients(async config => {
+    if (mode === 0) throw new axios.AxiosError("Red ambigua", "ERR_NETWORK", config);
+    return { status: mode, data: { email: ["Correo inválido"], account_id: 99, detail: "Fallo QA" } };
+  });
+  await client.login();
+  for (mode of [400, 409, 503, 0]) {
+    await assert.rejects(client.accounts.inviteAccount({}), error => {
+      assert.equal(error.status, mode || undefined);
+      if (mode) { assert.equal(error.payload.account_id, 99); assert.deepEqual(error.payload.email, ["Correo inválido"]); }
+      return true;
+    });
+  }
+  assert.equal(client.seen.length, 4); assert.equal(client.refreshes, 0);
+});
+
+
+test("calendar PATCH keeps exact revision and intention, rejects missing preconditions and never retries a calendar conflict", async () => {
+  const client = await clients(async config => ({ status: config.method === "patch" ? 409 : 200,
+    data: config.method === "patch" ? { code: "calendar_revision_conflict", detail: "Calendario modificado", calendar_revision: "9007199254740994" } : {} }));
+  await client.login();
+  const data = { due_date: null, expected_calendar_revision: "9007199254740993", calendar_intent_id: "829862d2-5f51-4d16-a5e9-907de7a4900c" };
+  await assert.rejects(client.services.updateTask(3, 8, data), error => error instanceof client.api.ApiError
+    && error.status === 409 && error.payload.code === "calendar_revision_conflict" && error.payload.calendar_revision === "9007199254740994");
+  assert.equal(client.seen.length, 1); assert.deepEqual(client.seen[0].data, data);
+  assert.equal(client.seen[0].config.headers.get("X-CSRFToken"), "synthetic-csrf");
+  assert.throws(() => client.services.updateTask(3, 8, { due_date: null }), /revisión e intención/);
+  assert.equal(client.seen.length, 1);
+  await client.services.createTask(3, { name: "QA", state_code: "PENDIENTE", parent_id: null, reason: "", start_date: "2026-10-29", due_date: null });
+  assert.equal(client.seen[1].method, "post");
+  assert.equal("expected_calendar_revision" in client.seen[1].data, false);
+  assert.equal("calendar_intent_id" in client.seen[1].data, false);
 });

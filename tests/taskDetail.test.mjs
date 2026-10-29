@@ -1,3 +1,4 @@
+import { taskSyncFixture } from "./taskSyncFixture.mjs";
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -7,13 +8,15 @@ import * as runtime from 'react/jsx-runtime';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
 
+const syncFixture = taskSyncFixture();
+
 async function load(file, dependencies = {}) {
   const code = ts.transpileModule(readFileSync(new URL(file, import.meta.url), 'utf8'), {
     compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
   const module = new vm.SourceTextModule(code);
   await module.link(name => {
-    const values = { react: React, 'react/jsx-runtime': runtime, ...dependencies }[name];
+    const values = { "../TaskSyncProvider": { default: ({ children }) => children }, "../useTaskSync": { useTaskSync: () => syncFixture }, "../CalendarEditFeedback": { default: () => null }, "../useTaskCalendarEdit": { useTaskCalendarEdit() { throw new Error("Calendar editing uses its dedicated regressions"); } }, react: React, 'react/jsx-runtime': runtime, ...dependencies }[name];
     assert.ok(values, name);
     return new vm.SyntheticModule(Object.keys(values), function () { for (const [key, value] of Object.entries(values)) this.setExport(key, value); });
   });
@@ -101,6 +104,7 @@ function hooks() {
   const slots = []; let index = 0;
   const same = (a, b) => a && b && a.length === b.length && a.every((value, i) => Object.is(value, b[i]));
   return { react: {
+    useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot(),
     useState(initial) { const slot = index++; if (!(slot in slots)) slots[slot] = typeof initial === 'function' ? initial() : initial; return [slots[slot], next => { slots[slot] = typeof next === 'function' ? next(slots[slot]) : next; }]; },
     useRef(initial) { const slot = index++; return slots[slot] ??= { current: initial }; },
     useCallback(fn, deps) { const slot = index++; if (!same(slots[slot]?.deps, deps)) slots[slot] = { fn, deps }; return slots[slot].fn; },
@@ -170,4 +174,21 @@ test('browser verification expressions are executable before starting isolated s
     ts.forEachChild(node, visit);
   }
   visit(source);
+});
+
+
+test("the current detail exposes the shared editor only with edit permission and keeps it disabled during a mutation", async () => {
+  let permitted=true,pending=false;
+  const emptyPage={value:null,loading:false,error:"",refresh(){},moreBusy:false,loadMore(){}};
+  const {default:Content}=await load('../src/features/projects/TaskDetail/TaskDetailContent.tsx',{
+    '../Modal/Modal':{default:({children})=>React.createElement('div',null,children)},
+    './TaskDetailProperties':{default:Empty,TaskTitle:Empty},'./TaskSubtasks':{default:Empty},'./TaskActivity':{default:Empty},'./TaskRelations':{default:Empty},
+    './useTaskDetail':{useTaskDetail:()=>({detail:{...emptyPage,value:{task:{id:4,name:'Tarea QA',created_at:'2026-10-29T12:00:00Z',description:'',permissions:{edit:permitted}},parent:null}},children:emptyPage,activity:emptyPage,relations:emptyPage,busy:pending})},
+    './detailFormat':formatting,'../../../shared/Tooltip':{default:Empty},'./taskDetail.css':{},
+  });
+  const props={target:{projectId:1,taskId:4},project:{name:'Proyecto QA',areas:[]},catalogs:{},onUpdated(){},onNavigate(){},onClose(){},onEdit(){}};
+  const render=()=>renderToStaticMarkup(React.createElement(Content,props));
+  assert.match(render(),/>Editar datos<\/button>/);
+  pending=true;assert.match(render(),/<button[^>]*disabled=""[^>]*>Editar datos<\/button>/);
+  pending=false;permitted=false;assert.doesNotMatch(render(),/>Editar datos<\/button>/);
 });

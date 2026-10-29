@@ -1,27 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import ListSearch from "../../../shared/ListSearch";
+import PageNavigation from "../../../shared/PageNavigation";
+import { useOrganizationProjects } from "./useOrganizationProjects";
+import ResourceStatus from "../../../shared/ResourceStatus";
 import { Link } from "react-router";
-import { getProjects } from "../../projects/services";
-import type { ProjectSummary } from "../../projects/types";
 import { projectPath } from "../../../routes";
 import EmptyState from "../../../shared/EmptyState/EmptyState";
 import ProjectsIcon from "../../../shared/icons/ProjectsIcon";
 
 function ProjectsSection() {
-  const [data, setData] = useState<ProjectSummary[]>([]);
-
-  useEffect(() => {
-    let mounted = true;
-    getProjects()
-      .then((projects) => {
-        if (mounted) setData(projects);
-      })
-      .catch((e: unknown) => {
-        console.error("Error fetching projects:", e);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const [search, setSearch] = useState("");
+  const resource = useOrganizationProjects(search);
+  const { data } = resource;
 
   return (
     <section aria-label="Proyectos" className="flex h-full flex-col">
@@ -29,7 +19,10 @@ function ProjectsSection() {
         <h3 className="m-0 text-sm text-neutral-800">Proyectos</h3>
       </div>
 
-      {data.length === 0 ? (
+      <ListSearch label="Buscar proyectos de organización" value={search} onSearch={setSearch} />
+      <PageNavigation label="proyectos de organización" navigation={resource.navigation} />
+      <ResourceStatus label="proyectos" {...resource} />
+      {resource.ready && !resource.pending && !resource.error && data.length === 0 ? (
         <EmptyState
           iconName="projects"
           message="No hay proyectos registrados."

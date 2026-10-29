@@ -1,7 +1,7 @@
+import { useInvitation } from "../useInvitation";
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { ApiError, apiRequest, errorText, type Area } from "../../auth/api";
-import { useToast } from "../../../hooks/useToast";
+import type { Area } from "../../auth/api";
 import XIcon from "../../../shared/icons/XIcon";
 import { accountRoles } from "../../auth/roles";
 
@@ -16,10 +16,6 @@ interface AreaSelection {
   value: string;
 }
 
-interface InvitationResult {
-  detail: string;
-}
-
 const field =
   "w-full bg-white border border-neutral-200 text-neutral-800 placeholder:text-neutral-600 px-3 py-1.5 text-xs rounded-lg focus:border-neutral-400 focus:outline-none";
 const label = "text-xs text-neutral-800";
@@ -31,7 +27,7 @@ export default function InvitationModal({
   onClose,
   onUpdate,
 }: InvitationModalProps) {
-  const { addToast } = useToast();
+  const { busy, invite } = useInvitation(onUpdate, onClose);
   const nextKey = useRef(1);
   const [firstNames, setFirstNames] = useState("");
   const [lastNames, setLastNames] = useState("");
@@ -41,7 +37,6 @@ export default function InvitationModal({
     { key: 0, value: "" },
   ]);
   const [allAreas, setAllAreas] = useState(false);
-  const [busy, setBusy] = useState(false);
   const canAdd =
     !allAreas &&
     selections.every((item) => item.value) &&
@@ -79,50 +74,18 @@ export default function InvitationModal({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setBusy(true);
-    try {
-      const result = await apiRequest<InvitationResult>("admin/invitations/", {
-        method: "POST",
-        body: JSON.stringify({
-          first_names: firstNames,
-          last_names: lastNames,
-          email,
-          role,
-          all_areas: allAreas,
-          area_ids: allAreas
-            ? []
-            : selections.map((item) => Number(item.value)),
-        }),
-      });
-      addToast({
-        icon: "success",
-        title: "Invitación registrada",
-        message: result.detail,
-      });
-      onClose();
-    } catch (failure) {
-      if (
-        failure instanceof ApiError &&
-        failure.status === 503 &&
-        failure.payload?.account_id
-      )
-        clearForm();
-      addToast({
-        icon: "error",
-        title: "No se pudo registrar",
-        message: errorText(failure),
-      });
-    } finally {
-      await onUpdate();
-      setBusy(false);
-    }
+    const clear = await invite({
+      first_names: firstNames, last_names: lastNames, email, role, all_areas: allAreas,
+      area_ids: allAreas ? [] : selections.map((item) => Number(item.value)),
+    });
+    if (clear) clearForm();
   }
 
   return (
     <div className="bg-modal">
-      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-xl">
+      <div role="dialog" aria-modal="true" aria-labelledby="invitation-title" className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-white rounded-xl">
         <header className="flex items-center justify-between px-4 py-3 border-b border-neutral-200">
-          <h3 className="m-0 text-sm text-neutral-800">Registrar e invitar</h3>
+          <h3 id="invitation-title" className="m-0 text-sm text-neutral-800">Registrar e invitar</h3>
           <button
             type="button"
             className="p-1.5 text-neutral-700 hover:bg-neutral-200 hover:text-neutral-800 rounded-full cursor-pointer inline-flex items-center justify-center"

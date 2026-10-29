@@ -11,6 +11,8 @@ import FlagIcon from "../../../shared/icons/FlagIcon";
 import SuccessIcon from "../../../shared/icons/SuccessIcon";
 import UserIcon from "../../../shared/icons/UserIcon";
 import XIcon from "../../../shared/icons/XIcon";
+import CalendarEditFeedback from "../CalendarEditFeedback";
+import { useTaskCalendarEdit } from "../useTaskCalendarEdit";
 import { errorText } from "../../auth/api";
 import { Calendar } from "../CreateProjectModal/ProjectEndDateSelector";
 import LabelEditor from "../LabelEditor/LabelEditor";
@@ -30,7 +32,7 @@ import TaskDateValue from "../TaskForm/TaskDateValue";
 import StatusIcon from "../../../shared/icons/StatusIcon";
 import TaskProperty from "../TaskForm/TaskProperty";
 import type {
-  EditTaskPayload,
+  TaskPatchPayload,
   Label,
   Project,
   ProjectCatalogs,
@@ -63,7 +65,7 @@ type Field =
   | "due_date"
   | "labels";
 export interface TaskChanges {
-  onPatch: (task: Task, data: Partial<EditTaskPayload>) => Promise<void>;
+  onPatch: (task: Task, data: TaskPatchPayload) => Promise<void>;
   onState: (task: Task, data: TaskStatePayload) => Promise<void>;
 }
 interface TaskCellProps extends TaskChanges {
@@ -188,7 +190,9 @@ function Editor({
   onState,
   close,
 }: TaskCellProps & { close: () => void }) {
-  const [value, setValue] = useState(String(task[field] ?? ""));
+  const calendarEdit = useTaskCalendarEdit(task);
+  const baseTask = calendarEdit.base!;
+  const [value, setValue] = useState(String(baseTask[field] ?? ""));
   const [responsibles, setResponsibles] = useState(() =>
     field === "responsible_id"
       ? taskAssignees(task).map((person) => person.id)
@@ -200,6 +204,7 @@ function Editor({
   const [error, setError] = useState("");
   const id = useId();
   const errorMessage = useRef<HTMLParagraphElement>(null);
+  const saveButton = useRef<HTMLButtonElement>(null);
   const isDate = field === "start_date" || field === "due_date";
   const matches = (name: string) =>
     name
@@ -220,18 +225,18 @@ function Editor({
       if (field === "state_code")
         await onState(task, { state_code: value });
       else if (field === "responsible_id")
-        await onPatch(task, { responsible_ids: responsibles });
+        await calendarEdit.save({ responsible_ids: responsibles }, (data) => onPatch(task, data));
       else if (field === "labels") {
-        await onPatch(task, labelSelection(taskLabels));
+        await calendarEdit.save(labelSelection(taskLabels), (data) => onPatch(task, data));
       } else
-        await onPatch(task, {
+        await calendarEdit.save({
           [field]:
             field === "priority"
               ? value
                 ? Number(value)
                 : null
               : value || null,
-        });
+        }, (data) => onPatch(task, data));
       close();
     } catch (failure) {
       setError(errorText(failure));
@@ -355,7 +360,8 @@ function Editor({
           />
         )}
       </fieldset>
-      {error && (
+      <CalendarEditFeedback busy={busy} editor={calendarEdit} onPrepared={() => { setError(""); requestAnimationFrame(() => saveButton.current?.focus()); }} />
+      {error && !calendarEdit.problem && (
         <p
           ref={errorMessage}
           tabIndex={-1}
@@ -372,16 +378,17 @@ function Editor({
         </button>
         <button
           type="button"
+          ref={saveButton}
           className="primary-button bg-neutral-800 font-medium text-white hover:bg-neutral-700"
           disabled={
-            busy ||
+            busy || calendarEdit.blocked ||
             (field === "labels"
               ? JSON.stringify(labelSelection(taskLabels)) ===
                 JSON.stringify(labelSelection(task.labels))
               : field === "responsible_id"
                 ? JSON.stringify([...responsibles].sort((a, b) => a - b)) ===
                   JSON.stringify(taskAssignees(task).map((person) => person.id))
-                : value === String(task[field] ?? ""))
+                : value === String(baseTask[field] ?? ""))
           }
           onClick={() => {
             void save();

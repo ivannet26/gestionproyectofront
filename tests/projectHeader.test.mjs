@@ -1,3 +1,4 @@
+import { taskSyncFixture } from "./taskSyncFixture.mjs";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
@@ -7,6 +8,8 @@ import * as jsxRuntime from "react/jsx-runtime";
 import { renderToStaticMarkup } from "react-dom/server";
 import ts from "typescript";
 
+const syncFixture = taskSyncFixture();
+
 async function load(path, dependencies = {}) {
   const source = readFileSync(new URL(path, import.meta.url), "utf8");
   const compiled = ts.transpileModule(source, {
@@ -14,7 +17,7 @@ async function load(path, dependencies = {}) {
   }).outputText;
   const module = new vm.SourceTextModule(compiled);
   await module.link((name) => {
-    const exports = { react: React, "react/jsx-runtime": jsxRuntime, ...dependencies }[name];
+    const exports = { "../TaskSyncProvider": { default: ({ children }) => children }, "../useTaskSync": { useTaskSync: () => syncFixture }, react: React, "react/jsx-runtime": jsxRuntime, ...dependencies }[name];
     assert.ok(exports, `Unexpected import: ${name}`);
     return new vm.SyntheticModule(Object.keys(exports), function () {
       for (const [key, value] of Object.entries(exports)) this.setExport(key, value);

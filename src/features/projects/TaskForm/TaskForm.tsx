@@ -1,6 +1,8 @@
 import type { FormEvent } from "react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { errorText } from "../../auth/api";
+import CalendarEditFeedback from "../CalendarEditFeedback";
+import { useTaskCalendarEdit } from "../useTaskCalendarEdit";
 import LabelList from "../LabelList/LabelList";
 import TaskStatusConfiguration from "../TaskStatusConfiguration/TaskStatusConfiguration";
 import type { FieldErrors } from "../formErrors";
@@ -83,6 +85,7 @@ export default function TaskForm({
   onConfigured,
   onClose,
 }: TaskFormProps) {
+  const calendarEdit = useTaskCalendarEdit(task);
   const [name, setName] = useState(task?.name ?? "");
   const [description, setDescription] = useState(task?.description ?? "");
   const [stateCode, setStateCode] = useState(initialState ?? project.task_states.states.find((state) => state.category === "not_started" || !state.category && state.code === "PENDIENTE")?.code ?? "PENDIENTE");
@@ -185,16 +188,14 @@ export default function TaskForm({
       data.description = description.trim();
     if (canAssign) data.responsible_ids = responsible;
     try {
-      await onSubmit(
-        task
-          ? data
-          : {
+      await (task ? calendarEdit.save(data, onSubmit) : onSubmit({
             ...data,
+            name: name.trim(),
             state_code: stateCode,
             parent_id: parent?.id ?? null,
             reason: reason.trim(),
-          },
-      );
+          }));
+      if (task) onClose();
     } catch (failure) {
       const fields = apiFieldErrors(failure, taskFields);
       setFieldErrors(fields);
@@ -368,7 +369,8 @@ export default function TaskForm({
           </fieldset>
         </div>
         <footer className={styles.footer}>
-          {error && (
+          <CalendarEditFeedback busy={busy} editor={calendarEdit} onPrepared={() => { setError(""); setFieldErrors({}); requestAnimationFrame(() => form.current?.querySelector<HTMLButtonElement>('button[type="submit"]')?.focus()); }} />
+          {error && !calendarEdit.problem && (
             <p
               className={styles.generalError}
               role="alert"
@@ -396,7 +398,7 @@ export default function TaskForm({
               <button
                 type="submit"
                 className="min-h-10 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700"
-                disabled={busy}
+                disabled={busy || calendarEdit.blocked}
               >
                 {busy
                   ? "Guardando…"
