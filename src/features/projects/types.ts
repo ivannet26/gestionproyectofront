@@ -1,4 +1,3 @@
-import type { PageNavigation } from "../../core/interfaces/pagination.interface";
 export interface ProjectArea {
   id: number;
   name: string;
@@ -67,19 +66,14 @@ export interface ProjectAreaGroup extends ProjectArea {
   projects: ProjectSummary[];
 }
 
-export interface ProjectsMenuProps
-  extends Omit<ProjectNavigationProps, "loading" | "error" | "onRetry"> {
+export interface ProjectsMenuProps {
   isCollapsed: boolean;
-  projectsLoading: boolean;
-  projectError: string;
-  onRetryProjects: () => void;
+  currentPath: string;
   canCreateProject: boolean;
   projectCreationDisabled: boolean;
   onCreateProject: () => void;
-  directoryNavigation?: PageNavigation;
-  projectSearch?: string;
-  onProjectSearch?: (value: string) => void;
-  currentProject?: ProjectSummary | null;
+  canCreateTasks: boolean;
+  onCreateTask: (id: number, project: ProjectSummary) => void;
 }
 
 export interface Project extends ProjectSummary {
@@ -307,6 +301,7 @@ export interface TaskCreationRequest {
 
 
 export interface ProjectListFilters {
+  project_id?: number;
   search?: string;
   area_id?: number;
   state_code?: string;

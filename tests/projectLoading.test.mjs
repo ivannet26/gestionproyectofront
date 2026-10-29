@@ -108,6 +108,7 @@ async function shellHarness() {
     "../../auth/api": { errorText: error => error.message },
     "../../../hooks/useLoading": { useLoading: () => loading },
     "../../../hooks/useRemoteResource": { useRemoteResource: () => ({ value: null }) },
+    "../../projects/projectDirectoryEvents": { projectDirectoryChanged() {} },
     "../../projects/useProjectDirectory": { useProjectDirectory: (filters, enabled = true) => {
       const [data, setData] = harness.react.useState([]);
       const [pending, setPending] = harness.react.useState(enabled);
@@ -146,13 +147,13 @@ async function shellHarness() {
     get active() { return active; }, get bootReleased() { return bootReleased; }, navigate(next) { pathname = next; tree(); }, unmount: harness.unmount };
 }
 
-test("catalog requests run alongside projects and failures retain explicit error and retry contracts", async () => {
+test("catalog requests stay independent of lazy project navigation and retain errors and retry", async () => {
   const shell = await shellHarness();
   assert.equal(shell.route().catalogLoading, true);
-  assert.equal(shell.projects.length, 1); assert.equal(shell.catalogs.length, 1);
+  assert.equal(shell.projects.length, 0); assert.equal(shell.catalogs.length, 1);
   assert.equal(shell.active, 0);
-  assert.equal(shell.bootReleased, false);
-  shell.projects[0].resolve([]); shell.catalogs[0].reject(Error("Catálogos no disponibles"));
+  assert.equal(shell.bootReleased, true);
+  shell.catalogs[0].reject(Error("Catálogos no disponibles"));
   await flush();
   const failed = shell.route();
   assert.equal(shell.bootReleased, true);
@@ -161,17 +162,15 @@ test("catalog requests run alongside projects and failures retain explicit error
   assert.equal(shell.active, 0);
   failed.onRetryCatalogs();
   assert.equal(shell.route().catalogLoading, true);
-  assert.equal(shell.projects.length, 1); assert.equal(shell.catalogs.length, 2);
+  assert.equal(shell.projects.length, 0); assert.equal(shell.catalogs.length, 2);
   const confirmed = { areas: [{ id: 1 }], states: [{ code: "OPEN" }], priorities: [] };
   shell.catalogs[1].resolve(confirmed); await flush();
   const ready = shell.route();
   assert.equal(ready.catalogs, confirmed); assert.equal(ready.catalogLoading, false); assert.equal(ready.catalogError, "");
-  shell.sidebar().onRetryProjects(); shell.route();
-  assert.equal(shell.active, 0);
-  assert.equal(shell.sidebar().projectsLoading, true);
+  assert.equal("onRetryProjects" in shell.sidebar(), false);
+  assert.equal("directoryNavigation" in shell.sidebar(), false);
+  assert.equal(shell.projects.length, 0);
   shell.unmount(); assert.equal(shell.active, 0);
-  shell.projects[1].resolve([{ id: 99 }]); await flush();
-  assert.equal(shell.active, 0);
 });
 
 test("late catalog responses from a departed route are discarded and a returning route can retry", async () => {
@@ -208,14 +207,12 @@ test("project route forwards catalog loading, errors and retry without disguisin
 });
 
 
-test("initial project failure releases the legacy login overlay and retains explicit retry", async () => {
+test("optional directory failure cannot block login or add sidebar retry controls", async () => {
   const shell = await shellHarness();
-  shell.route(); assert.equal(shell.bootReleased, false);
+  shell.route(); assert.equal(shell.bootReleased, true); assert.equal(shell.projects.length, 0);
+  shell.navigate("/proyectos"); assert.equal(shell.projects.length, 1);
   shell.projects[0].reject(Error("Listado no disponible")); await flush();
-  assert.equal(shell.sidebar().projectError, "Listado no disponible");
-  assert.equal(shell.bootReleased, true);
-  shell.sidebar().onRetryProjects(); shell.route();
-  assert.equal(shell.projects.length, 2);
-  shell.unmount(); shell.projects[1].resolve([]); shell.catalogs[0].resolve({ areas: [], states: [], priorities: [] });
-  await flush();
+  assert.equal(shell.bootReleased, true); assert.equal("onRetryProjects" in shell.sidebar(), false);
+  shell.navigate("/proyectos/42"); assert.equal(shell.projects.length, 1);
+  shell.unmount(); shell.catalogs[0].resolve({ areas: [], states: [], priorities: [] }); await flush();
 });

@@ -1,5 +1,5 @@
-import { useProjectDirectory } from "../../projects/useProjectDirectory";
+import { useProjectAreaDirectory } from "../../projects/useProjectAreaDirectory";
 
-export function useOrganizationProjects(search = "") {
-  return useProjectDirectory({ search });
+export function useOrganizationProjects() {
+  return useProjectAreaDirectory(undefined, true);
 }

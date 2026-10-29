@@ -18,11 +18,6 @@ function Sidebar({
   user,
   onLogout,
   currentPath,
-  projects,
-  directoryNavigation, projectSearch, onProjectSearch, currentProject,
-  projectsLoading,
-  projectError,
-  onRetryProjects,
   canCreateProject,
   projectCreationDisabled,
   onCreateProject,
@@ -99,14 +94,6 @@ function Sidebar({
             <ProjectsMenu
               isCollapsed={isCollapsed}
               currentPath={currentPath}
-              projects={projects}
-              directoryNavigation={directoryNavigation}
-              projectSearch={projectSearch}
-              onProjectSearch={onProjectSearch}
-              currentProject={currentProject}
-              projectsLoading={projectsLoading}
-              projectError={projectError}
-              onRetryProjects={onRetryProjects}
               canCreateProject={canCreateProject}
               projectCreationDisabled={projectCreationDisabled}
               onCreateProject={onCreateProject}

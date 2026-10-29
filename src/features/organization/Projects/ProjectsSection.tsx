@@ -1,70 +1,10 @@
-import { useState } from "react";
-import ListSearch from "../../../shared/ListSearch";
-import PageNavigation from "../../../shared/PageNavigation";
 import { useOrganizationProjects } from "./useOrganizationProjects";
-import ResourceStatus from "../../../shared/ResourceStatus";
-import { Link } from "react-router";
-import { projectPath } from "../../../routes";
-import EmptyState from "../../../shared/EmptyState/EmptyState";
-import ProjectsIcon from "../../../shared/icons/ProjectsIcon";
+import ProjectAreaNavigation from "../../projects/ProjectNavigation/ProjectAreaNavigation";
 
-function ProjectsSection() {
-  const [search, setSearch] = useState("");
-  const resource = useOrganizationProjects(search);
-  const { data } = resource;
-
-  return (
-    <section aria-label="Proyectos" className="flex h-full flex-col">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="m-0 text-sm text-neutral-800">Proyectos</h3>
-      </div>
-
-      <ListSearch label="Buscar proyectos de organización" value={search} onSearch={setSearch} />
-      <PageNavigation label="proyectos de organización" navigation={resource.navigation} />
-      <ResourceStatus label="proyectos" {...resource} />
-      {resource.ready && !resource.pending && !resource.error && data.length === 0 ? (
-        <EmptyState
-          iconName="projects"
-          message="No hay proyectos registrados."
-        />
-      ) : (
-        <ul className="m-0 p-0 list-none space-y-0.5">
-          {data.map((project) => (
-            <li
-              key={project.id}
-              className="px-3 py-2 rounded-lg hover:bg-neutral-100 flex items-center gap-2 text-xs"
-            >
-              <span
-                className="inline-flex items-center text-orange-500"
-                aria-hidden="true"
-              >
-                <ProjectsIcon className="size-4" />
-              </span>
-              <Link
-                to={projectPath(project.id)}
-                className="flex-1 min-w-0 text-neutral-700 hover:text-neutral-800 truncate cursor-pointer"
-              >
-                {project.name}
-              </Link>
-              <span className="text-[10px] text-neutral-600">
-                {project.start_date}
-              </span>
-              <div className="flex items-center gap-1.5 ml-2">
-                {project.areas.map((area, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-0.5 text-[10px] text-neutral-600 bg-neutral-100 rounded font-medium"
-                  >
-                    {area.name}
-                  </span>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
+export default function ProjectsSection() {
+  const directory = useOrganizationProjects();
+  return <section aria-label="Proyectos" className="flex h-full min-w-0 flex-col">
+    <div className="mb-3 flex items-center justify-between"><h3 className="m-0 text-sm text-neutral-800">Proyectos</h3></div>
+    <ProjectAreaNavigation directory={directory} organization />
+  </section>;
 }
-
-export default ProjectsSection;

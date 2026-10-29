@@ -11,6 +11,7 @@ import type {
   ProjectFavoriteState,
   ProjectCatalogs,
   ProjectSummary,
+  ProjectArea,
   ProjectTaskConfiguration,
   ProjectTaskConfigurationPayload,
   Task,
@@ -49,14 +50,21 @@ export function removeTaskRelation(target: TaskIdentity, relationId: number): Pr
   return projectRequest<void>(`${taskPath(target)}relations/${relationId}/`, { method: "DELETE" });
 }
 
-export function getProjects(filters: ProjectListFilters = {}, cursor: string | null = null): Promise<CursorPage<ProjectSummary>> {
+export function getProjects(filters: ProjectListFilters = {}, cursor: string | null = null, signal?: AbortSignal): Promise<CursorPage<ProjectSummary>> {
   const query = new URLSearchParams();
   if (filters.search?.trim()) query.set("search", filters.search.trim());
-  for (const key of ["area_id", "state_code", "available", "associated"] as const) {
+  for (const key of ["area_id", "project_id", "state_code", "available", "associated"] as const) {
     if (filters[key] !== undefined) query.set(key, String(filters[key]));
   }
   if (cursor) query.set("cursor", cursor);
-  return projectRequest(query.size ? "?" + query : "");
+  return projectRequest(query.size ? "?" + query : "", signal ? { signal } : undefined);
+}
+
+export function getProjectAreas(filters: Pick<ProjectListFilters, "associated"> = {}, cursor: string | null = null, signal?: AbortSignal): Promise<CursorPage<ProjectArea>> {
+  const query = new URLSearchParams();
+  if (filters.associated !== undefined) query.set("associated", String(filters.associated));
+  if (cursor) query.set("cursor", cursor);
+  return projectRequest("areas/" + (query.size ? "?" + query : ""), signal ? { signal } : undefined);
 }
 
 export function getProjectCatalogs(): Promise<ProjectCatalogs> {

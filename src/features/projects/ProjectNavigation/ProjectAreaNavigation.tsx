@@ -1,130 +1,53 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
-import { projectPath } from "../../../routes";
-import type { ProjectNavigationProps } from "../types";
-import ProjectNavigation from "./ProjectNavigation";
-import { groupProjectsByArea } from "./groupProjectsByArea";
+import type { useProjectAreaDirectory } from "../useProjectAreaDirectory";
+import type { ProjectSummary } from "../types";
+import ProjectAreaBranch from "./ProjectAreaBranch";
+import ProjectContinuation from "./ProjectContinuation";
 
-export default function ProjectAreaNavigation({
-  projects,
-  currentPath,
-  loading,
-  error,
-  onRetry,
-  canCreateTasks,
-  onCreateTask,
-}: ProjectNavigationProps) {
+interface ProjectAreaNavigationProps {
+  directory: ReturnType<typeof useProjectAreaDirectory>;
+  currentPath?: string;
+  associated?: boolean;
+  enabled?: boolean;
+  organization?: boolean;
+  canCreateTasks?: boolean;
+  onCreateTask?: (id: number, project: ProjectSummary) => void;
+}
+
+export default function ProjectAreaNavigation({ directory, currentPath = "", associated, enabled = true, organization, canCreateTasks, onCreateTask }: ProjectAreaNavigationProps) {
   const navigationId = useId();
-  const groups = useMemo(() => groupProjectsByArea(projects), [projects]);
-  const [expandedAreas, setExpandedAreas] = useState<Record<number, boolean>>(
-    {},
-  );
-  const activeAreaId = groups.find((area) =>
-    area.projects.some((project) => {
-      const path = projectPath(project.id);
-      return currentPath === path || currentPath.startsWith(`${path}/`);
-    }),
-  )?.id;
-
+  const [expandedAreas, setExpandedAreas] = useState<Record<number, boolean>>({});
+  const activeAreaId = directory.currentProject?.areas[0]?.id;
   useEffect(() => {
     if (activeAreaId === undefined) return;
     let current = true;
-    void Promise.resolve().then(() => {
-      if (current)
-        setExpandedAreas((expanded) => ({ ...expanded, [activeAreaId]: true }));
-    });
-    return () => {
-      current = false;
-    };
+    void Promise.resolve().then(() => { if (current) setExpandedAreas((expanded) => ({ ...expanded, [activeAreaId]: true })); });
+    return () => { current = false; };
   }, [activeAreaId, currentPath]);
-
-  return (
-    <div aria-busy={loading}>
-      {loading && (
-        <p className="mx-3 text-xs text-neutral-600" role="status">
-          Cargando proyectos…
-        </p>
-      )}
-      {error && (
-        <p className="mx-3 break-words text-xs text-neutral-600" role="alert">
-          {error}
-        </p>
-      )}
-      {error && onRetry && (
-        <button
-          type="button"
-          disabled={loading}
-          onClick={onRetry}
-          className="mx-3 mb-2 cursor-pointer rounded-lg border border-neutral-200 px-3 py-1.5 text-xs text-neutral-800 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-neutral-700"
-        >
-          Volver a cargar proyectos
-        </button>
-      )}
-      {!loading && !error && groups.length === 0 && (
-        <p className="mx-3 text-xs text-neutral-600" role="status">
-          No hay proyectos autorizados con trabajadores asociados.
-        </p>
-      )}
-      <ul
-        className="m-0 flex list-none flex-col gap-2 p-0 hidden:hidden"
-        aria-label="Áreas con proyectos asociados"
-        hidden={loading || Boolean(error)}
-      >
-        {groups.map((area) => {
-          const expanded = expandedAreas[area.id] ?? area.id === activeAreaId;
-          const childrenId = `project-area-${navigationId}-${area.id}-navigation`;
-          return (
-            <li key={area.id} className="min-w-0">
-              <button
-                type="button"
-                aria-expanded={expanded}
-                aria-controls={childrenId}
-                aria-label={`${expanded ? "Contraer" : "Expandir"} área ${area.name}`}
-                title={area.name}
-                className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-medium text-neutral-800 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700"
-                onClick={() =>
-                  setExpandedAreas((current) => ({
-                    ...current,
-                    [area.id]: !expanded,
-                  }))
-                }
-                onKeyDown={(event) => {
-                  if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
-                    event.preventDefault();
-                    setExpandedAreas((current) => ({
-                      ...current,
-                      [area.id]: event.key === "ArrowRight",
-                    }));
-                  }
-                }}
-              >
-                <span
-                  aria-hidden="true"
-                  className="grid size-5 shrink-0 place-items-center rounded-md bg-neutral-200 text-xs font-semibold text-neutral-800"
-                >
-                  {Array.from(area.name.trim())[0]?.toLocaleUpperCase("es")}
-                </span>
-                <span className="min-w-0 flex-1 truncate">{area.name}</span>
-                <span aria-hidden="true" className="shrink-0">
-                  <ChevronDownIcon
-                    className={`size-4 ${expanded ? "" : "-rotate-90"}`}
-                  />
-                </span>
-              </button>
-              <div id={childrenId} hidden={!expanded} className="ml-4 mt-1">
-                <ProjectNavigation
-                  projects={area.projects}
-                  currentPath={currentPath}
-                  loading={false}
-                  error=""
-                  canCreateTasks={canCreateTasks}
-                  onCreateTask={onCreateTask}
-                />
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
+  return <div aria-busy={directory.pending}>
+    {directory.currentError && <p role="alert" className="mx-3 break-words text-xs text-neutral-600">No se pudo consultar el proyecto abierto. <button type="button" className="cursor-pointer rounded px-1 underline focus-visible:outline-2 focus-visible:outline-neutral-700" onClick={() => { void directory.retryCurrent(); }}>Reintentar</button></p>}
+    <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label={organization ? "Áreas de proyectos" : "Áreas con proyectos asociados"}>
+      {directory.areas.map((area, index) => {
+        const expanded = expandedAreas[area.id] ?? (area.id === activeAreaId || Boolean(organization && index === 0));
+        const childrenId = `project-area-${navigationId}-${area.id}-navigation`;
+        const toggle = (value: boolean) => setExpandedAreas((current) => ({ ...current, [area.id]: value }));
+        return <li key={area.id} className="min-w-0">
+          <button type="button" aria-expanded={expanded} aria-controls={childrenId} aria-label={`${expanded ? "Contraer" : "Expandir"} área ${area.name}`} title={area.name}
+            className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-medium text-neutral-800 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-neutral-700"
+            onClick={() => toggle(!expanded)} onKeyDown={(event) => { if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); toggle(event.key === "ArrowRight"); } }}>
+            <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center rounded-md bg-neutral-200 text-xs font-semibold text-neutral-800">{Array.from(area.name.trim())[0]?.toLocaleUpperCase("es")}</span>
+            <span className="min-w-0 flex-1 truncate">{area.name}</span>
+            <span aria-hidden="true" className="shrink-0"><ChevronDownIcon className={`size-4 ${expanded ? "" : "-rotate-90"}`} /></span>
+          </button>
+          <div id={childrenId} hidden={!expanded} className="ml-4 mt-1">
+            <ProjectAreaBranch area={area} associated={associated} enabled={enabled && expanded} currentPath={currentPath}
+              currentProject={directory.currentProject} organization={organization} canCreateTasks={canCreateTasks} onCreateTask={onCreateTask} />
+          </div>
+        </li>;
+      })}
+    </ul>
+    {directory.ready && !directory.pending && !directory.error && !directory.areas.length && <p role="status" className="mx-3 text-xs text-neutral-600">{organization ? "No hay proyectos registrados." : "No hay proyectos autorizados con trabajadores asociados."}</p>}
+    <ProjectContinuation {...directory} enabled={enabled} label="áreas" />
+  </div>;
 }

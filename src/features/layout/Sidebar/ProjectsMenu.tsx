@@ -1,9 +1,7 @@
-import { Link } from "react-router";
-import ListSearch from "../../../shared/ListSearch";
-import PageNavigation from "../../../shared/PageNavigation";
 import { useId, useState } from "react";
 import ChevronDownIcon from "../../../shared/icons/ChevronDownIcon";
 import PlusIcon from "../../../shared/icons/PlusIcon";
+import { useProjectAreaDirectory } from "../../projects/useProjectAreaDirectory";
 import ProjectAreaNavigation from "../../projects/ProjectNavigation/ProjectAreaNavigation";
 import { projectCreateActionClassName } from "../../projects/ProjectNavigation/navigationClasses";
 import type { ProjectsMenuProps } from "../../projects/types";
@@ -11,11 +9,6 @@ import type { ProjectsMenuProps } from "../../projects/types";
 export default function ProjectsMenu({
   isCollapsed,
   currentPath,
-  projects,
-  directoryNavigation, projectSearch = "", onProjectSearch, currentProject,
-  projectsLoading,
-  projectError,
-  onRetryProjects,
   canCreateProject,
   projectCreationDisabled,
   onCreateProject,
@@ -24,6 +17,8 @@ export default function ProjectsMenu({
 }: ProjectsMenuProps) {
   const [open, setOpen] = useState(true);
   const itemsId = useId();
+  const enabled = open && !isCollapsed;
+  const directory = useProjectAreaDirectory(true, enabled, currentPath);
 
   return (
     <div className="mt-3" hidden={isCollapsed}>
@@ -56,23 +51,8 @@ export default function ProjectsMenu({
         )}
       </div>
       <div id={itemsId} hidden={!open}>
-        <Link to="/proyectos" className="mx-3 block text-xs text-neutral-700 underline">Ver todos los proyectos</Link>
-        {onProjectSearch && <ListSearch label="Buscar proyectos del menú" value={projectSearch} onSearch={onProjectSearch} />}
-        {directoryNavigation && <PageNavigation label="menú de proyectos" navigation={directoryNavigation} />}
-        {currentProject && <div className="mb-3">
-          <p className="mx-3 text-[10px] text-neutral-600">Proyecto actual fuera de esta página</p>
-          <ProjectAreaNavigation projects={[currentProject]} currentPath={currentPath} loading={false} error=""
-            canCreateTasks={canCreateTasks} onCreateTask={onCreateTask} />
-        </div>}
-        <ProjectAreaNavigation
-          projects={projects}
-          currentPath={currentPath}
-          loading={projectsLoading}
-          error={projectError}
-          onRetry={onRetryProjects}
-          canCreateTasks={canCreateTasks}
-          onCreateTask={onCreateTask}
-        />
+        <ProjectAreaNavigation directory={directory} currentPath={currentPath} associated enabled={enabled}
+          canCreateTasks={canCreateTasks} onCreateTask={onCreateTask} />
       </div>
     </div>
   );

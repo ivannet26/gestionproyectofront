@@ -1,20 +1,21 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router";
 import type { AppRoute } from "../../../routes";
 import { appRoutes, projectPath } from "../../../routes";
 import type { SessionUser } from "../../auth/api";
 import { errorText } from "../../auth/api";
-import { useRemoteResource } from "../../../hooks/useRemoteResource";
 import { useLoading } from "../../../hooks/useLoading";
 import { useProjectDirectory } from "../../projects/useProjectDirectory";
+import { projectDirectoryChanged } from "../../projects/projectDirectoryEvents";
 import CreateProjectModal from "../../projects/CreateProjectModal/CreateProjectModal";
 import DashboardPage from "../../dashboard/DashboardPage/DashboardPage";
 import Modal from "../../projects/Modal/Modal";
 import ProjectList from "../../projects/ProjectList/ProjectList";
 import ProjectRoute from "../../projects/ProjectRoute/ProjectRoute";
-import { getProjectCatalogs, getProject } from "../../projects/services";
+import { getProjectCatalogs } from "../../projects/services";
 import type {
   Project,
+  ProjectSummary,
   ProjectCatalogs,
   TaskCreationRequest,
 } from "../../projects/types";
@@ -43,18 +44,10 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   const taskCreationSequence = useRef(0);
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const [projectSearch, setProjectSearch] = useState("");
   const [listSearch, setListSearch] = useState("");
   const { hideLoading } = useLoading();
-  const directory = useProjectDirectory({ search: projectSearch, associated: true });
   const mainDirectory = useProjectDirectory({ search: listSearch }, pathname === "/proyectos" || pathname === "/proyectos/resumen");
-  const projects = directory.data, projectsLoading = directory.pending, projectError = directory.error;
-  const activeId = Number(pathname.match(/^\/proyectos\/(\d+)$/)?.[1]);
-  const activeOnPage = projects.find((item) => item.id === activeId);
-  const active = useRemoteResource(useCallback(() => getProject(activeId), [activeId]),
-    "current-project:" + activeId, Number.isSafeInteger(activeId) && activeId > 0 && !activeOnPage);
-  const currentProject = activeOnPage ?? active.value;
-  useEffect(() => { if (!directory.loading) hideLoading(); }, [directory.loading, hideLoading]);
+  useEffect(() => { hideLoading(); }, [hideLoading]);
 
   const canViewAdmin = user.permissions.manage_accounts;
   const canCreateProject = user.role === "ADMINISTRADOR";
@@ -94,7 +87,7 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
   }
 
   function projectCreated(project: Project) {
-    void directory.reload();
+    projectDirectoryChanged(project.areas.map((area) => area.id));
     void mainDirectory.reload();
     setCreating(false);
     void navigate(projectPath(project.id));
@@ -106,14 +99,8 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
     );
   }
 
-  function openTaskCreation(projectId: number) {
-    const project = projects.find((item) => item.id === projectId) ?? (currentProject?.id === projectId ? currentProject : null);
-    if (
-      !canCreateTasks ||
-      projectsLoading ||
-      !project?.permissions.create_tasks
-    )
-      return;
+  function openTaskCreation(projectId: number, project: ProjectSummary) {
+    if (!canCreateTasks || project.id !== projectId || !project.permissions.create_tasks) return;
     taskCreationSequence.current += 1;
     setTaskCreationRequest({
       projectId,
@@ -168,14 +155,6 @@ function AppShell({ user, onLogout, logoutError }: AppShellProps) {
         user={user}
         onLogout={onLogout}
         currentPath={pathname}
-        projects={projects}
-        projectsLoading={projectsLoading}
-        projectError={projectError}
-        onRetryProjects={directory.refetch}
-        directoryNavigation={directory.navigation}
-        projectSearch={projectSearch}
-        onProjectSearch={setProjectSearch}
-        currentProject={!activeOnPage && currentProject?.has_associated_workers ? currentProject : null}
         canCreateProject={canCreateProject}
         projectCreationDisabled={creationDisabled}
         onCreateProject={openProjectCreation}

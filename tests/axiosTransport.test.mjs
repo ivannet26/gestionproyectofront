@@ -274,3 +274,15 @@ test("calendar PATCH keeps exact revision and intention, rejects missing precond
   assert.equal("expected_calendar_revision" in client.seen[1].data, false);
   assert.equal("calendar_intent_id" in client.seen[1].data, false);
 });
+
+
+test("project navigation preserves shared default GETs and carries cancellable scoped area requests", async () => {
+  const gate=deferred(),started=deferred();let held=true;
+  const client=await clients(async()=>{if(held){started.resolve();await gate.promise;}return {data:{results:[],total:0,cursor:"x",next_cursor:null}};});
+  await client.login();
+  const first=client.services.getProjects({project_id:7,associated:true}),second=client.services.getProjects({project_id:7,associated:true});
+  await started.promise;assert.equal(client.seen.length,1);gate.resolve();await Promise.all([first,second]);held=false;
+  assert.equal(client.seen[0].url,"projects/?project_id=7&associated=true");
+  const abort=new AbortController();await client.services.getProjectAreas({associated:false},"QA cursor",abort.signal);
+  const sent=client.seen[1];assert.equal(sent.url,"projects/areas/?associated=false&cursor=QA+cursor");assert.equal(sent.config.signal,abort.signal);assert.equal(sent.authorization,"Bearer initial");assert.equal(sent.config.withCredentials,true);
+});
