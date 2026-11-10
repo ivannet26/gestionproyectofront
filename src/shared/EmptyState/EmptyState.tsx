@@ -8,6 +8,7 @@ import TeamsIcon from "../Icons/TeamsIcon";
 interface EmptyStateProps {
   iconName: EmptyStateIconName;
   message: string;
+  style?: "normal" | "small";
 }
 
 export type EmptyStateIconName = "areas" | "teams" | "specialties" | "projects";
@@ -19,8 +20,9 @@ const emptyStateIcons: Record<EmptyStateIconName, ComponentType<IconProps>> = {
   projects: ProjectsIcon,
 };
 
-function EmptyState({ iconName, message }: EmptyStateProps) {
+function EmptyState({ iconName, message, style = "normal" }: EmptyStateProps) {
   const Icon = emptyStateIcons[iconName];
+  const small = style === "small";
 
   return (
     <div
@@ -31,9 +33,13 @@ function EmptyState({ iconName, message }: EmptyStateProps) {
         className="text-neutral-600 dark:text-neutral-400"
         aria-hidden="true"
       >
-        <Icon className="size-8" fill={false} />
+        <Icon className={small ? "size-6" : "size-8"} fill={false} />
       </span>
-      <p className="m-0 mt-2 text-xs text-neutral-600 dark:text-neutral-400">
+      <p
+        className={`m-0 mt-2 ${
+          small ? "text-[11px]" : "text-xs"
+        } text-neutral-600 dark:text-neutral-400`}
+      >
         {message}
       </p>
     </div>

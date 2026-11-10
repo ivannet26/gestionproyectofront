@@ -11,10 +11,12 @@
 
 - Solo Tailwind. CSS únicamente en `src/index.css` para tokens/base; prohibido CSS por componente, inline styles, `transition-*`, sombras y `bold`. Inter 400/500/600.
 - Tokens: paleta Tailwind estándar. Cualquier token semántico nuevo se define una sola vez en `src/index.css` (`@theme`) y se usa desde ahí; no se enumeran en este documento ni se inventan valores.
-- Escala: `text-[10px]` tags, `text-xs` UI/tablas/inputs, `text-sm` subtítulos/nav, `text-lg` títulos. Radios: `rounded-lg` controles, `rounded-xl` paneles/modales, `rounded-full` cerrar. Iconos `size-4` (`size-5` solo sidebar).
-- Densidad (sin `h-*`/`min-h-*` en controles): controles `px-3 py-1.5 text-xs font-medium rounded-lg`; filas `px-3 py-2 text-xs`; tags `px-2 py-0.5 text-[10px] font-medium rounded`; nav `px-3 py-2.5 text-sm font-medium rounded-lg gap-3`.
+- Escala: `text-xs` mínimo (incluye tags), `text-xs` UI/tablas/inputs, `text-sm` subtítulos/nav, `text-lg` títulos. Radios: `rounded-lg` controles, `rounded-xl` paneles/modales, `rounded-full` cerrar. Iconos `size-4` (`size-5` solo sidebar).
+- Botones de icono: contenedor con radio y padding (`p-1.5`); el hover colorea el contenedor (`hover:bg-*`), nunca solo el icono.
+- Densidad (sin `h-*`/`min-h-*` en controles): controles `px-3 py-1.5 text-sm font-medium rounded-lg` (Input/Select `style="small"`: `text-xs` y padding apretado); filas `px-3 py-2 text-xs`; tags `px-2 py-0.5 text-xs font-medium rounded`; nav `px-3 py-2.5 text-sm font-medium rounded-lg gap-3`.
 - Reutilizar `shared/` (`Button`, `Input`, `Form`, `Modal`, `Toast`, `icons`) antes de escribir controles o estilos. `cursor-pointer` obligatorio en acciones.
 - className cortas y estáticas; heredar del contenedor; sin constantes de estilos ni interpolación compleja. Dark mode con variantes `dark:` equivalentes; sin hojas CSS alternativas.
+- Prohibido `uppercase` (ni CSS ni texto forzado): el contenido se muestra siempre con su capitalización original.
 
 ## 3. React
 

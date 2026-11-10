@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "node --experimental-vm-modules --test tests/*.test.mjs",
     "preview": "vite preview"

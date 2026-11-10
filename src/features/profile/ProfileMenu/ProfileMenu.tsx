@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router";
+import { lazy, Suspense, useState } from "react";
 import LogoutIcon from "../../../shared/Icons/LogoutIcon";
 import SettingsIcon from "../../../shared/Icons/SettingsIcon";
 import Avatar from "../../../shared/Avatar";
 import type { SessionUser } from "../../auth/api";
 import { roleLabel } from "../../auth/roles";
+
+const SettingsModal = lazy(() => import("../../settings/SettingsModal"));
 
 interface ProfileMenuProps {
   user: SessionUser;
@@ -13,8 +14,8 @@ interface ProfileMenuProps {
 }
 
 function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
-  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const item =
     "w-full flex items-center gap-2 px-3 py-2 text-xs text-neutral-800 dark:text-neutral-100 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg cursor-pointer text-left";
 
@@ -36,7 +37,7 @@ function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
       >
         <Avatar
           name={user.name}
-          className="size-8 text-xs"
+          className="size-8 rounded-full text-xs"
           aria-hidden="true"
         />
         {!isCollapsed && (
@@ -66,7 +67,7 @@ function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
               role="menuitem"
               onClick={() => {
                 setOpen(false);
-                navigate("/configuracion");
+                setSettingsOpen(true);
               }}
               className={item}
             >
@@ -87,6 +88,11 @@ function ProfileMenu({ user, onLogout, isCollapsed }: ProfileMenuProps) {
             </button>
           </div>
         </>
+      )}
+      {settingsOpen && (
+        <Suspense fallback={null}>
+          <SettingsModal onClose={() => setSettingsOpen(false)} />
+        </Suspense>
       )}
     </div>
   );

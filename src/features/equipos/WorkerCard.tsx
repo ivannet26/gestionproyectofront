@@ -1,0 +1,78 @@
+import EditIcon from "../../shared/Icons/EditIcon";
+import BuildingIcon from "../../shared/Icons/BuildingIcon";
+import AtIcon from "../../shared/Icons/AtIcon";
+import HashIcon from "../../shared/Icons/HashIcon";
+import { avatarFor } from "../../shared/Avatar";
+import { initialColor } from "../../utils/initialColor";
+import type { Worker } from "../../core/interfaces/worker.interface";
+
+interface WorkerCardProps {
+  worker: Worker;
+  areaName: string;
+  canManage: boolean;
+  onEdit: (worker: Worker) => void;
+}
+
+export default function WorkerCard({
+  worker,
+  areaName,
+  canManage,
+  onEdit,
+}: WorkerCardProps) {
+  const name = `${worker.first_names} ${worker.last_names}`;
+
+  return (
+    <article className="group flex flex-col rounded-2xl border border-neutral-200 transition-colors dark:border-neutral-800">
+      <div className="p-2 pb-0">
+        <div
+          className={`relative flex aspect-square w-full items-center justify-center rounded-xl ${initialColor(name)} text-white`}
+        >
+          <span className="text-4xl font-medium tracking-tight">
+            {avatarFor(name)}
+          </span>
+          <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-lg bg-white p-0.5 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 dark:bg-neutral-900">
+            <button
+              type="button"
+              disabled={!canManage}
+              onClick={() => onEdit(worker)}
+              aria-label={`Editar ${name}`}
+              title={canManage ? "Editar trabajador" : "Solo administradores"}
+              className="inline-flex cursor-pointer items-center justify-center rounded-md p-1.5 text-neutral-600 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40 dark:text-neutral-200 dark:hover:bg-neutral-800"
+            >
+              <EditIcon className="size-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-4 p-4 text-neutral-600 dark:text-neutral-200">
+        <div className="flex items-center justify-between gap-2">
+          <p className="m-0 max-w-50 truncate text-xs font-medium">{name}</p>
+          <span
+            title={worker.active ? "Activo" : "Inactivo"}
+            className={`size-2 shrink-0 rounded-full ${
+              worker.active ? "bg-emerald-500" : "bg-neutral-400"
+            }`}
+          />
+        </div>
+
+        <div className="ml-1 flex flex-col gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <BuildingIcon className="size-4 shrink-0" fill={false} />
+            <span className="truncate">{areaName}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <AtIcon className="size-4 shrink-0" fill={false} />
+            <span className="truncate">{worker.email}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <HashIcon className="size-4 shrink-0" fill={false} />
+            <span className="truncate">{worker.code}</span>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+}

@@ -61,7 +61,7 @@ export default function ProjectAreaNavigation({
             >
               <span
                 aria-hidden="true"
-                className="grid size-5 shrink-0 place-items-center rounded-md bg-neutral-200 text-[10px] font-medium text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
+                className="grid size-5 shrink-0 place-items-center rounded-md bg-neutral-200 text-xs font-medium text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
               >
                 {Array.from(area.name.trim())[0]?.toLocaleUpperCase("es")}
               </span>
