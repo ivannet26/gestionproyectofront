@@ -1,5 +1,21 @@
 import { projectToday } from "../../utils/taskGrouping";
 
+export function taskCreationDay(createdAt?: string | null): string | null {
+  if (!createdAt) return null;
+  const instant = new Date(createdAt);
+  return Number.isFinite(instant.getTime()) ? projectToday(instant) : null;
+}
+
+export function isBeforeTaskCreation(
+  value?: string | null,
+  createdAt?: string | null,
+) {
+  const day = taskCreationDay(createdAt);
+  return Boolean(
+    value && day && /^\d{4}-\d{2}-\d{2}$/.test(value) && value < day,
+  );
+}
+
 export function isPastTaskDate(value?: string | null, now = new Date()) {
   return Boolean(value && value < projectToday(now));
 }

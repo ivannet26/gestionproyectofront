@@ -80,7 +80,10 @@ export interface ProjectDraft {
 export interface CreateProjectPayload {
   participant_source?: "workers" | "teams";
   team_ids?: number[];
-  initial_task_states?: Pick<ProjectTaskState, "name" | "category">[];
+  initial_task_states?: Pick<
+    ProjectTaskState,
+    "name" | "category" | "tema_id"
+  >[];
   name: string;
   description: string;
   end_date: string | null;
@@ -98,11 +101,39 @@ export interface Project extends ProjectSummary {
   task_states: ProjectTaskConfiguration;
 }
 
+export type DependencyType = "FS" | "SS" | "FF" | "SF";
+export interface TaskSchedule {
+  precision: "day" | "hour";
+  start: string;
+  end: string | null;
+  timezone: "America/Lima";
+}
+export interface DependencyLink {
+  predecessor_id: number;
+  successor_id: number;
+  type: DependencyType | null;
+  legacy: boolean;
+  conditions?: {
+    required_event: "start" | "finish";
+    conditioned_event: "start" | "finish";
+  }[];
+}
+
 export interface Task {
+  schedule?: TaskSchedule;
+  dependency_links?: DependencyLink[];
+  execution?: {
+    started_at: string | null;
+    finished_at: string | null;
+    historical_unknown: boolean;
+  };
   updated_at?: string;
   move_revision?: string;
   move_targets?: string[];
   manual_position?: string | null;
+  calendar_revision?: string;
+  calendar_receipt?: { replayed?: boolean };
+  state_color?: string;
   id: number;
   parent_id: number | null;
   name: string;
@@ -133,7 +164,18 @@ export interface Task {
   };
 }
 
+export type TaskPatchPayload = Partial<EditTaskPayload> & {
+  expected_calendar_revision?: string;
+  calendar_intent_id?: string;
+};
+
+export interface TaskPage<T> {
+  items: T[];
+  next_cursor: number | null;
+}
+
 export interface EditTaskPayload {
+  schedule?: TaskSchedule;
   estimated_minutes?: number | null;
   start_date?: string;
   name: string;
@@ -171,6 +213,8 @@ export interface SubtaskPage extends TaskPage<Task> {
 export type RelationKind = "blocks" | "blocked_by" | "custom";
 
 export interface TaskRelation {
+  dependency_type?: DependencyType | null;
+  legacy?: boolean;
   id: string;
   kind: RelationKind;
   name: string;
@@ -205,7 +249,11 @@ export interface TaskAssignee {
 }
 
 export type TaskGroupingMode =
-  "state" | "assignees" | "priority" | "labels" | "due_date";
+  | "state"
+  | "assignees"
+  | "priority"
+  | "labels"
+  | "due_date";
 
 export type TaskGroupOrder = "asc" | "desc";
 
@@ -253,7 +301,11 @@ export interface TaskStatePayload {
 }
 
 export type TaskActionKind =
-  "edit" | "state" | "child" | "dependencies" | "detail";
+  | "edit"
+  | "state"
+  | "child"
+  | "dependencies"
+  | "detail";
 
 export type TaskAction =
   | { kind: "create"; stateCode?: string }

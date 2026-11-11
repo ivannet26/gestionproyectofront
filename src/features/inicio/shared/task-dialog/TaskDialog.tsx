@@ -1,3 +1,7 @@
+import TaskDetailController from "../task-detail/TaskDetailController";
+import TaskEditDialog from "./TaskEditDialog";
+import type { Task } from "../../types";
+import type { ReactNode } from "react";
 import Modal from "../../../../shared/Modal/Modal";
 import type { TaskAction, TaskDialogController } from "../../types";
 import TaskForm from "../task-form/TaskForm";
@@ -21,8 +25,12 @@ function dialogTitle(action: TaskAction, taskName?: string) {
 
 export default function TaskDialog({
   controller,
+  feedback,
+  onUpdated = () => undefined,
 }: {
   controller: TaskDialogController;
+  feedback?: ReactNode;
+  onUpdated?: (task: Task) => void;
 }) {
   const {
     project,
@@ -46,10 +54,27 @@ export default function TaskDialog({
 
   if (action.kind !== "create" && !activeTask) return null;
 
-  const composed =
-    action.kind === "create" ||
-    action.kind === "edit" ||
-    action.kind === "child";
+  if (action.kind === "detail")
+    return (
+      <TaskDetailController
+        key={project.id + ":" + action.taskId}
+        controller={controller}
+        taskId={action.taskId}
+        onUpdated={onUpdated}
+      />
+    );
+  if (action.kind === "edit" && activeTask)
+    return (
+      <TaskEditDialog
+        key={project.id + ":" + activeTask.id}
+        controller={controller}
+        task={activeTask}
+        onUpdated={onUpdated}
+        onClose={close}
+      />
+    );
+
+  const composed = action.kind === "create" || action.kind === "child";
 
   function form() {
     if (!action) return null;
@@ -68,19 +93,6 @@ export default function TaskDialog({
     }
 
     if (!activeTask) return null;
-
-    if (action.kind === "edit") {
-      return (
-        <TaskForm
-          project={project}
-          catalogs={catalogs}
-          task={activeTask}
-          onSubmit={saveTask}
-          onConfigured={configuredStates}
-          onClose={close}
-        />
-      );
-    }
 
     if (action.kind === "child") {
       return (
@@ -122,6 +134,7 @@ export default function TaskDialog({
       onClose={close}
     >
       {form()}
+      {feedback}
     </Modal>
   );
 }

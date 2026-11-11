@@ -1,9 +1,8 @@
-import type { ComponentType, ReactNode } from "react";
-import { useState } from "react";
-import Modal from "../../../../shared/Modal/Modal";
+import type { ButtonHTMLAttributes, ComponentType, ReactNode } from "react";
 import type { IconProps } from "../../../../shared/Icons/types";
+import { useTaskProperty } from "./useTaskProperty";
 
-interface TaskPropertyProps {
+interface Props {
   id: string;
   label: string;
   value: string;
@@ -14,28 +13,46 @@ interface TaskPropertyProps {
   compact?: boolean;
   board?: boolean;
   selected?: boolean;
+  appearance?: string;
+  fitViewport?: boolean;
+  triggerClassName?: string;
+  triggerProps?: Pick<
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    "draggable" | "onDragStart" | "onDragEnd"
+  >;
   triggers?: { label: string; content: ReactNode }[];
   content?: ReactNode;
   children: (close: () => void) => ReactNode;
 }
-
-export default function TaskProperty({
-  id,
-  label,
-  value,
-  icon,
-  error,
-  disabled,
-  cell,
-  compact,
-  board,
-  selected,
-  triggers,
-  content,
-  children,
-}: TaskPropertyProps) {
-  const [open, setOpen] = useState(false);
-  const Icon = typeof icon === "function" ? icon : null;
+export default function TaskProperty(props: Props) {
+  const {
+    id,
+    label,
+    value,
+    icon,
+    error,
+    disabled,
+    cell,
+    compact,
+    board,
+    selected,
+    triggers,
+    content,
+    children,
+    triggerClassName,
+    triggerProps,
+    appearance,
+    fitViewport,
+  } = props;
+  const {
+      panel: panelRef,
+      trigger,
+      open,
+      setOpen,
+      close,
+      panelId,
+    } = useTaskProperty(id, fitViewport),
+    Icon = typeof icon === "function" ? icon : null;
   const items = triggers ?? [
     {
       label: `${label}: ${value}`,
@@ -47,30 +64,40 @@ export default function TaskProperty({
       ),
     },
   ];
-
   return (
-    <div className="h-full min-w-0 max-w-full">
+    <div
+      className={
+        cell
+          ? "min-w-0 w-full"
+          : "inline-flex min-w-0 max-w-full shrink-0 flex-col"
+      }
+      data-property-appearance={appearance}
+    >
       <div
-        className={
-          triggers ? "flex flex-wrap items-center gap-0.5 px-1.5" : "contents"
-        }
+        className={triggers ? "flex flex-wrap items-center gap-1" : "contents"}
       >
         {items.map((item, index) => (
           <button
-            key={index}
+            key={item.label}
             id={index === 0 ? id : `${id}-${index}`}
+            ref={index === 0 ? trigger : undefined}
             type="button"
+            popoverTarget={panelId}
+            {...triggerProps}
             className={
-              triggers || compact
-                ? "inline-flex h-full cursor-pointer items-center justify-center rounded border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700"
-                : board
-                  ? `inline-flex max-w-full min-w-0 cursor-pointer items-center gap-1.5 overflow-hidden rounded-lg border border-neutral-100 px-1.5 py-1 text-xs font-medium hover:bg-neutral-100 disabled:cursor-default disabled:opacity-50 dark:border-neutral-800 dark:hover:bg-neutral-800${selected ? " text-neutral-700 dark:text-neutral-200" : " text-neutral-400 dark:text-neutral-500"}`
-                  : `inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700${cell ? " h-10 w-full px-2 text-xs" : " px-2.5 py-1.5 text-xs"}`
+              triggerClassName ??
+              `inline-flex min-w-0 cursor-pointer items-center gap-1.5 rounded-lg border border-transparent px-2 py-1.5 text-xs text-neutral-800 hover:border-neutral-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-700 disabled:cursor-default dark:text-neutral-200 dark:hover:border-neutral-600 dark:focus-visible:outline-neutral-300 ${cell ? "w-full" : "max-w-full"} ${compact ? "justify-center" : ""} ${board ? "hover:bg-neutral-100 dark:hover:bg-neutral-800" : ""}`
             }
             disabled={disabled}
             aria-label={item.label}
+            aria-expanded={open}
+            aria-controls={panelId}
             aria-pressed={compact || board ? selected : undefined}
-            onClick={() => setOpen(true)}
+            aria-invalid={Boolean(error) || undefined}
+            aria-describedby={error ? `${id}-error` : undefined}
+            onClick={(event) => {
+              trigger.current = event.currentTarget;
+            }}
           >
             {item.content}
           </button>
@@ -79,19 +106,31 @@ export default function TaskProperty({
       {error && (
         <p
           id={`${id}-error`}
-          className="mb-0 mt-1 max-w-56 text-xs leading-relaxed text-red-600 dark:text-red-400"
           role="alert"
+          className="m-0 max-w-64 text-xs text-red-700 dark:text-red-300"
         >
           {error}
         </p>
       )}
-      {open && (
-        <Modal title={label} onClose={() => setOpen(false)}>
-          <div className="p-4" data-initial-focus tabIndex={-1}>
-            {children(() => setOpen(false))}
-          </div>
-        </Modal>
-      )}
+      <div
+        ref={panelRef}
+        id={panelId}
+        popover="auto"
+        role="dialog"
+        aria-label={label}
+        data-return-focus={id}
+        className="fixed inset-auto m-0 w-72 max-w-[calc(100vw-16px)] overflow-y-auto overscroll-contain rounded-lg border border-neutral-200 bg-white p-3 text-xs text-neutral-800 backdrop:bg-transparent dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 [&_input:not([type=checkbox]):not([type=radio])]:w-full [&_input:not([type=checkbox]):not([type=radio])]:rounded-lg [&_input]:border-neutral-300 [&_input:not([type=checkbox]):not([type=radio])]:px-2 [&_input:not([type=checkbox]):not([type=radio])]:py-1.5 [&_select]:w-full [&_select]:rounded-lg [&_select]:border [&_select]:border-neutral-200 [&_select]:px-2 [&_select]:py-1.5 dark:[&_input]:bg-neutral-900 dark:[&_select]:bg-neutral-900 [&_label]:text-xs"
+        onToggle={(event) => setOpen(event.newState === "open")}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            close();
+          }
+        }}
+      >
+        {open && children(close)}
+      </div>
     </div>
   );
 }

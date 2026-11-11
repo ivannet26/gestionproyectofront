@@ -1,5 +1,6 @@
 import { httpClient } from "../api/httpClient";
 import type {
+  ProjectArea,
   ProjectCatalogs,
   ProjectSummary,
   TaskStatusTemplate,
@@ -34,6 +35,25 @@ export async function getProjects(): Promise<ProjectSummary[]> {
 
 export async function getProjectCatalogs(): Promise<ProjectCatalogs> {
   const { data } = await httpClient.get<ProjectCatalogs>("projects/catalogs/");
+  return data;
+}
+
+export async function getProjectAreas(
+  filters: { associated?: boolean } = {},
+  cursor: string | null = null,
+  signal?: AbortSignal,
+): Promise<{ results: ProjectArea[]; next_cursor: string | null }> {
+  const query = new URLSearchParams();
+  if (filters.associated !== undefined)
+    query.set("associated", String(filters.associated));
+  if (cursor) query.set("cursor", cursor);
+  const { data } = await httpClient.get<{
+    results: ProjectArea[];
+    next_cursor: string | null;
+  }>(
+    `projects/areas/${query.size ? "?" + query : ""}`,
+    signal ? { signal } : undefined,
+  );
   return data;
 }
 
@@ -140,5 +160,27 @@ export async function getProjectAssignmentTeams(
   const { data } = await httpClient.get<TeamOption[]>(
     `projects/${projectId}/assignment-teams/`,
   );
+  return data;
+}
+
+export async function getProjectPage(
+  filters: {
+    area_id?: number;
+    project_id?: number;
+    associated?: boolean;
+    q?: string;
+  } = {},
+  cursor: string | null = null,
+  signal?: AbortSignal,
+): Promise<{ results: ProjectSummary[]; next_cursor: string | null }> {
+  const query = new URLSearchParams({ page_size: "50" });
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined) query.set(key, String(value));
+  });
+  if (cursor) query.set("cursor", cursor);
+  const { data } = await httpClient.get<{
+    results: ProjectSummary[];
+    next_cursor: string | null;
+  }>(`projects/?${query}`, { signal });
   return data;
 }

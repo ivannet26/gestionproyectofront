@@ -20,7 +20,8 @@ export function useTaskView(
   initialCreate?: number,
   onCreateHandled?: () => void,
 ) {
-  const { tasks, setTasks, refetch, acceptTask } = useProjectTasks(project.id);
+  const { tasks, setTasks, refetch, acceptTask, loading, error } =
+    useProjectTasks(project.id);
   const { catalogs } = useProjectCatalogs();
   const [action, setAction] = useState<TaskAction | null>(() =>
     initialCreate !== undefined && project.permissions.create_tasks
@@ -81,23 +82,15 @@ export function useTaskView(
   );
 
   const changeDependency = useCallback(
-    async (predecessorId: number, remove: boolean) => {
+    async (
+      predecessorId: number,
+      remove: boolean,
+      type?: import("../types").DependencyType,
+    ) => {
       if (!action || action.kind !== "dependencies") return;
       await executeChangeDependency(action.taskId, predecessorId, remove);
-      setTasks((current) =>
-        current.map((task) =>
-          task.id === action.taskId
-            ? {
-                ...task,
-                dependencies: remove
-                  ? task.dependencies.filter((item) => item !== predecessorId)
-                  : [...task.dependencies, predecessorId],
-              }
-            : task,
-        ),
-      );
     },
-    [action, executeChangeDependency, setTasks],
+    [action, executeChangeDependency],
   );
 
   const configuredStates = useCallback(
@@ -113,11 +106,25 @@ export function useTaskView(
   );
 
   useEffect(() => {
-    if (initialCreate !== undefined) onCreateHandled?.();
-  }, [initialCreate, onCreateHandled]);
+    if (initialCreate === undefined || !project.permissions.create_tasks)
+      return;
+    let active = true;
+    void Promise.resolve().then(() => {
+      if (active) {
+        setAction({ kind: "create" });
+        onCreateHandled?.();
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [initialCreate, onCreateHandled, project.permissions.create_tasks]);
 
   return {
     tasks,
+    loading,
+    error,
+    refetch,
     catalogs,
     action,
     setAction,

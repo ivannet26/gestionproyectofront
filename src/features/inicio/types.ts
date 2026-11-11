@@ -28,6 +28,12 @@ export type {
   TaskIdentity,
   TaskFormPayload,
   TaskStatePayload,
+  TaskPatchPayload,
+  TaskSchedule,
+  DependencyType,
+  DependencyLink,
+  TaskPage,
+  ProjectFavoriteState,
   CreateTaskPayload,
   EditTaskPayload,
   Label,
@@ -48,6 +54,7 @@ export type {
   TaskDetailData,
   SubtaskPage,
   TaskActivityGroup,
+  TaskActivityEvent,
   TaskRelation,
   RelationKind,
 } from "../../core/interfaces/task.interface";
@@ -68,6 +75,10 @@ export interface TaskDialogController {
   close: () => void;
   saveTask: (data: TaskFormPayload) => Promise<void>;
   changeState: (task: Task, data: TaskStatePayload) => Promise<void>;
-  changeDependency: (predecessorId: number, remove: boolean) => Promise<void>;
+  changeDependency: (
+    predecessorId: number,
+    remove: boolean,
+    type?: import("./types").DependencyType,
+  ) => Promise<void>;
   configuredStates: (configuration: ProjectTaskConfiguration) => void;
 }

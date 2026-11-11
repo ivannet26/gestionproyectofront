@@ -1,5 +1,5 @@
 import { formatTaskDate } from "../../utils/taskHierarchy";
-import { isPastTaskDate } from "./taskDates";
+import { isBeforeTaskCreation } from "./taskDates";
 
 const shortDate = new Intl.DateTimeFormat("es-PE", {
   month: "short",
@@ -16,15 +16,26 @@ function formatShortDate(value: string) {
 export default function TaskDateValue({
   value,
   short,
+  createdAt,
 }: {
   value?: string | null;
   short?: boolean;
+  createdAt?: string | null;
 }) {
-  const past = isPastTaskDate(value);
+  const beforeCreation = isBeforeTaskCreation(value, createdAt);
+  const hasError = beforeCreation;
   return (
-    <span className={past ? "text-red-600 dark:text-red-400" : undefined}>
+    <span
+      data-before-creation={beforeCreation || undefined}
+      className={hasError ? "text-red-600 dark:text-red-400" : undefined}
+    >
       {short && value ? formatShortDate(value) : formatTaskDate(value)}
-      {past && <span className="sr-only"> · Fecha anterior a hoy</span>}
+      {beforeCreation && (
+        <span className="sr-only">
+          {" "}
+          · Fecha actual anterior al día de creación
+        </span>
+      )}
     </span>
   );
 }

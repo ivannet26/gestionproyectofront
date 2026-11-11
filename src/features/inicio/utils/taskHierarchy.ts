@@ -1,5 +1,21 @@
 import type { Task } from "../../../core/interfaces/task.interface";
 
+export function taskMatchesSearch(task: Task, search = ""): boolean {
+  const query = search.trim().toLocaleLowerCase("es");
+  return (
+    !query ||
+    [
+      task.name,
+      task.responsible_name ?? "",
+      ...(task.assignees ?? []).map((person) => person.name),
+      ...task.labels.map((label) => label.name),
+    ]
+      .join(" ")
+      .toLocaleLowerCase("es")
+      .includes(query)
+  );
+}
+
 export function taskHierarchy(tasks: Task[], search = "") {
   const byId = new Map(tasks.map((task) => [task.id, task]));
   const children = new Map<number, Task[]>();
@@ -13,21 +29,23 @@ export function taskHierarchy(tasks: Task[], search = "") {
       roots.push(task);
     }
   }
-  const query = search.trim().toLocaleLowerCase("es");
+  const rootById = new Map<number, Task>();
+  for (const task of byId.values()) {
+    let root = task;
+    const seen = new Set<number>();
+    while (
+      root.parent_id !== null &&
+      byId.has(root.parent_id) &&
+      !seen.has(root.id)
+    ) {
+      seen.add(root.id);
+      root = byId.get(root.parent_id)!;
+    }
+    rootById.set(task.id, root);
+  }
   const visible = new Set<number>();
   for (const task of byId.values()) {
-    if (
-      query &&
-      ![
-        task.name,
-        task.responsible_name ?? "",
-        ...(task.assignees ?? []).map((person) => person.name),
-        ...task.labels.map((label) => label.name),
-      ]
-        .join(" ")
-        .toLocaleLowerCase("es")
-        .includes(query)
-    ) {
+    if (!taskMatchesSearch(task, search)) {
       continue;
     }
     let current: Task | undefined = task;
@@ -54,6 +72,7 @@ export function taskHierarchy(tasks: Task[], search = "") {
   return {
     roots: roots.filter((task) => visible.has(task.id)),
     children,
+    rootById,
     visible,
     descendants,
   };

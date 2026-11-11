@@ -35,8 +35,9 @@ export interface ProjectTaskState {
   code: string;
   name: string;
   category?: StateCategory;
-  tema_id: number;
-  tema: Tema | null;
+  color?: string;
+  tema_id?: number;
+  tema?: Tema | null;
 }
 
 export interface TaskStatusTemplate {
