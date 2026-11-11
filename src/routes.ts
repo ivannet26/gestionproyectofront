@@ -9,6 +9,7 @@ import FolderIcon from "./shared/Icons/FolderIcon";
 import UserIcon from "./shared/Icons/UserIcon";
 import KeyIcon from "./shared/Icons/KeyIcon";
 import ClockIcon from "./shared/Icons/ClockIcon";
+import IdIcon from "./shared/Icons/IdIcon";
 
 export const HomePage = lazy(() => import("./features/home/HomePage"));
 export const ProjectRoute = lazy(() => import("./features/home/ProjectPage"));
@@ -51,22 +52,18 @@ export const appModules: NavModule[] = [
     path: "/",
     subRoutes: [
       {
-        title: "Publicaciones",
+        title: "Ver publicaciones",
         path: "/publicaciones",
         Icon: FileIcon,
         Component: PublicationsPage,
       },
+
       {
-        title: "Últimas tareas",
+        title: "Inicio",
         path: "/",
         Icon: ClockIcon,
         Component: HomePage,
-      },
-      {
-        title: "Todos mis proyectos",
-        path: "/mis-proyectos",
-        Icon: ProjectsIcon,
-        Component: HomePage,
+        hidden: true,
       },
       {
         title: "Detalle de proyecto",
@@ -80,19 +77,26 @@ export const appModules: NavModule[] = [
   {
     label: "Equipos",
     Icon: TeamsIcon,
-    path: "/equipos",
+    path: "/equipos/todos",
     subRoutes: [
       {
         title: "Todos los equipos",
-        path: "/equipos",
+        path: "/equipos/todos",
         Icon: TeamsIcon,
         Component: TeamsPage,
       },
       {
-        title: "Trabajadores",
+        title: "Todos los trabajadores",
         path: "/equipos/trabajadores",
-        Icon: UserIcon,
+        Icon: IdIcon,
         Component: TeamsPage,
+      },
+      {
+        title: "Equipos",
+        path: "/equipos",
+        Icon: TeamsIcon,
+        Component: TeamsPage,
+        hidden: true,
       },
       {
         title: "Detalle de equipo",
@@ -106,12 +110,12 @@ export const appModules: NavModule[] = [
   {
     label: "Organización",
     Icon: BuildingIcon,
-    path: "/organizaciones",
+    path: "/organizaciones/equipos",
     requiresAdmin: true,
     subRoutes: [
       {
         title: "Equipos",
-        path: "/organizaciones",
+        path: "/organizaciones/equipos",
         Icon: TeamsIcon,
         Component: OrganizationsPage,
       },
@@ -145,9 +149,23 @@ export const appModules: NavModule[] = [
         Icon: KeyIcon,
         Component: RecoveryRequestsPage,
       },
+      {
+        title: "Organización",
+        path: "/organizaciones",
+        Icon: BuildingIcon,
+        Component: OrganizationsPage,
+        hidden: true,
+      },
     ],
   },
 ];
+
+export const allRoutes = appModules.flatMap((module) =>
+  module.subRoutes.map((sub) => ({
+    ...sub,
+    requiresAdmin: Boolean(module.requiresAdmin),
+  })),
+);
 
 export function projectPath(projectId: number | string): string {
   return `/proyectos/${projectId}`;

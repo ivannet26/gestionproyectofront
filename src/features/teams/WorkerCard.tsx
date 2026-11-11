@@ -58,11 +58,6 @@ export default function WorkerCard({
 
         <div className="ml-1 flex flex-col gap-2 text-xs">
           <div className="flex items-center gap-2">
-            <BuildingIcon className="size-4 shrink-0" fill={false} />
-            <span className="truncate">{areaName}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
             <AtIcon className="size-4 shrink-0" fill={false} />
             <span className="truncate">{worker.email}</span>
           </div>

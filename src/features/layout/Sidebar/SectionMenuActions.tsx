@@ -1,26 +1,60 @@
-import PlusIcon from "../../../shared/Icons/PlusIcon";
-import FileIcon from "../../../shared/Icons/FileIcon";
+import CreateTaskModal from "../../home/components/CreateTaskModal";
+import PublishModal from "../../home/components/PublishModal";
+import { useHomeActions } from "../../home/hooks/useHomeActions";
+import type { ProjectSummary } from "../../../core/interfaces/project.interface";
+import TaskListIcon from "../../../shared/Icons/TaskListIcon";
+import PublicationIcon from "../../../shared/Icons/PublicationIcon";
 
-export default function SectionMenuActions() {
+interface SectionMenuActionsProps {
+  project: ProjectSummary | null;
+}
+
+export default function SectionMenuActions({
+  project,
+}: SectionMenuActionsProps) {
+  const actions = useHomeActions(project);
+
   return (
-    <div className="mb-2 flex flex-col gap-1.5 px-0.5">
+    <div className="mb-1 flex flex-col gap-0.5">
       <button
         type="button"
-        onClick={() => window.dispatchEvent(new CustomEvent("gm-open-create-task"))}
-        className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200"
+        disabled={!project}
+        onClick={() => actions.setTaskOpen(true)}
+        className="badge w-full disabled:opacity-50"
       >
-        <PlusIcon className="size-3.5" />
-        <span>Crear tarea</span>
+        <TaskListIcon className="size-4 shrink-0" />
+        <span className="min-w-0 flex-1 truncate text-left">Crear tarea</span>
       </button>
+
       <button
         type="button"
-        onClick={() => window.dispatchEvent(new CustomEvent("gm-open-publish"))}
-        className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
+        disabled={!project}
+        onClick={() => actions.setPubOpen(true)}
+        className="badge w-full disabled:opacity-50"
       >
-        <FileIcon className="size-3.5" />
-        <span>Publicar</span>
+        <PublicationIcon className="size-4 shrink-0" />
+        <span className="min-w-0 flex-1 truncate text-left">
+          Crear publicación
+        </span>
       </button>
+
+      {actions.isTaskOpen && project && (
+        <CreateTaskModal
+          projectName={project.name}
+          submitting={actions.isSavingTask}
+          onClose={() => actions.setTaskOpen(false)}
+          onSubmit={actions.createTask}
+        />
+      )}
+
+      {actions.isPubOpen && project && (
+        <PublishModal
+          projectName={project.name}
+          submitting={actions.isSavingPublication}
+          onClose={() => actions.setPubOpen(false)}
+          onSubmit={actions.createPublication}
+        />
+      )}
     </div>
   );
 }
-

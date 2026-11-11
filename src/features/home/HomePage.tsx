@@ -1,47 +1,25 @@
-import { useHome } from "./hooks/useHome";
-import RecentTasksView from "./components/RecentTasksView";
-import AllProjectsView from "./components/AllProjectsView";
-import CreateTaskModal from "./components/CreateTaskModal";
-import PublishModal from "./components/PublishModal";
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
+import { useProjects } from "./hooks/useProjects";
 
 export default function HomePage() {
-  const home = useHome();
-  const isAllProjects = home.pathname === "/mis-proyectos";
+  const { projects } = useProjects();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (projects.length > 0) {
+      navigate(`/proyectos/${projects[0].id}`, { replace: true });
+    }
+  }, [projects, navigate]);
 
   return (
-    <main id="main-content" className="min-h-full text-neutral-800 dark:text-neutral-100">
-      {isAllProjects ? (
-        <AllProjectsView projects={home.projects} />
-      ) : (
-        <RecentTasksView
-          project={home.activeProject}
-          projects={home.projects}
-          tasks={home.tasks}
-          stats={home.taskStats}
-          search={home.taskSearch}
-          onSearch={home.setTaskSearch}
-          onSelectProject={home.setSelectedProjectId}
-          onCreateTask={() => home.setCreateTaskOpen(true)}
-        />
-      )}
-
-      {home.isCreateTaskOpen && home.activeProject && (
-        <CreateTaskModal
-          projectName={home.activeProject.name}
-          submitting={home.isSavingTask}
-          onClose={() => home.setCreateTaskOpen(false)}
-          onSubmit={home.createTask}
-        />
-      )}
-
-      {home.isPublishOpen && home.activeProject && (
-        <PublishModal
-          projectName={home.activeProject.name}
-          submitting={home.isSavingPublication}
-          onClose={() => home.setPublishOpen(false)}
-          onSubmit={home.createPublication}
-        />
-      )}
+    <main
+      id="main-content"
+      className="flex min-h-full items-center justify-center text-sm text-neutral-500 dark:text-neutral-400"
+    >
+      {projects.length === 0
+        ? "No hay proyectos disponibles."
+        : "Cargando proyecto..."}
     </main>
   );
 }

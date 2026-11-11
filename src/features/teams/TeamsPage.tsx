@@ -33,7 +33,7 @@ interface TeamsPageProps {
 export default function TeamsPage({ canManage = false }: TeamsPageProps) {
   const { pathname } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const isTeams = pathname === "/equipos";
+  const isTeams = pathname === "/equipos" || pathname === "/equipos/todos";
   const people = usePeople();
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function TeamsPage({ canManage = false }: TeamsPageProps) {
       <header className="-mx-4 -mt-4 mb-3 border-b border-neutral-200 dark:border-neutral-800">
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <h1 className="m-0 text-sm font-medium text-neutral-800 dark:text-neutral-100">
-            {isTeams ? "Todos los equipos" : "Trabajadores"}
+            {isTeams ? "Todos los equipos" : "Todos los trabajadores"}
           </h1>
           <span
             title={canManage ? undefined : "Solo administradores"}

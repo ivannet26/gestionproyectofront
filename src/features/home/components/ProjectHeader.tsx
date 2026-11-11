@@ -1,0 +1,91 @@
+import { Link } from "react-router";
+import BuildingIcon from "../../../shared/Icons/BuildingIcon";
+import CalendarIcon from "../../../shared/Icons/CalendarIcon";
+import ChevronDownIcon from "../../../shared/Icons/ChevronIcon";
+import DashboardIcon from "../../../shared/Icons/Dashboard";
+import FileIcon from "../../../shared/Icons/FileIcon";
+import FolderIcon from "../../../shared/Icons/FolderIcon";
+import StackIcon from "../../../shared/Icons/StackIcon";
+import StarIcon from "../../../shared/Icons/StarIcon";
+import { projectPath } from "../../../routes";
+import type { Project } from "../../../core/interfaces/task.interface";
+
+const VIEWS = [
+  { id: "lista", label: "Lista", Icon: FileIcon, color: "bg-sky-500" },
+  { id: "tablero", label: "Tablero", Icon: StackIcon, color: "bg-emerald-500" },
+  { id: "overview", label: "Overview", Icon: DashboardIcon, color: "bg-indigo-500" },
+  { id: "gantt", label: "Gantt", Icon: CalendarIcon, color: "bg-amber-500" },
+] as const;
+
+interface ProjectHeaderProps {
+  project: Project;
+  viewKey: string;
+  onToggleFavorite: () => void;
+}
+
+export default function ProjectHeader({
+  project,
+  viewKey,
+  onToggleFavorite,
+}: ProjectHeaderProps) {
+  const areaName = project.areas?.[0]?.name ?? "Área no disponible";
+  const currentView = VIEWS.find((v) => v.id === viewKey)?.label ?? "Lista";
+
+  return (
+    <header className="-mx-4 -mt-4 mb-3 border-b border-neutral-200 dark:border-neutral-800">
+      <div className="flex items-center px-4 py-2.5">
+        <nav className="text-sm">
+          <ol className="flex items-center gap-1.5 sm:gap-2">
+            <li className="flex items-center gap-1 text-neutral-600 dark:text-neutral-400">
+              <BuildingIcon className="size-4 shrink-0" />
+              <span className="truncate">{areaName}</span>
+            </li>
+            <li className="flex items-center gap-1">
+              <ChevronDownIcon className="size-4 shrink-0 -rotate-90 text-neutral-400" />
+              <FolderIcon className="size-4 shrink-0" fill={false} />
+              <Link to={projectPath(project.id)} className="truncate hover:underline">
+                {project.name}
+              </Link>
+            </li>
+            <li className="flex items-center gap-1 font-medium text-neutral-800 dark:text-neutral-200">
+              <ChevronDownIcon className="size-4 shrink-0 -rotate-90 text-neutral-400" />
+              <span>{currentView}</span>
+            </li>
+            <li>
+              <button
+                type="button"
+                aria-label="Marcar como favorito"
+                onClick={onToggleFavorite}
+                className={`cursor-pointer rounded-lg p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
+                  project.is_favorite ? "text-amber-500" : "text-neutral-400"
+                }`}
+              >
+                <StarIcon className="size-4" fill={project.is_favorite} />
+              </button>
+            </li>
+          </ol>
+        </nav>
+      </div>
+
+      <nav className="flex gap-2 px-4 text-xs">
+        {VIEWS.map(({ id, label, Icon, color }) => (
+          <Link
+            key={id}
+            to={`?vista=${id}`}
+            className={`flex items-center gap-1.5 border-b-2 pb-2 font-medium ${
+              viewKey === id
+                ? "border-neutral-800 text-neutral-800 dark:border-neutral-100 dark:text-neutral-100"
+                : "border-transparent text-neutral-600 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-100"
+            }`}
+          >
+            <span className={`rounded p-0.5 text-neutral-100 ${color}`}>
+              <Icon className="size-3" fill />
+            </span>
+            {label}
+          </Link>
+        ))}
+      </nav>
+    </header>
+  );
+}
+

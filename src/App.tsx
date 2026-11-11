@@ -18,7 +18,6 @@ import { LoadingProvider } from "./context/LoadingContext";
 import { ToastProvider } from "./context/ToastContext";
 import { useLoading } from "./hooks/useLoading";
 import AppShell from "./features/layout/AppShell/AppShell";
-import { GlobalLoading } from "./shared/GlobalLoading/GlobalLoading";
 import { Toast } from "./shared/Toast/Toast";
 
 const queryClient = new QueryClient({
@@ -31,6 +30,29 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+const SESSION_USER_KEY = "gm-session-user";
+
+function savedSessionUser(): SessionUser | null {
+  try {
+    const value = sessionStorage.getItem(SESSION_USER_KEY);
+    return value ? (JSON.parse(value) as SessionUser) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSessionUser(user: SessionUser | null): void {
+  try {
+    if (user) {
+      sessionStorage.setItem(SESSION_USER_KEY, JSON.stringify(user));
+    } else {
+      sessionStorage.removeItem(SESSION_USER_KEY);
+    }
+  } catch {
+    // sessionStorage can be unavailable in restricted browser modes.
+  }
+}
 
 function App() {
   return (
@@ -47,9 +69,13 @@ function App() {
 function AppContent() {
   const { hideLoading, isLoading } = useLoading();
 
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(savedSessionUser);
   const [logoutError, setLogoutError] = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    saveSessionUser(user);
+  }, [user]);
 
   useEffect(() => {
     let mounted = true;
@@ -58,7 +84,10 @@ function AppContent() {
         if (mounted) setUser(sessionUser);
       })
       .catch(() => {
-        if (mounted) clearAccess();
+        if (mounted) {
+          clearAccess();
+          setUser(null);
+        }
       })
       .finally(() => {
         if (mounted) hideLoading();
@@ -93,7 +122,6 @@ function AppContent() {
 
   return (
     <>
-      <GlobalLoading />
       <Toast />
       <Routes>
         <Route path="/activar" element={<PasswordPage mode="activar" />} />
@@ -105,17 +133,15 @@ function AppContent() {
         <Route
           path="/*"
           element={
-            !user ? (
-              isLoading ? null : (
-                <LoginPage onLogin={setUser} />
-              )
-            ) : (
+            user || isLoading ? (
               <AppShell
-                key={sessionKey(user)}
+                key={user ? sessionKey(user) : "boot"}
                 user={user}
                 onLogout={signOut}
                 logoutError={logoutError}
               />
+            ) : (
+              <LoginPage onLogin={setUser} />
             )
           }
         />

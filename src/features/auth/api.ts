@@ -1,3 +1,5 @@
+import { authService } from "../../core/services/authService";
+
 export interface SessionUser {
   id: number;
   name: string;
@@ -240,6 +242,7 @@ export async function refreshSession(): Promise<SessionUser> {
 
       principal = nextPrincipal;
       accessToken = payload.access ?? null;
+      authService.setUser(payload.user);
 
       window.dispatchEvent(
         new CustomEvent("gm-session-updated", {
@@ -281,6 +284,7 @@ export async function login(
 
   accessToken = payload.access ?? null;
   principal = sessionKey(payload.user);
+  authService.setUser(payload.user);
 
   return payload.user;
 }
@@ -308,6 +312,7 @@ export function clearAccess(): void {
   sessionEpoch += 1;
   invalidateReads();
   renewal = null;
+  authService.setUser(null);
 }
 
 export function getAccessToken(): string | null {

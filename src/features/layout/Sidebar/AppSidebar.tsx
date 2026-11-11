@@ -8,7 +8,7 @@ import gmLogoSmall from "../../../assets/gm-logo-small.png";
 interface AppSidebarProps {
   modules: NavModule[];
   activePath: string;
-  user: SessionUser;
+  user: SessionUser | null;
   onLogout: () => void;
   onSectionSelect: () => void;
 }
@@ -20,13 +20,11 @@ export default function AppSidebar({
   onLogout,
   onSectionSelect,
 }: AppSidebarProps) {
-  const canManage = user.permissions.manage_accounts;
-  const visibleModules = modules.filter(
-    (m) => !m.requiresAdmin || canManage,
-  );
+  const canManage = user?.permissions.manage_accounts ?? false;
+  const visibleModules = modules.filter((m) => !m.requiresAdmin || canManage);
 
   return (
-    <aside className="flex w-16 shrink-0 flex-col items-center gap-2 rounded-xl bg-white px-2 py-3 dark:bg-neutral-900 max-md:w-full max-md:flex-row max-md:justify-between max-md:px-3 max-md:py-2 border border-neutral-200 dark:border-neutral-800">
+    <aside className="flex w-16 shrink-0 flex-col items-center gap-2 rounded-lg bg-white px-2 py-3 dark:bg-neutral-900 max-md:w-full max-md:flex-row max-md:justify-between max-md:px-3 max-md:py-2 border border-neutral-200 dark:border-neutral-800">
       <Link
         to="/"
         onClick={onSectionSelect}
@@ -70,9 +68,11 @@ export default function AppSidebar({
         {canManage && <InviteButton />}
       </nav>
 
-      <div className="mt-auto w-full pt-2 max-md:ml-auto max-md:mt-0 max-md:w-auto max-md:pt-0">
-        <ProfileMenu user={user} onLogout={onLogout} isCollapsed />
-      </div>
+      {user && (
+        <div className="mt-auto w-full pt-2 max-md:ml-auto max-md:mt-0 max-md:w-auto max-md:pt-0">
+          <ProfileMenu user={user} onLogout={onLogout} isCollapsed />
+        </div>
+      )}
     </aside>
   );
 }

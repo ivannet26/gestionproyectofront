@@ -5,6 +5,7 @@ import type {
   ProjectSummary,
 } from "../../../core/interfaces/project.interface";
 import { projectPath } from "../../../routes";
+import Avatar from "../../../shared/Avatar";
 import ChevronDownIcon from "../../../shared/Icons/ChevronIcon";
 import PlusIcon from "../../../shared/Icons/PlusIcon";
 import ProjectsIcon from "../../../shared/Icons/ProjectsIcon";
@@ -57,14 +58,13 @@ export default function ProjectAreaNavigation({
                   [area.id]: expanded,
                 }))
               }
-              className="flex w-full min-w-0 cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              className="badge w-full min-w-0 text-left"
             >
-              <span
+              <Avatar
+                name={area.name.trim().charAt(0)}
                 aria-hidden="true"
-                className="grid size-5 shrink-0 place-items-center rounded-md bg-neutral-200 text-xs font-medium text-neutral-800 dark:bg-neutral-700 dark:text-neutral-100"
-              >
-                {Array.from(area.name.trim())[0]?.toLocaleUpperCase("es")}
-              </span>
+                className="size-5 rounded-md text-xs font-medium"
+              />
               <span className="min-w-0 flex-1 truncate">{area.name}</span>
               <ChevronDownIcon
                 className={`size-4 shrink-0 ${expanded ? "" : "-rotate-90"}`}
@@ -85,17 +85,17 @@ export default function ProjectAreaNavigation({
                         to={path}
                         aria-current={active ? "page" : undefined}
                         title={project.name}
-                        className={`flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-lg px-3 py-1.5 text-xs ${
+                        className={`badge min-w-0 flex-1 ${
                           active
                             ? "text-neutral-800 dark:text-neutral-100"
-                            : "text-neutral-600 hover:text-neutral-800 dark:text-neutral-400 dark:hover:text-neutral-100"
+                            : ""
                         }`}
                       >
                         <ProjectsIcon
                           className="size-4 shrink-0"
-                          fill={false}
+                          fill={active}
                         />
-                        <span className="min-w-0 flex-1 truncate pr-6">
+                        <span className="min-w-0 flex-1 truncate">
                           {project.name}
                         </span>
                       </Link>

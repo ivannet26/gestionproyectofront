@@ -39,15 +39,17 @@ function MyTeamsList({ currentPath }: MyTeamsListProps) {
                 key={team.id}
                 className={`flex items-center rounded-lg pr-1 text-xs ${
                   active
-                    ? "bg-neutral-100 text-neutral-800 dark:bg-neutral-800 dark:text-neutral-100"
-                    : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+                    ? "bg-neutral-100 dark:bg-neutral-800"
+                    : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
                 }`}
               >
                 <Link
                   to={path}
                   aria-current={active ? "page" : undefined}
                   title={team.name}
-                  className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 px-3 py-1.5"
+                  className={`badge min-w-0 flex-1 ${
+                    active ? "text-neutral-800 dark:text-neutral-100" : ""
+                  }`}
                 >
                   <Avatar
                     name={team.name.charAt(0)}

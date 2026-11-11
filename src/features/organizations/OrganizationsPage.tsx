@@ -7,6 +7,7 @@ import ProjectsSection from "./Projects/ProjectsSection";
 
 const sections: Record<string, ComponentType> = {
   "/organizaciones": TeamsSection,
+  "/organizaciones/equipos": TeamsSection,
   "/organizaciones/especialidades": SpecialtiesSection,
   "/organizaciones/proyectos": ProjectsSection,
   "/organizaciones/areas": AreasSection,

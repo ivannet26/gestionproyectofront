@@ -5,18 +5,16 @@ export function GlobalLoading() {
 
   if (!isLoading) return null;
 
-  const theme = window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
+  const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   return (
-    <div
+    <aside
       role="status"
-      aria-label="Cargando"
-      className={`fixed inset-0 z-50 grid place-items-center ${theme == "dark" ? `bg-[#101011]` : ` bg-white`}`}
+      aria-label="Cargando contenido"
+      className="flex h-full min-h-0 w-full items-center justify-center bg-white dark:bg-neutral-900"
     >
       <video
-        src={theme == "dark" ? "/loading-dark.webm" : "/loading.webm"}
+        src={isDark ? "/loading-dark.webm" : "/loading.webm"}
         autoPlay
         loop
         muted
@@ -24,6 +22,6 @@ export function GlobalLoading() {
         aria-hidden="true"
         className="size-16"
       />
-    </div>
+    </aside>
   );
 }

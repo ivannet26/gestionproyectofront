@@ -8,7 +8,7 @@ export default function ProjectToolbar({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex shrink-0 flex-wrap items-center gap-2 py-3">
+    <div className="flex shrink-0 flex-wrap items-center gap-2 pb-6">
       {children}
       {action && (
         <div className="ml-auto flex items-center gap-2">{action}</div>
