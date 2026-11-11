@@ -1,11 +1,11 @@
 import { lazy, Suspense, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import UserPlusIcon from "../../../shared/Icons/UserPlusIcon";
-import { useActiveAreas } from "../../organizaciones/accounts/useAccounts";
+import { useActiveAreas } from "../../organizations/accounts/useAccounts";
 
 const InvitationModal = lazy(
   () =>
-    import("../../organizaciones/accounts/InvitationModal/InvitationModal"),
+    import("../../organizations/accounts/InvitationModal/InvitationModal"),
 );
 
 export default function InviteButton() {

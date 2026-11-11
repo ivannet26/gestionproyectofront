@@ -42,4 +42,5 @@
 
 ## 7. Estructura
 
+- Nombres de carpetas, archivos, componentes, hooks, funciones, tipos y variables en inglés (incluidas las carpetas de `features/<module>/`). Solo los textos visibles al usuario (labels de `routes.ts`, títulos, mensajes, placeholders) se mantienen en español.
 - Un componente por archivo (PascalCase); hooks/utils camelCase. Mantener `pages/`, `use<Feature>.ts`, `types.ts`, `services.ts`. Barrel solo si aporta; evitar ciclos.

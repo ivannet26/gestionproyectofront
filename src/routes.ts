@@ -10,22 +10,22 @@ import UserIcon from "./shared/Icons/UserIcon";
 import KeyIcon from "./shared/Icons/KeyIcon";
 import ClockIcon from "./shared/Icons/ClockIcon";
 
-export const HomePage = lazy(() => import("./features/inicio/HomePage"));
-export const ProjectRoute = lazy(() => import("./features/inicio/ProjectPage"));
+export const HomePage = lazy(() => import("./features/home/HomePage"));
+export const ProjectRoute = lazy(() => import("./features/home/ProjectPage"));
 export const PublicationsPage = lazy(
-  () => import("./features/publicaciones/PublicacionesPage"),
+  () => import("./features/publications/PublicationsPage"),
 );
-const EquiposPage = lazy(() => import("./features/equipos/EquiposPage"));
-const TeamDetailPage = lazy(() => import("./features/equipos/TeamDetailPage"));
-const OrganizacionesPage = lazy(
-  () => import("./features/organizaciones/OrganizacionesPage"),
+const TeamsPage = lazy(() => import("./features/teams/TeamsPage"));
+const TeamDetailPage = lazy(() => import("./features/teams/TeamDetailPage"));
+const OrganizationsPage = lazy(
+  () => import("./features/organizations/OrganizationsPage"),
 );
 const AccountsPage = lazy(
-  () => import("./features/organizaciones/accounts/AccountsPage"),
+  () => import("./features/organizations/accounts/AccountsPage"),
 );
 const RecoveryRequestsPage = lazy(
   () =>
-    import("./features/organizaciones/recovery-requests/RecoveryRequestsPage"),
+    import("./features/organizations/recovery-requests/RecoveryRequestsPage"),
 );
 
 export interface SubRoute {
@@ -51,6 +51,12 @@ export const appModules: NavModule[] = [
     path: "/",
     subRoutes: [
       {
+        title: "Publicaciones",
+        path: "/publicaciones",
+        Icon: FileIcon,
+        Component: PublicationsPage,
+      },
+      {
         title: "Últimas tareas",
         path: "/",
         Icon: ClockIcon,
@@ -72,19 +78,6 @@ export const appModules: NavModule[] = [
     ],
   },
   {
-    label: "Publicaciones",
-    Icon: FileIcon,
-    path: "/publicaciones",
-    subRoutes: [
-      {
-        title: "Publicaciones",
-        path: "/publicaciones",
-        Icon: FileIcon,
-        Component: PublicationsPage,
-      },
-    ],
-  },
-  {
     label: "Equipos",
     Icon: TeamsIcon,
     path: "/equipos",
@@ -93,13 +86,13 @@ export const appModules: NavModule[] = [
         title: "Todos los equipos",
         path: "/equipos",
         Icon: TeamsIcon,
-        Component: EquiposPage,
+        Component: TeamsPage,
       },
       {
         title: "Trabajadores",
         path: "/equipos/trabajadores",
         Icon: UserIcon,
-        Component: EquiposPage,
+        Component: TeamsPage,
       },
       {
         title: "Detalle de equipo",
@@ -120,25 +113,25 @@ export const appModules: NavModule[] = [
         title: "Equipos",
         path: "/organizaciones",
         Icon: TeamsIcon,
-        Component: OrganizacionesPage,
+        Component: OrganizationsPage,
       },
       {
         title: "Especialidades",
         path: "/organizaciones/especialidades",
         Icon: FileIcon,
-        Component: OrganizacionesPage,
+        Component: OrganizationsPage,
       },
       {
         title: "Proyectos",
         path: "/organizaciones/proyectos",
         Icon: ProjectsIcon,
-        Component: OrganizacionesPage,
+        Component: OrganizationsPage,
       },
       {
         title: "Áreas",
         path: "/organizaciones/areas",
         Icon: FolderIcon,
-        Component: OrganizacionesPage,
+        Component: OrganizationsPage,
       },
       {
         title: "Cuentas",

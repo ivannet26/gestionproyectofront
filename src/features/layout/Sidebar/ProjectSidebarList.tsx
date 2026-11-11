@@ -1,4 +1,4 @@
-import { useProjects } from "../../inicio/hooks/useProjects";
+import { useProjects } from "../../home/hooks/useProjects";
 import ProjectAreaNavigation from "./ProjectAreaNavigation";
 
 interface ProjectSidebarListProps {

@@ -1,7 +1,7 @@
 import { useQueries } from "@tanstack/react-query";
 import type { Task } from "../../../core/interfaces/task.interface";
 import { getTasks } from "../../../core/services/taskService";
-import { useProjects } from "../../inicio/hooks/useProjects";
+import { useProjects } from "../../home/hooks/useProjects";
 
 export type PriorityTask = Task & { projectId: number };
 

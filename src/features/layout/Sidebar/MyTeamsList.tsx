@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import Avatar from "../../../shared/Avatar";
 import EmptyState from "../../../shared/EmptyState/EmptyState";
 import PlusIcon from "../../../shared/Icons/PlusIcon";
-import TeamMembersModal from "../../organizaciones/Teams/TeamMembersModal";
+import TeamMembersModal from "../../organizations/Teams/TeamMembersModal";
 import { teamPath } from "../../../routes";
 import type { Team } from "../../../core/interfaces/organization.interface";
 
